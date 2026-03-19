@@ -5,7 +5,6 @@ import { isValidBloodSugar, isValidCholesterol, isValidThyroid } from '../utils/
 
 // Define the ExtractedMetric interface
 export interface IExtractedMetric extends Document {
-  patientId: string
   recordId: string
   category: string
   metricName: string
@@ -16,24 +15,19 @@ export interface IExtractedMetric extends Document {
   status: string
   measuredDate: Date
   createdAt: Date
+  isNormal(): boolean
+  getStatus(): string
+  getAlertLevel(): string
 }
 
 // Define the ExtractedMetric schema
 const extractedMetricSchema: Schema<IExtractedMetric> = new Schema(
   {
-    patientId: {
-      type: String,
-      required: true,
-      validate: {
-        validator: (value: string) => value.match(/^[0-9a-fA-F]{24}$/),
-        message: 'Invalid patient ID'
-      }
-    },
     recordId: {
       type: String,
       required: true,
       validate: {
-        validator: (value: string) => value.match(/^[0-9a-fA-F]{24}$/),
+        validator: (value: string) => /^[0-9a-fA-F]{24}$/.test(value),
         message: 'Invalid record ID'
       }
     },
@@ -86,45 +80,19 @@ const extractedMetricSchema: Schema<IExtractedMetric> = new Schema(
 )
 
 // Create indexes
-extractedMetricSchema.index({ patientId: 1 })
 extractedMetricSchema.index({ category: 1 })
 extractedMetricSchema.index({ metricName: 1 })
 extractedMetricSchema.index({ measuredDate: -1 })
 extractedMetricSchema.index({ value: 1 })
 
-// Virtual properties
-extractedMetricSchema.virtual('patient', {
-  ref: 'Patient',
-  localField: 'patientId',
-  foreignField: '_id',
-  justOne: true
-})
-
 // Static methods
-extractedMetricSchema.statics.findByPatient = async function(
-  patientId: string,
-  options: { limit?: number; skip?: number; category?: string } = {}
-): Promise<IExtractedMetric[]> {
-  const { limit = 20, skip = 0, category } = options
-
-  const query: any = { patientId }
-  if (category) query.category = category
-
-  return this.find(query)
-    .sort({ measuredDate: -1 })
-    .skip(skip)
-    .limit(limit)
-    .exec()
-}
-
 extractedMetricSchema.statics.findByCategory = async function(
   category: string,
-  options: { limit?: number; skip?: number; patientId?: string } = {}
+  options: { limit?: number; skip?: number } = {}
 ): Promise<IExtractedMetric[]> {
-  const { limit = 20, skip = 0, patientId } = options
+  const { limit = 20, skip = 0 } = options
 
   const query: any = { category }
-  if (patientId) query.patientId = patientId
 
   return this.find(query)
     .sort({ measuredDate: -1 })
@@ -135,11 +103,9 @@ extractedMetricSchema.statics.findByCategory = async function(
 
 extractedMetricSchema.statics.getTrend = async function(
   metricName: string,
-  patientId: string,
   dateRange: { start: Date; end: Date }
 ): Promise<IExtractedMetric[]> {
   return this.find({
-    patientId,
     metricName,
     measuredDate: {
       $gte: dateRange.start,
@@ -151,13 +117,11 @@ extractedMetricSchema.statics.getTrend = async function(
 }
 
 extractedMetricSchema.statics.getSummary = async function(
-  patientId: string,
   dateRange: { start: Date; end: Date }
 ): Promise<any> {
   const pipeline = [
     {
       $match: {
-        patientId,
         measuredDate: {
           $gte: dateRange.start,
           $lte: dateRange.end
@@ -193,11 +157,6 @@ extractedMetricSchema.statics.getSummary = async function(
 }
 
 // Instance methods
-extractedMetricSchema.methods.getPatientInfo = async function(this: IExtractedMetric): Promise<any> {
-  const Patient = require('./Patient').default
-  return Patient.findById(this.patientId).exec()
-}
-
 extractedMetricSchema.methods.getRecordInfo = async function(this: IExtractedMetric): Promise<any> {
   const MedicalRecord = require('./MedicalRecord').default
   return MedicalRecord.findById(this.recordId).exec()

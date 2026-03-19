@@ -48,7 +48,6 @@ const Dashboard: React.FC = () => {
         setStats([
           { title: "Latest Readings", value: processedCount.toString(), change: `+${processedCount}`, changeType: "increase", unit: "processed" },
           { title: "Recent Uploads", value: recentUploadsCount.toString(), change: `+${recentUploadsCount}`, changeType: "increase", unit: "this week" },
-          { title: "Active Shares", value: "0", change: "0", changeType: "neutral", unit: "current" },
           { title: "Total Records", value: totalRecords.toString(), change: `+${totalRecords}`, changeType: "increase", unit: "all time" }
         ])
 
@@ -56,22 +55,14 @@ const Dashboard: React.FC = () => {
         setRecentUploads(records.slice(0, 4).map(record => ({
           id: record._id || record.id,
           category: record.category,
-          patientName: record.patientName || 'Unknown',
-          date: new Date(record.createdAt).toLocaleDateString(),
-          doctor: record.doctor || 'Unknown',
+          date: new Date(record.uploadDate || record.createdAt).toLocaleDateString(),
           status: record.status
         })))
 
         // Set health alerts (example alerts)
         setHealthAlerts([
-          { type: "warning", title: "High Blood Pressure", description: "Readings above normal range" },
-          { type: "info", title: "Missing Follow-up", description: "Schedule check-up with specialist" }
-        ])
-
-        // Set recent shares (example data)
-        setRecentShares([
-          { doctor: "Dr. Patel", categories: "Blood Sugar, BP", date: "Mar 10, 2026" },
-          { doctor: "Dr. Garcia", categories: "Thyroid", date: "Mar 8, 2026" }
+          { type: "warning", title: "High Blood Sugar", description: "Recent fasting levels are above target" },
+          { type: "info", title: "Monthly Summary", description: "Your health trends are looking stable" }
         ])
 
       } catch (error) {
@@ -103,7 +94,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {stats.map((stat, index) => (
           <Card key={index} className="relative overflow-hidden hover:shadow-md transition-shadow">
             <div className="relative p-6">
@@ -155,11 +146,10 @@ const Dashboard: React.FC = () => {
                     >
                       <div className="flex items-center space-x-4">
                         <Badge color={['completed', 'active', 'processed'].includes((upload.status || '').toLowerCase()) ? "green" : (upload.status || '').toLowerCase() === "pending" ? "yellow" : "red"}>
-                          {upload.category} - {upload.patientName}
+                          {upload.category.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
                         </Badge>
                         <div>
                           <p className="text-sm font-medium text-gray-900">{upload.date}</p>
-                          <p className="text-xs text-gray-500">{upload.doctor}</p>
                         </div>
                       </div>
                       <div className="text-xs font-semibold uppercase tracking-wider">
@@ -209,35 +199,6 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
               ))}
-            </div>
-          </Card>
-
-          {/* Recent Shares */}
-          <Card>
-            <div className="p-6 border-b flex justify-between items-center">
-              <h2 className="text-lg font-semibold text-gray-900">Dr. Shares</h2>
-              <button className="text-blue-600 hover:text-blue-700 text-xs font-medium">Manage</button>
-            </div>
-            <div className="p-6">
-              {recentShares.length === 0 ? (
-                <div className="text-center py-6 text-gray-400">
-                  <p className="text-xs">No active shares</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {recentShares.map((share, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{share.doctor}</p>
-                        <p className="text-[10px] text-gray-500 uppercase">{share.categories}</p>
-                      </div>
-                      <div className="text-[10px] text-gray-400">
-                        {share.date}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </Card>
         </div>

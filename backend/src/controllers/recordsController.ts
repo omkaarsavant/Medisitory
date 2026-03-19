@@ -132,11 +132,6 @@ export async function getRecords(req: Request, res: Response): Promise<void> {
       query.uploadDate = dateQuery
     }
 
-    // Filter by doctor name
-    if (doctorName) {
-      query.doctorName = { $regex: doctorName as string, $options: 'i' }
-    }
-
     // Pagination
     const skip = (pageNumber - 1) * limitNumber
 

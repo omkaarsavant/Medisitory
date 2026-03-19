@@ -91,17 +91,21 @@ export interface ConfirmExtractionResponse {
 export interface MedicalRecord {
   id: string
   _id?: string
-  patientName?: string
   category: string
   date: string
+  uploadDate?: string
   doctor?: string
   hospital?: string
-  fileSize?: number
+  imagePath: string
+  fileName: string
+  fileSize: number
   fileType?: string
   status: 'processing' | 'processed' | 'error' | 'Completed' | 'Pending' | 'Active'
   extractedData?: Record<string, string>
   manualData?: Record<string, string>
   notes?: string
+  aiFindings?: string
+  aiNotes?: string
   createdAt: string
   updatedAt: string
 }

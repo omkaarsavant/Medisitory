@@ -6,8 +6,6 @@ import { validateMedicalRecord } from '../utils/validators'
 
 // Define the MedicalRecord interface
 export interface IMedicalRecord extends Document {
-  patientId: string
-  patientName: string
   category: string
   uploadDate: Date
   imagePath: string
@@ -23,6 +21,8 @@ export interface IMedicalRecord extends Document {
   manualData: Record<string, any>
   displayData: Record<string, any>
   notes: string
+  aiFindings: string
+  aiNotes: string
   doctorName: string
   hospitalName: string
   visitDate: Date
@@ -38,19 +38,6 @@ export interface IMedicalRecord extends Document {
 // Define the MedicalRecord schema
 const medicalRecordSchema = new Schema(
   {
-    patientId: {
-      type: String,
-      required: true,
-      validate: {
-        validator: (value: string) => /^[0-9a-fA-F]{24}$/.test(value),
-        message: 'Invalid patient ID'
-      }
-    },
-    patientName: {
-      type: String,
-      trim: true,
-      default: ''
-    },
     category: {
       type: String,
       required: true,
@@ -119,6 +106,16 @@ const medicalRecordSchema = new Schema(
       trim: true,
       default: ''
     },
+    aiFindings: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    aiNotes: {
+      type: String,
+      trim: true,
+      default: ''
+    },
     doctorName: {
       type: String,
       trim: true,
@@ -154,48 +151,22 @@ const medicalRecordSchema = new Schema(
 )
 
 // Create indexes
-medicalRecordSchema.index({ patientId: 1 })
 medicalRecordSchema.index({ category: 1 })
-medicalRecordSchema.index({ date: -1 })
+medicalRecordSchema.index({ uploadDate: -1 })
 medicalRecordSchema.index({ status: 1 })
 medicalRecordSchema.index({ createdAt: -1 })
 
-// Virtual properties
-medicalRecordSchema.virtual('patient', {
-  ref: 'Patient',
-  localField: 'patientId',
-  foreignField: '_id',
-  justOne: true
-})
-
 // Static methods
-medicalRecordSchema.statics.findByPatient = async function(
-  patientId: string,
-  options: { limit?: number; skip?: number; status?: string } = {}
-): Promise<IMedicalRecord[]> {
-  const { limit = 20, skip = 0, status } = options
-
-  const query: any = { patientId }
-  if (status) query.status = status
-
-  return this.find(query)
-    .sort({ date: -1 })
-    .skip(skip)
-    .limit(limit)
-    .exec()
-}
-
 medicalRecordSchema.statics.findByCategory = async function(
   category: string,
-  options: { limit?: number; skip?: number; patientId?: string } = {}
+  options: { limit?: number; skip?: number } = {}
 ): Promise<IMedicalRecord[]> {
-  const { limit = 20, skip = 0, patientId } = options
+  const { limit = 20, skip = 0 } = options
 
   const query: any = { category }
-  if (patientId) query.patientId = patientId
 
   return this.find(query)
-    .sort({ date: -1 })
+    .sort({ uploadDate: -1 })
     .skip(skip)
     .limit(limit)
     .exec()
@@ -222,11 +193,6 @@ medicalRecordSchema.statics.search = async function(
 }
 
 // Instance methods
-medicalRecordSchema.methods.getPatientInfo = async function(this: IMedicalRecord): Promise<any> {
-  const Patient = require('./Patient').default
-  return Patient.findById(this.patientId).exec()
-}
-
 medicalRecordSchema.methods.extractMetrics = async function(this: IMedicalRecord): Promise<any[]> {
   const ExtractedMetric = require('./ExtractedMetric').default
 
@@ -447,7 +413,6 @@ medicalRecordSchema.methods.shareWithDoctor = async function(
 
   // Create a new doctor access record
   const doctorAccess = new DoctorAccess({
-    patientId: this.patientId,
     doctorEmail,
     doctorName: '', // Will be filled in later
     shareToken: Math.random().toString(36).substring(7),

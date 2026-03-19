@@ -84,3 +84,68 @@ export async function extractMedicalDataWithAI(
     throw new Error(`AI Extraction failed: ${error.message}`)
   }
 }
+/**
+ * Generate medical insights based on extracted data
+ */
+export async function generateMedicalInsights(
+  category: string,
+  fields: Record<string, any>
+): Promise<{
+  findings: string
+  notes: string
+}> {
+  if (!genAI) {
+    logger.warn('Gemini API key not found in environment variables')
+    return { findings: '', notes: '' } // Graceful fallback
+  }
+
+  try {
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite-preview' })
+    
+    // Format fields for the prompt
+    const metricsString = Object.entries(fields)
+      .filter(([_, v]) => v !== null && v !== undefined)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(', ')
+
+    const prompt = `
+      You are an expert medical assistant. Analyze the following health metrics for the category "${category}":
+      Metrics: ${metricsString}
+
+      TASK:
+      Provide a brief, professional medical interpretation of these results.
+      
+      INSTRUCTIONS:
+      1. Return ONLY a valid JSON object with:
+         - "findings": A concise (1-2 sentences) observation about the scores (e.g., "Your fasting glucose is slightly elevated, suggesting pre-diabetic levels.")
+         - "notes": Practical, actionable advice or next steps (e.g., "Consider reducing refined carb intake and monitor your activity levels. Consult a GP for a formal evaluation.")
+      2. Use standard clinical ranges for your interpretation.
+      3. Be professional and encouraging.
+      4. DO NOT include medical disclaimers in the content; the UI will handle that.
+      5. If metrics are missing or invalid, stay neutral.
+    `
+
+    const result = await model.generateContent(prompt)
+    const response = await result.response
+    const text = response.text()
+
+    const jsonMatch = text.match(/\{[\s\S]*\}/)
+    if (!jsonMatch) {
+      return { findings: 'Analysis completed.', notes: 'Contact your doctor for a detailed review.' }
+    }
+
+    const data = JSON.parse(jsonMatch[0])
+
+    return {
+      findings: data.findings || 'No specific findings identified.',
+      notes: data.notes || 'Please consult with a healthcare professional regarding these results.'
+    }
+
+  } catch (error: any) {
+    logger.error('Failed to generate medical insights:', error)
+    return { 
+      findings: 'Automated analysis is currently unavailable.', 
+      notes: 'Please review your results with a medical professional.' 
+    }
+  }
+}

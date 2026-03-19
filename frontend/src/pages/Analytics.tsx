@@ -18,7 +18,8 @@ const COLORS = {
 }
 
 const Analytics: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'blood_sugar' | 'bp' | 'cholesterol' | 'thyroid'>('blood_sugar')
+  const [activeTab, setActiveTab] = useState<'blood_sugar' | 'other'>('blood_sugar')
+  const [subCategory, setSubCategory] = useState<'bp' | 'cholesterol' | 'thyroid'>('bp')
   const [timeRange, setTimeRange] = useState(30)
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -28,7 +29,8 @@ const Analytics: React.FC = () => {
     const fetchData = async () => {
       try {
         setLoading(true)
-        const response = await getAnalyticsData(activeTab, timeRange)
+        const targetCategory = activeTab === 'blood_sugar' ? 'blood_sugar' : subCategory
+        const response = await getAnalyticsData(targetCategory, timeRange)
         if (response.success) {
           setData(response.data)
         } else {
@@ -36,20 +38,18 @@ const Analytics: React.FC = () => {
         }
       } catch (err) {
         console.error('Error fetching analytics:', err)
-        setError('Failed to load analytics data. Please make sure you have uploaded records with this category.')
+        setError('Failed to load analytics data. Please make sure you have uploaded records.')
       } finally {
         setLoading(false)
       }
     }
 
     fetchData()
-  }, [activeTab, timeRange])
+  }, [activeTab, subCategory, timeRange])
 
   const tabs = [
-    { id: 'blood_sugar', label: 'Blood Sugar', icon: Droplets, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { id: 'bp', label: 'Blood Pressure', icon: Activity, color: 'text-red-600', bg: 'bg-red-50' },
-    { id: 'cholesterol', label: 'Cholesterol', icon: Heart, color: 'text-orange-600', bg: 'bg-orange-50' },
-    { id: 'thyroid', label: 'Thyroid', icon: Thermometer, color: 'text-purple-600', bg: 'bg-purple-50' },
+    { id: 'blood_sugar', label: 'Sugar', icon: Droplets, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { id: 'other', label: 'Other Health', icon: Activity, color: 'text-purple-600', bg: 'bg-purple-50' },
   ]
 
   const formatXAxis = (tickItem: any) => {
@@ -143,9 +143,17 @@ const Analytics: React.FC = () => {
   const renderSugarAnalytics = () => {
     if (!data?.timeseries || Object.keys(data.timeseries).length === 0) return <EmptyState category="Blood Sugar" />
     
-    // Glucose data might have multiple types like 'fasting', 'post_meal'
     const fastingData = data.timeseries['fasting'] || data.timeseries['random'] || []
+    const postMealData = data.timeseries['post_meal'] || []
     const hba1cData = data.timeseries['hba1c'] || []
+
+    // Prepare range data for Pie Chart
+    const totalReadings = fastingData.length + postMealData.length
+    const rangeStats = [
+      { name: 'Normal (70-100)', value: fastingData.filter((d: any) => d.value >= 70 && d.value <= 100).length + postMealData.filter((d: any) => d.value >= 70 && d.value <= 140).length, color: '#10b981' },
+      { name: 'Elevated', value: fastingData.filter((d: any) => d.value > 100).length + postMealData.filter((d: any) => d.value > 140).length, color: '#f59e0b' },
+      { name: 'Low (<70)', value: fastingData.filter((d: any) => d.value < 70).length + postMealData.filter((d: any) => d.value < 70).length, color: '#3b82f6' }
+    ].filter(d => d.value > 0)
     
     return (
       <div className="space-y-6">
@@ -162,7 +170,7 @@ const Analytics: React.FC = () => {
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-gray-900 flex items-center">
                 <Droplets className="w-5 h-5 mr-2 text-blue-500" />
-                Glucose Trends (mg/dL)
+                Glucose Trends Over Time (mg/dL)
               </h3>
             </div>
             <div className="h-80 w-full">
@@ -175,58 +183,73 @@ const Analytics: React.FC = () => {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                  <XAxis 
-                    dataKey="date" 
-                    tickFormatter={formatXAxis} 
-                    stroke="#9ca3af" 
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis 
-                    stroke="#9ca3af" 
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
+                  <XAxis dataKey="date" tickFormatter={formatXAxis} stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Area 
-                    type="monotone" 
-                    dataKey="value" 
-                    name="Glucose"
-                    stroke="#3b82f6" 
-                    strokeWidth={3}
-                    fillOpacity={1} 
-                    fill="url(#colorValue)" 
-                    activeDot={{ r: 6, strokeWidth: 0 }}
-                  />
+                  <Area type="monotone" dataKey="value" name="Glucose" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </Card>
 
-          {renderDistributionChart('fasting')}
+          <Card className="p-6">
+            <h3 className="text-sm font-bold text-gray-900 mb-6">Status Breakdown</h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={rangeStats}
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {rangeStats.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend verticalAlign="bottom" align="center" iconType="circle" wrapperStyle={{ fontSize: '10px' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mt-4 text-center">
+              <p className="text-xs text-gray-500">Total of {totalReadings} readings reviewed</p>
+            </div>
+          </Card>
         </div>
 
-        {hba1cData.length > 0 && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-6">HbA1c Long-term Trend (%)</h3>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={hba1cData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                    <XAxis dataKey="date" tickFormatter={formatXAxis} stroke="#9ca3af" fontSize={12} />
-                    <YAxis stroke="#9ca3af" fontSize={12} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="value" name="HbA1c" fill="#8884d8" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
-            {renderDistributionChart('hba1c')}
-          </div>
-        )}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-6">Post-Meal Spike Analysis</h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={postMealData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                  <XAxis dataKey="date" tickFormatter={formatXAxis} stroke="#9ca3af" fontSize={12} />
+                  <YAxis stroke="#9ca3af" fontSize={12} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="value" name="Post-Meal" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+          
+          <Card className="p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-6">HbA1c Variance (%)</h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={hba1cData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                  <XAxis dataKey="date" tickFormatter={formatXAxis} stroke="#9ca3af" fontSize={12} />
+                  <YAxis stroke="#9ca3af" fontSize={12} domain={[4, 10]} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Line type="step" dataKey="value" name="HbA1c" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 6 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+        </div>
       </div>
     )
   }
@@ -356,7 +379,7 @@ const Analytics: React.FC = () => {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex overflow-x-auto space-x-4 mb-8 pb-2 scrollbar-hide">
+        <div className="flex overflow-x-auto space-x-4 mb-2 pb-2 scrollbar-hide">
           {tabs.map(tab => (
             <button
               key={tab.id}
@@ -377,6 +400,29 @@ const Analytics: React.FC = () => {
           ))}
         </div>
 
+        {/* Sub-navigation for Other Health */}
+        {activeTab === 'other' && (
+          <div className="flex space-x-2 mb-8 animate-in slide-in-from-top-2 duration-300">
+            {[
+              { id: 'bp', label: 'Blood Pressure' },
+              { id: 'cholesterol', label: 'Cholesterol' },
+              { id: 'thyroid', label: 'Thyroid' }
+            ].map(sub => (
+              <button
+                key={sub.id}
+                onClick={() => setSubCategory(sub.id as any)}
+                className={`px-4 py-2 rounded-full text-xs font-bold border transition-all ${
+                  subCategory === sub.id
+                    ? 'bg-gray-900 text-white border-gray-900'
+                    : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                {sub.label}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Analytics Content */}
         {loading ? (
           <div className="flex justify-center items-center h-96">
@@ -387,8 +433,9 @@ const Analytics: React.FC = () => {
         ) : (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
             {activeTab === 'blood_sugar' && renderSugarAnalytics()}
-            {activeTab === 'bp' && renderBPAnalytics()}
-            {(activeTab === 'cholesterol' || activeTab === 'thyroid') && renderOtherAnalytics(activeTab)}
+            {activeTab === 'other' && (
+              subCategory === 'bp' ? renderBPAnalytics() : renderOtherAnalytics(subCategory)
+            )}
           </div>
         )}
 

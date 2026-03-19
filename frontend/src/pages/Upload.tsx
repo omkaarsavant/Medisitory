@@ -91,8 +91,6 @@ const Upload: React.FC = () => {
           const extractResponse = await extractData(newUploadId)
           const fields = extractResponse.data.fields
           setExtractedData({
-            patientName: extractResponse.data.patientName || 'Unknown',
-            age: fields.age ? parseInt(fields.age) : 0,
             category: category,
             extractedValues: fields,
             rawText: extractResponse.data.rawText // Include raw text
@@ -120,13 +118,11 @@ const Upload: React.FC = () => {
 
     try {
       await confirmExtraction(uploadId, { 
-        ...extractedData.extractedValues, 
-        patientName: extractedData.patientName 
+        ...extractedData.extractedValues
       })
 
       const record: MedicalRecord = {
         id: uploadId,
-        patientName: extractedData.patientName,
         category: extractedData.category,
         date: new Date().toISOString().split('T')[0],
         extractedData: extractedData.extractedValues,
@@ -269,15 +265,6 @@ const Upload: React.FC = () => {
               <div className="border-b pb-6">
                 <h4 className="text-sm font-semibold text-gray-900 mb-3">Extracted Data</h4>
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm text-gray-600">Patient Name:</span>
-                    <input 
-                      type="text"
-                      value={extractedData.patientName}
-                      onChange={(e) => setExtractedData({ ...extractedData, patientName: e.target.value })}
-                      className="text-sm font-medium border-b border-dashed border-gray-400 focus:outline-none focus:border-blue-500 bg-transparent px-1"
-                    />
-                  </div>
                   {/* Medical Data Table */}
                   <div className="mt-4 border rounded-lg overflow-hidden">
                     <div className="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">

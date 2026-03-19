@@ -4,8 +4,6 @@ import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
-import Patients from './pages/Patients'
-import PatientDetails from './pages/PatientDetails'
 import Records from './pages/Records'
 import RecordDetails from './pages/RecordDetails'
 import Upload from './pages/Upload'
@@ -17,8 +15,6 @@ const App: React.FC = () => {
     <Routes>
       <Route path='/' element={<Layout />}>
         <Route index element={<Dashboard />} />
-        <Route path='patients' element={<Patients />} />
-        <Route path='patients/:id' element={<PatientDetails />} />
         <Route path='records' element={<Records />} />
         <Route path='records/:id' element={<RecordDetails />} />
         <Route path='upload' element={<Upload />} />

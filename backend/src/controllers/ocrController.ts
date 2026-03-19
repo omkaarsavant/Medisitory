@@ -3,7 +3,7 @@
 import { Request, Response } from 'express'
 import { extractTextFromMedicalFile } from '../services/ocrService'
 import { extractMedicalData, generatePreview, validateExtractedData } from '../services/dataExtractionService'
-import { extractMedicalDataWithAI } from '../services/aiService'
+import { extractMedicalDataWithAI, generateMedicalInsights } from '../services/aiService'
 import MedicalRecord from '../models/MedicalRecord'
 import ExtractedMetric from '../models/ExtractedMetric'
 import { logger } from '../utils/logger'
@@ -245,8 +245,8 @@ export async function confirmExtraction(req: Request, res: Response): Promise<vo
       const finalFields = manualCorrections || {}
       
       // Update patient name if it's in the corrections (usually from the input field)
+      // We no longer save patientName to the MedicalRecord model as per user request
       if (finalFields.patientName) {
-        medicalRecord.patientName = finalFields.patientName
         delete finalFields.patientName // Remove from medical metrics
       }
 
@@ -280,7 +280,6 @@ export async function confirmExtraction(req: Request, res: Response): Promise<vo
           const fieldInfo = getFieldInfo(medicalRecord.category, field, Number(value))
           if (fieldInfo) {
             metricsToCreate.push({
-              patientId: medicalRecord.patientId,
               recordId: medicalRecord._id,
               category: medicalRecord.category,
               metricName: field,
@@ -302,6 +301,16 @@ export async function confirmExtraction(req: Request, res: Response): Promise<vo
 
       // Update status
       medicalRecord.status = 'Completed'
+
+      // Generate AI Insights (Notes and Findings)
+      try {
+        const insights = await generateMedicalInsights(medicalRecord.category, finalFields)
+        medicalRecord.aiFindings = insights.findings
+        medicalRecord.aiNotes = insights.notes
+        logger.info(`AI insights generated for record: ${uploadId}`)
+      } catch (insightErr) {
+        logger.error('Failed to generate AI insights, proceeding without them:', insightErr)
+      }
 
       // Save medical record
       const updatedRecord = await medicalRecord.save()

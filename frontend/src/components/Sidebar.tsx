@@ -31,12 +31,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       exact: true
     },
     {
-      name: 'Patients',
-      path: '/patients',
-      icon: Users,
-      exact: false
-    },
-    {
       name: 'Medical Records',
       path: '/records',
       icon: FileText,

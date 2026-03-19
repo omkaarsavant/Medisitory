@@ -9,7 +9,7 @@ import { logger } from '../utils/logger'
  */
 export async function getMetricsData(req: Request, res: Response): Promise<void> {
   try {
-    const { category, patientId = '000000000000000000000000', days = '30' } = req.query
+    const { category, days = '30' } = req.query
     
     if (!category) {
       res.status(400).json({ success: false, error: 'Category is required' })
@@ -26,7 +26,6 @@ export async function getMetricsData(req: Request, res: Response): Promise<void>
     prevStartDate.setDate(startDate.getDate() - daysInt)
 
     const query: any = {
-      patientId,
       category,
       measuredDate: { $gte: prevStartDate, $lte: endDate }
     }
@@ -103,14 +102,12 @@ export async function getMetricsData(req: Request, res: Response): Promise<void>
  */
 export async function getSummary(req: Request, res: Response): Promise<void> {
   try {
-    const { patientId = '000000000000000000000000' } = req.query
-    
     // Get latest metrics for each category
     const categories = ['blood_sugar', 'bp', 'cholesterol', 'thyroid']
     const summary: Record<string, any> = {}
 
     for (const category of categories) {
-      const latestMetrics = await ExtractedMetric.find({ patientId, category })
+      const latestMetrics = await ExtractedMetric.find({ category })
         .sort({ measuredDate: -1 })
         .limit(1)
         .lean()
