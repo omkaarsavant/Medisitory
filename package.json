@@ -1,0 +1,20 @@
+{
+  "name": "medvault",
+  "version": "1.0.0",
+  "description": "Medical record management system",
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "build": "npm run build --prefix backend && npm run build --prefix frontend",
+    "test": "npm run test --prefix backend && npm run test --prefix frontend"
+  },
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": ["medical", "records", "healthcare"],
+  "author": "MedVault Team",
+  "license": "MIT"
+}
