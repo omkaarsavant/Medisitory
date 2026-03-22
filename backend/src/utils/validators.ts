@@ -67,50 +67,66 @@ export const validateMedicalRecord = (category: string, data: any): { valid: boo
       break
     }
 
-    case 'bp':
-      if (!data.systolic || !data.diastolic || typeof data.systolic !== 'number' || typeof data.diastolic !== 'number') {
+    case 'bp': {
+      const systolic = typeof data.systolic === 'string' ? parseFloat(data.systolic) : data.systolic
+      const diastolic = typeof data.diastolic === 'string' ? parseFloat(data.diastolic) : data.diastolic
+      const pulse = typeof data.pulse === 'string' ? parseFloat(data.pulse) : data.pulse
+
+      if (!systolic || !diastolic || typeof systolic !== 'number' || typeof diastolic !== 'number') {
         errors.push('Systolic and Diastolic values are required and must be numeric')
         valid = false
       }
-      if (data.pulse && typeof data.pulse !== 'number') {
+      if (data.pulse && typeof pulse !== 'number') {
         errors.push('Invalid pulse value (must be numeric)')
         valid = false
       }
       break
+    }
 
-    case 'cholesterol':
-      if (!data.total || typeof data.total !== 'number') {
+    case 'cholesterol': {
+      const total = typeof data.total === 'string' ? parseFloat(data.total) : data.total
+      const ldl = typeof data.ldl === 'string' ? parseFloat(data.ldl) : data.ldl
+      const hdl = typeof data.hdl === 'string' ? parseFloat(data.hdl) : data.hdl
+      const triglycerides = typeof data.triglycerides === 'string' ? parseFloat(data.triglycerides) : data.triglycerides
+
+      if (!total || typeof total !== 'number') {
         errors.push('Total cholesterol is required and must be numeric')
         valid = false
       }
-      if (data.ldl && typeof data.ldl !== 'number') {
+      if (data.ldl && typeof ldl !== 'number') {
         errors.push('LDL value must be numeric')
         valid = false
       }
-      if (data.hdl && typeof data.hdl !== 'number') {
+      if (data.hdl && typeof hdl !== 'number') {
         errors.push('HDL value must be numeric')
         valid = false
       }
-      if (data.triglycerides && typeof data.triglycerides !== 'number') {
+      if (data.triglycerides && typeof triglycerides !== 'number') {
         errors.push('Triglycerides value must be numeric')
         valid = false
       }
       break
+    }
 
-    case 'thyroid':
-      if (!data.tsh || typeof data.tsh !== 'number') {
+    case 'thyroid': {
+      const tsh = typeof data.tsh === 'string' ? parseFloat(data.tsh) : data.tsh
+      const t3 = typeof data.t3 === 'string' ? parseFloat(data.t3) : data.t3
+      const t4 = typeof data.t4 === 'string' ? parseFloat(data.t4) : data.t4
+
+      if (!tsh || typeof tsh !== 'number') {
         errors.push('TSH value is required and must be numeric')
         valid = false
       }
-      if (data.t3 && typeof data.t3 !== 'number') {
+      if (data.t3 && typeof t3 !== 'number') {
         errors.push('T3 value must be numeric')
         valid = false
       }
-      if (data.t4 && typeof data.t4 !== 'number') {
+      if (data.t4 && typeof t4 !== 'number') {
         errors.push('T4 value must be numeric')
         valid = false
       }
       break
+    }
 
     case 'opd':
       if (!data.symptoms || typeof data.symptoms !== 'string' || data.symptoms.trim().length === 0) {

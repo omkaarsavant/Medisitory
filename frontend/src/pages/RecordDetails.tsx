@@ -74,12 +74,13 @@ const RecordDetails: React.FC = () => {
     fetchRecordData()
   }, [id])
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Active':
-      case 'Completed': return 'green'
-      case 'Archived': return 'gray'
-      case 'Pending': return 'yellow'
+  const getStatusColor = (status?: string): 'green' | 'gray' | 'yellow' | 'red' => {
+    if (!status) return 'red'
+    switch (status.toLowerCase()) {
+      case 'active':
+      case 'completed': return 'green'
+      case 'archived': return 'gray'
+      case 'pending': return 'yellow'
       default: return 'red'
     }
   }
@@ -115,10 +116,25 @@ const RecordDetails: React.FC = () => {
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-gray-900 capitalize">
-                {record.category.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())} {new Date(record.uploadDate || record.date || record.createdAt).toLocaleDateString('en-GB')}
+                {(() => {
+                  const cat = (record.category || 'custom').toLowerCase();
+                  const mapping: Record<string, string> = {
+                    'blood_sugar': 'Blood Sugar',
+                    'bp': 'Blood Pressure',
+                    'thyroid': 'Thyroid',
+                    'cholesterol': 'Cholesterol',
+                    'opd': 'OPD',
+                    'imaging': 'Imaging',
+                    'lab': 'Lab'
+                  };
+                  return mapping[cat] || cat.replace(/_/g, ' ');
+                })()}
               </h1>
               <p className="text-gray-600">
-                Result Date: {record.date || new Date(record.createdAt).toLocaleDateString()}
+                Uploaded: {(() => {
+                  const raw = new Date(record.uploadDate || record.createdAt)
+                  return raw.toLocaleString('en-GB')
+                })()}
               </p>
             </div>
           </div>
@@ -153,14 +169,47 @@ const RecordDetails: React.FC = () => {
                   <FileText className="w-4 h-4" />
                   <span className="text-sm">Category</span>
                 </div>
-                <span className="text-sm font-medium">{record.category}</span>
+                <span className="text-sm font-medium">
+                  {(() => {
+                    const cat = (record.category || 'custom').toLowerCase();
+                    const mapping: Record<string, string> = {
+                      'blood_sugar': 'Blood Sugar',
+                      'bp': 'Blood Pressure',
+                      'thyroid': 'Thyroid',
+                      'cholesterol': 'Cholesterol',
+                      'opd': 'OPD',
+                      'imaging': 'Imaging',
+                      'lab': 'Lab'
+                    };
+                    return mapping[cat] || cat.replace(/_/g, ' ');
+                  })()}
+                </span>
               </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-gray-500">
+                  <Calendar className="w-4 h-4" />
+                  <span className="text-sm">Visit Date</span>
+                </div>
+                <span className="text-sm font-medium">
+                  {(() => {
+                    const date = new Date(record.visitDate || record.uploadDate || record.createdAt)
+                    return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                  })()}
+                </span>
+              </div>
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2 text-gray-500">
                   <Clock className="w-4 h-4" />
-                  <span className="text-sm">Uploaded</span>
+                  <span className="text-sm">Visit Time</span>
                 </div>
-                <span className="text-sm font-medium">{new Date(record.createdAt).toLocaleDateString()}</span>
+                <span className="text-sm font-medium">
+                  {(() => {
+                    const date = new Date(record.visitDate || record.uploadDate || record.createdAt)
+                    return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+                  })()}
+                </span>
               </div>
             </div>
           </Card>
@@ -190,46 +239,60 @@ const RecordDetails: React.FC = () => {
               </div>
               <h3 className="text-lg font-bold text-gray-900">Source Document</h3>
             </div>
-            <div className="flex space-x-2">
-              <Button 
-                variant="outline" 
-                onClick={() => window.open(record.imagePath, '_blank')}
-                className="text-xs h-8"
-              >
-                <ExternalLink className="w-3 h-3 mr-1" />
-                Open Full
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  const link = document.createElement('a');
-                  link.href = record.imagePath;
-                  link.download = record.fileName || 'medical-record';
-                  link.click();
-                }}
-                className="text-xs h-8"
-              >
-                <Download className="w-3 h-3 mr-1" />
-                Download
-              </Button>
-            </div>
+            {record.imagePath && (
+              <div className="flex space-x-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => window.open(record.imagePath || '', '_blank')}
+                  className="text-xs h-8"
+                >
+                  <ExternalLink className="w-3 h-3 mr-1" />
+                  Open Full
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.href = record.imagePath || '';
+                    link.download = record.fileName || 'medical-record';
+                    link.click();
+                  }}
+                  className="text-xs h-8"
+                >
+                  <Download className="w-3 h-3 mr-1" />
+                  Download
+                </Button>
+              </div>
+            )}
           </div>
           
-          <div className="bg-gray-100 rounded-xl overflow-hidden border border-gray-200 min-h-[400px] flex items-center justify-center">
-            {isPDF ? (
-              <iframe 
-                src={`${record.imagePath}#toolbar=0`} 
-                className="w-full h-[600px] border-none"
-                title="Medical record PDF preview"
-              />
-            ) : (
-              <div className="relative group cursor-zoom-in w-full">
-                <img 
-                  src={record.imagePath} 
-                  alt="Medical Record" 
-                  className="w-full h-auto object-contain max-h-[800px] mx-auto transition-transform duration-300 group-hover:scale-[1.02]"
+          <div className={`bg-gray-100 rounded-xl overflow-hidden border border-gray-200 min-h-[400px] flex items-center justify-center ${!record.imagePath ? 'bg-white' : ''}`}>
+            {record.imagePath ? (
+              isPDF ? (
+                <iframe 
+                  src={`${record.imagePath}#toolbar=0`} 
+                  className="w-full h-[600px] border-none"
+                  title="Medical record PDF preview"
                 />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 pointer-events-none" />
+              ) : (
+                <div className="relative group cursor-zoom-in w-full">
+                  <img 
+                    src={record.imagePath} 
+                    alt="Medical Record" 
+                    className="w-full h-auto object-contain max-h-[800px] mx-auto transition-transform duration-300 group-hover:scale-[1.02]"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 pointer-events-none" />
+                </div>
+              )
+            ) : (
+              <div className="text-center space-y-4 max-w-sm p-8">
+                <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto text-blue-500 shadow-sm border border-blue-100">
+                  <Info className="w-10 h-10" />
+                </div>
+                <div>
+                  <h4 className="text-xl font-black text-gray-900 uppercase tracking-tighter">No Document Attached</h4>
+                  <p className="text-sm font-bold text-gray-400 mt-2">This record was added manually without an accompanying source document (PDF/Image).</p>
+                </div>
               </div>
             )}
           </div>
@@ -238,16 +301,16 @@ const RecordDetails: React.FC = () => {
         {/* Record Details */}
         <Card className="p-8">
           <div className="space-y-8">
-           {/* Smart Insights Section */}
-          {(record.aiFindings || record.aiNotes) && (
-            <div className="mt-8">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-2">
-                  <div className="p-2 bg-blue-50 rounded-lg">
-                    <TrendingUp className="w-5 h-5 text-blue-600" />
+            {/* Smart Insights Section */}
+            {(record.aiFindings || record.aiNotes) && (
+              <div className="mt-8">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <div className="p-2 bg-blue-50 rounded-lg">
+                      <TrendingUp className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-900">Smart Insights</h3>
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900">Smart Insights</h3>
-                </div>
                 <Badge color="blue" className="px-3 py-1 text-[10px] font-black uppercase tracking-widest bg-blue-50 text-blue-700 border border-blue-100 italic">
                   Powered by AI
                 </Badge>

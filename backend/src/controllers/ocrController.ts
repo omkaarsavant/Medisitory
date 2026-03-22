@@ -9,6 +9,7 @@ import ExtractedMetric from '../models/ExtractedMetric'
 import { logger } from '../utils/logger'
 import { RequestValidationError } from '../errors/requestValidationError'
 import { isValidObjectId } from 'mongoose'
+import { parseNumericValue, getFieldInfo } from '../utils/metrics'
 
 /**
  * OCR Controller
@@ -109,22 +110,22 @@ export async function extractData(req: Request, res: Response): Promise<void> {
       
       if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key') {
         try {
-          const aiResult = await extractMedicalDataWithAI(ocrResult.processedText, medicalRecord.category)
+          const aiResult = await extractMedicalDataWithAI(ocrResult.processedText, medicalRecord.category || 'detect')
           extractionResult = {
             ...aiResult,
-            detectedCategory: medicalRecord.category,
-            category: medicalRecord.category,
+            detectedCategory: aiResult.detectedCategory,
+            category: aiResult.detectedCategory,
             missingFields: [], // AI handled this
             rawMatches: [] // AI doesn't use regex matches
           }
-          logger.info(`AI-powered extraction successful: ${aiResult.confidence.toFixed(2)} confidence`)
+          logger.info(`AI-powered extraction successful: Detected ${aiResult.detectedCategory} with ${aiResult.confidence.toFixed(2)} confidence`)
         } catch (aiErr) {
           logger.warn('AI extraction failed, falling back to regex:', aiErr)
-          extractionResult = extractMedicalData(ocrResult.processedText, medicalRecord.category)
+          extractionResult = extractMedicalData(ocrResult.processedText, medicalRecord.category || 'detect')
         }
       } else {
         logger.info('Using regex-based extraction (AI not configured)')
-        extractionResult = extractMedicalData(ocrResult.processedText, medicalRecord.category)
+        extractionResult = extractMedicalData(ocrResult.processedText, medicalRecord.category || 'detect')
       }
 
       // Generate preview
@@ -241,8 +242,28 @@ export async function confirmExtraction(req: Request, res: Response): Promise<vo
     }
 
     try {
-      // Use the confirmed data directly (save time by not re-running OCR)
+      // Use the confirmed data directly
       const finalFields = manualCorrections || {}
+      const { category, date, time } = req.body
+      
+      // Update category if provided
+      if (category) {
+        medicalRecord.category = category
+      }
+      
+      // Update visitDate if provided
+      if (date) {
+        let visitTimestamp = new Date(date)
+        if (time) {
+          const [hours, minutes] = time.split(':').map(Number)
+          visitTimestamp.setHours(hours, minutes, 0, 0)
+        }
+        medicalRecord.visitDate = visitTimestamp
+        logger.info(`Setting visit date to: ${visitTimestamp}`)
+      } else if (!medicalRecord.visitDate) {
+        // Fallback to current time if no visit date exists
+        medicalRecord.visitDate = new Date()
+      }
       
       // Update patient name if it's in the corrections (usually from the input field)
       // We no longer save patientName to the MedicalRecord model as per user request
@@ -269,38 +290,12 @@ export async function confirmExtraction(req: Request, res: Response): Promise<vo
         method: 'ocr'
       }
 
-      // Create display data
       medicalRecord.displayData = finalFields
-
-      // Create metrics for each field
-      const metricsToCreate: any[] = []
-
-      for (const [field, value] of Object.entries(finalFields)) {
-        if (value !== null && value !== undefined) {
-          const fieldInfo = getFieldInfo(medicalRecord.category, field, Number(value))
-          if (fieldInfo) {
-            metricsToCreate.push({
-              recordId: medicalRecord._id,
-              category: medicalRecord.category,
-              metricName: field,
-              value,
-              unit: fieldInfo.unit,
-              normalMin: fieldInfo.normalMin,
-              normalMax: fieldInfo.normalMax,
-              status: fieldInfo.status,
-              measuredDate: medicalRecord.uploadDate || new Date()
-            })
-          }
-        }
-      }
-
-      // Save metrics
-      if (metricsToCreate.length > 0) {
-        await ExtractedMetric.insertMany(metricsToCreate)
-      }
-
-      // Update status
+      // Ensure status is updated
       medicalRecord.status = 'Completed'
+
+      // Save medical record (this will trigger the post-save syncMetrics hook)
+      await medicalRecord.save()
 
       // Generate AI Insights (Notes and Findings)
       try {
@@ -312,7 +307,7 @@ export async function confirmExtraction(req: Request, res: Response): Promise<vo
         logger.error('Failed to generate AI insights, proceeding without them:', insightErr)
       }
 
-      // Save medical record
+      // Save again with AI insights
       const updatedRecord = await medicalRecord.save()
 
       logger.info(`Extraction confirmed: ${uploadId}`)
@@ -323,8 +318,8 @@ export async function confirmExtraction(req: Request, res: Response): Promise<vo
           recordId: updatedRecord._id,
           extractedData: updatedRecord.extractedData,
           displayData: updatedRecord.displayData,
-          metrics: metricsToCreate,
-          status: updatedRecord.status
+          status: updatedRecord.status,
+          visitDate: updatedRecord.visitDate
         },
         message: 'Extraction confirmed successfully'
       })
@@ -339,7 +334,7 @@ export async function confirmExtraction(req: Request, res: Response): Promise<vo
       })
     }
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Unexpected error in confirmExtraction:', error)
     res.status(500).json({
       success: false,
@@ -350,33 +345,72 @@ export async function confirmExtraction(req: Request, res: Response): Promise<vo
 }
 
 /**
- * Get field information
+ * Create a manual medical record
  */
-function getFieldInfo(category: string, field: string, value: number): any {
-  const ranges = {
-    'blood_sugar': {
-      'fasting': { unit: 'mg/dL', normalMin: 70, normalMax: 100, status: value >= 70 && value <= 100 ? 'normal' : value < 70 ? 'low' : 'high' },
-      'post_meal': { unit: 'mg/dL', normalMin: 100, normalMax: 140, status: value >= 100 && value <= 140 ? 'normal' : value < 100 ? 'low' : 'high' },
-      'random': { unit: 'mg/dL', normalMin: 70, normalMax: 140, status: value >= 70 && value <= 140 ? 'normal' : value < 70 ? 'low' : 'high' },
-      'hba1c': { unit: '%', normalMin: 4, normalMax: 6, status: value >= 4 && value <= 6 ? 'normal' : value < 4 ? 'low' : 'high' }
-    },
-    'bp': {
-      'systolic': { unit: 'mmHg', normalMin: 90, normalMax: 120, status: value >= 90 && value <= 120 ? 'normal' : value < 90 ? 'low' : 'high' },
-      'diastolic': { unit: 'mmHg', normalMin: 60, normalMax: 80, status: value >= 60 && value <= 80 ? 'normal' : value < 60 ? 'low' : 'high' },
-      'pulse': { unit: 'bpm', normalMin: 60, normalMax: 100, status: value >= 60 && value <= 100 ? 'normal' : value < 60 ? 'low' : 'high' }
-    },
-    'cholesterol': {
-      'total': { unit: 'mg/dL', normalMin: 125, normalMax: 200, status: value >= 125 && value <= 200 ? 'normal' : value < 125 ? 'low' : 'high' },
-      'ldl': { unit: 'mg/dL', normalMin: 50, normalMax: 130, status: value >= 50 && value <= 130 ? 'normal' : value < 50 ? 'low' : 'high' },
-      'hdl': { unit: 'mg/dL', normalMin: 40, normalMax: 100, status: value >= 40 && value <= 100 ? 'normal' : value < 40 ? 'low' : 'high' },
-      'triglycerides': { unit: 'mg/dL', normalMin: 50, normalMax: 150, status: value >= 50 && value <= 150 ? 'normal' : value < 50 ? 'low' : 'high' }
-    },
-    'thyroid': {
-      'tsh': { unit: 'mIU/L', normalMin: 0.4, normalMax: 4.0, status: value >= 0.4 && value <= 4.0 ? 'normal' : value < 0.4 ? 'low' : 'high' },
-      't3': { unit: 'ng/dL', normalMin: 60, normalMax: 200, status: value >= 60 && value <= 200 ? 'normal' : value < 60 ? 'low' : 'high' },
-      't4': { unit: 'mcg/dL', normalMin: 4.5, normalMax: 12.5, status: value >= 4.5 && value <= 12.5 ? 'normal' : value < 4.5 ? 'low' : 'high' }
-    }
-  }
+export async function createManualRecord(req: Request, res: Response): Promise<void> {
+  try {
+    const { 
+      category, date, time, doctor, hospital, metrics,
+      imagePath, publicId, fileName, fileSize 
+    } = req.body
 
-  return (ranges as any)[category]?.[field]
+    logger.info(`Creating manual medical record for category: ${category}`)
+
+    // Combine date and time for VISIT date
+    let visitTimestamp = new Date()
+    if (date) {
+      const [year, month, day] = date.split('-').map(Number)
+      visitTimestamp = new Date(year, month - 1, day)
+      
+      if (time) {
+        const [hours, minutes] = time.split(':').map(Number)
+        visitTimestamp.setHours(hours, minutes, 0, 0)
+      }
+    }
+
+    const medicalRecord = new MedicalRecord({
+      category: category.toLowerCase().replace(/ /g, '_'),
+      uploadDate: new Date(), // Automatic device/upload time
+      doctorName: doctor || '',
+      hospitalName: hospital || '',
+      visitDate: visitTimestamp, // User provided visit time
+      displayData: metrics || {},
+      status: 'Completed',
+      fileName: fileName || 'Manual Entry',
+      fileSize: fileSize || 0,
+      imagePath: imagePath || '',
+      publicId: publicId || ''
+    })
+
+    // Save medical record (this will trigger the post-save syncMetrics hook)
+    await medicalRecord.save()
+
+    // Generate AI Insights
+    try {
+      const insights = await generateMedicalInsights(medicalRecord.category, metrics || {})
+      medicalRecord.aiFindings = insights.findings
+      medicalRecord.aiNotes = insights.notes
+      
+      // Save again with AI insights
+      await medicalRecord.save()
+      
+      logger.info(`AI insights generated and saved for manual record: ${medicalRecord._id}`)
+    } catch (insightErr) {
+      logger.error('Failed to generate AI insights for manual record:', insightErr)
+    }
+
+    res.json({
+      success: true,
+      data: { record: medicalRecord },
+      message: 'Manual record created successfully'
+    })
+
+  } catch (error: any) {
+    logger.error('Error creating manual record:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create manual record',
+      details: error.message
+    })
+  }
 }

@@ -9,6 +9,7 @@ import {
 import { Activity, Thermometer, Droplets, Heart, AlertCircle, Info, Calendar, Download, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { Card, Badge, Button, LoadingSpinner, ErrorMessage } from '../components'
 import { getAnalyticsData } from '../services/api'
+import { useRecordStore } from '../store/recordStore'
 
 const COLORS = {
   normal: '#10b981', // green-500
@@ -18,19 +19,26 @@ const COLORS = {
 }
 
 const Analytics: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'blood_sugar' | 'other'>('blood_sugar')
-  const [subCategory, setSubCategory] = useState<'bp' | 'cholesterol' | 'thyroid'>('bp')
+  const [activeTab, setActiveTab] = useState<'blood_sugar' | 'blood_pressure' | 'other'>('blood_sugar')
+  const [subCategory, setSubCategory] = useState<'cholesterol' | 'thyroid'>('cholesterol')
   const [timeRange, setTimeRange] = useState(30)
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const { records } = useRecordStore()
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true)
-        const targetCategory = activeTab === 'blood_sugar' ? 'blood_sugar' : subCategory
-        const response = await getAnalyticsData(targetCategory, timeRange)
+        
+        let targetCategory = activeTab === 'blood_sugar' ? 'blood_sugar' : 
+                            activeTab === 'blood_pressure' ? 'bp' : 
+                            subCategory
+                            
+        // Add cache-buster to ensure real-time update
+        const response = await getAnalyticsData(targetCategory, timeRange, Date.now())
         if (response.success) {
           setData(response.data)
         } else {
@@ -45,10 +53,11 @@ const Analytics: React.FC = () => {
     }
 
     fetchData()
-  }, [activeTab, subCategory, timeRange])
+  }, [activeTab, subCategory, timeRange, records])
 
   const tabs = [
     { id: 'blood_sugar', label: 'Sugar', icon: Droplets, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { id: 'blood_pressure', label: 'Blood Pressure', icon: Heart, color: 'text-red-600', bg: 'bg-red-50' },
     { id: 'other', label: 'Other Health', icon: Activity, color: 'text-purple-600', bg: 'bg-purple-50' },
   ]
 
@@ -254,7 +263,7 @@ const Analytics: React.FC = () => {
     )
   }
 
-  const renderBPAnalytics = () => {
+  const renderBloodPressureAnalytics = () => {
     const ts = data?.timeseries
     if (!ts || (!ts['systolic'] && !ts['diastolic'])) return <EmptyState category="Blood Pressure" />
 
@@ -279,7 +288,7 @@ const Analytics: React.FC = () => {
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-gray-900 flex items-center">
                 <Heart className="w-5 h-5 mr-2 text-red-500" />
-                BP Trends (Systolic / Diastolic)
+                Blood Pressure Trends (Systolic / Diastolic)
               </h3>
             </div>
             <div className="h-80">
@@ -404,7 +413,6 @@ const Analytics: React.FC = () => {
         {activeTab === 'other' && (
           <div className="flex space-x-2 mb-8 animate-in slide-in-from-top-2 duration-300">
             {[
-              { id: 'bp', label: 'Blood Pressure' },
               { id: 'cholesterol', label: 'Cholesterol' },
               { id: 'thyroid', label: 'Thyroid' }
             ].map(sub => (
@@ -433,9 +441,8 @@ const Analytics: React.FC = () => {
         ) : (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
             {activeTab === 'blood_sugar' && renderSugarAnalytics()}
-            {activeTab === 'other' && (
-              subCategory === 'bp' ? renderBPAnalytics() : renderOtherAnalytics(subCategory)
-            )}
+            {activeTab === 'blood_pressure' && renderBloodPressureAnalytics()}
+            {activeTab === 'other' && renderOtherAnalytics(subCategory)}
           </div>
         )}
 

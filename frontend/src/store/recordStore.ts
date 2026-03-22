@@ -4,6 +4,7 @@ import { MedicalRecord, GetRecordsResponse } from '../services/api'
 
 interface RecordState {
   records: MedicalRecord[]
+  allRecords: MedicalRecord[]
   currentRecord: MedicalRecord | null
   loading: boolean
   error: string | null
@@ -29,6 +30,7 @@ type RecordActions = {
   setError: (error: string | null) => void
   setCurrentRecord: (record: MedicalRecord | null) => void
   fetchRecords: () => Promise<void>
+  fetchAllRecords: () => Promise<void>
   fetchRecord: (id: string) => Promise<void>
 }
 
@@ -39,6 +41,7 @@ export const useRecordStore = create<RecordStore>()(
     (set, get) => ({
       // Initial state
       records: [],
+      allRecords: [],
       currentRecord: null,
       loading: false,
       error: null,
@@ -53,12 +56,26 @@ export const useRecordStore = create<RecordStore>()(
       },
 
       // Actions
-      setRecords: (records: MedicalRecord[]) => set({ records }),
+      setRecords: (records: MedicalRecord[]) => set({ 
+        records: [...records].sort((a, b) => {
+          const dateA = new Date(a.uploadDate || a.createdAt || a.visitDate || a.date || Date.now()).getTime()
+          const dateB = new Date(b.uploadDate || b.createdAt || b.visitDate || b.date || b.createdAt || Date.now()).getTime()
+          return dateB - dateA
+        })
+      }),
 
       addRecord: (record) => {
-        set((state) => ({
-          records: [record, ...state.records]
-        }))
+        set((state) => {
+          const sortFn = (a: MedicalRecord, b: MedicalRecord) => {
+            const dateA = new Date(a.uploadDate || a.createdAt || a.visitDate || a.date || Date.now()).getTime()
+            const dateB = new Date(b.uploadDate || b.createdAt || b.visitDate || b.date || Date.now()).getTime()
+            return dateB - dateA
+          }
+          return {
+            records: [record, ...state.records].sort(sortFn),
+            allRecords: [record, ...state.allRecords].sort(sortFn)
+          }
+        })
       },
 
       updateRecord: (id, data) => {
@@ -136,6 +153,29 @@ export const useRecordStore = create<RecordStore>()(
           set({
             loading: false,
             error: error instanceof Error ? error.message : 'Failed to fetch record'
+          })
+        }
+      },
+
+      fetchAllRecords: async () => {
+        try {
+          set({ loading: true, error: null })
+          // Ignore category/date filters for timeline to show FULL history
+          const noFilters = { page: 1, limit: 1000 }
+          const response = await import('../services/api').then(m => m.getRecords(noFilters))
+
+          set({
+            allRecords: response.data.records.sort((a: MedicalRecord, b: MedicalRecord) => {
+              const dateA = new Date(a.uploadDate || a.createdAt || a.visitDate || a.date || Date.now()).getTime()
+              const dateB = new Date(b.uploadDate || b.createdAt || b.visitDate || b.date || Date.now()).getTime()
+              return dateB - dateA
+            }),
+            loading: false
+          })
+        } catch (error) {
+          set({
+            loading: false,
+            error: error instanceof Error ? error.message : 'Failed to fetch all records'
           })
         }
       }

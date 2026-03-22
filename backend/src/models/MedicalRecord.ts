@@ -2,16 +2,17 @@
 
 import mongoose, { Document, Schema, Types } from 'mongoose'
 import { MEDICAL_CATEGORIES, STATUS_VALUES } from '../utils/constants'
+import { getFieldInfo, parseNumericValue } from '../utils/metrics'
 import { validateMedicalRecord } from '../utils/validators'
 
 // Define the MedicalRecord interface
 export interface IMedicalRecord extends Document {
   category: string
   uploadDate: Date
-  imagePath: string
-  publicId: string
-  fileName: string
-  fileSize: number
+  imagePath?: string
+  publicId?: string
+  fileName?: string
+  fileSize?: number
   extractedData: {
     fields: Record<string, any>
     confidence: number
@@ -31,6 +32,8 @@ export interface IMedicalRecord extends Document {
   createdAt: Date
   updatedAt: Date
   validateData(): boolean
+  extractMetrics(): Promise<any[]>
+  syncMetrics(): Promise<void>
   updateDisplayData(newData: Record<string, any>): Promise<IMedicalRecord>
   shareWithDoctor(doctorEmail: string, categories?: string[], expirationDays?: number): Promise<string>
 }
@@ -51,23 +54,27 @@ const medicalRecordSchema = new Schema(
     },
     imagePath: {
       type: String,
-      required: true,
-      trim: true
+      required: false,
+      trim: true,
+      default: ''
     },
     publicId: {
       type: String,
-      required: true,
-      trim: true
+      required: false,
+      trim: true,
+      default: ''
     },
     fileName: {
       type: String,
-      required: true,
-      trim: true
+      required: false,
+      trim: true,
+      default: ''
     },
     fileSize: {
       type: Number,
-      required: true,
-      min: 0
+      required: false,
+      min: 0,
+      default: 0
     },
     extractedData: {
       type: {
@@ -129,7 +136,7 @@ const medicalRecordSchema = new Schema(
     visitDate: {
       type: Date,
       validate: {
-        validator: (value: Date) => value <= new Date(),
+        validator: (value: Date) => value <= new Date(Date.now() + 24 * 60 * 60 * 1000),
         message: 'Visit date must be in the past'
       }
     },
@@ -194,192 +201,83 @@ medicalRecordSchema.statics.search = async function(
 
 // Instance methods
 medicalRecordSchema.methods.extractMetrics = async function(this: IMedicalRecord): Promise<any[]> {
-  const ExtractedMetric = require('./ExtractedMetric').default
-
-  // Extract metrics based on category
   const metrics: any[] = []
 
-  switch (this.category) {
-    case 'blood_sugar':
-      if (this.displayData.fasting) {
-        metrics.push({
-          category: 'blood_sugar',
-          metricName: 'fasting_sugar',
-          value: this.displayData.fasting,
-          unit: 'mg/dL',
-          normalMin: 70,
-          normalMax: 100,
-          status: this.displayData.fasting >= 70 && this.displayData.fasting <= 100 ? 'normal' : 'abnormal',
-          measuredDate: this.visitDate || this.uploadDate
-        })
-      }
-      if (this.displayData.post_meal) {
-        metrics.push({
-          category: 'blood_sugar',
-          metricName: 'post_meal_sugar',
-          value: this.displayData.post_meal,
-          unit: 'mg/dL',
-          normalMin: 70,
-          normalMax: 140,
-          status: this.displayData.post_meal >= 70 && this.displayData.post_meal <= 140 ? 'normal' : 'abnormal',
-          measuredDate: this.visitDate || this.uploadDate
-        })
-      }
-      if (this.displayData.random) {
-        metrics.push({
-          category: 'blood_sugar',
-          metricName: 'random_sugar',
-          value: this.displayData.random,
-          unit: 'mg/dL',
-          normalMin: 70,
-          normalMax: 140,
-          status: this.displayData.random >= 70 && this.displayData.random <= 140 ? 'normal' : 'abnormal',
-          measuredDate: this.visitDate || this.uploadDate
-        })
-      }
-      if (this.displayData.hba1c) {
-        metrics.push({
-          category: 'blood_sugar',
-          metricName: 'hba1c',
-          value: this.displayData.hba1c,
-          unit: '%',
-          normalMin: 4,
-          normalMax: 5.6,
-          status: this.displayData.hba1c >= 4 && this.displayData.hba1c <= 5.6 ? 'normal' : 'abnormal',
-          measuredDate: this.visitDate || this.uploadDate
-        })
-      }
-      break
+  // Iterate over all fields in displayData
+  for (const [key, value] of Object.entries(this.displayData || {})) {
+    const numericValue = parseNumericValue(value)
+    if (numericValue === null) continue
 
-    case 'bp':
-      if (this.displayData.systolic && this.displayData.diastolic) {
-        metrics.push({
-          category: 'bp',
-          metricName: 'systolic_bp',
-          value: this.displayData.systolic,
-          unit: 'mmHg',
-          normalMin: 90,
-          normalMax: 120,
-          status: this.displayData.systolic >= 90 && this.displayData.systolic <= 120 ? 'normal' : 'abnormal',
-          measuredDate: this.visitDate || this.uploadDate
-        })
-        metrics.push({
-          category: 'bp',
-          metricName: 'diastolic_bp',
-          value: this.displayData.diastolic,
-          unit: 'mmHg',
-          normalMin: 60,
-          normalMax: 80,
-          status: this.displayData.diastolic >= 60 && this.displayData.diastolic <= 80 ? 'normal' : 'abnormal',
-          measuredDate: this.visitDate || this.uploadDate
-        })
-      }
-      if (this.displayData.pulse) {
-        metrics.push({
-          category: 'bp',
-          metricName: 'pulse',
-          value: this.displayData.pulse,
-          unit: 'bpm',
-          normalMin: 60,
-          normalMax: 100,
-          status: this.displayData.pulse >= 60 && this.displayData.pulse <= 100 ? 'normal' : 'abnormal',
-          measuredDate: this.visitDate || this.uploadDate
-        })
-      }
-      break
+    const field = key.toLowerCase().replace(/ /g, '_')
+    let metricName = field
+    let category = this.category
 
-    case 'cholesterol':
-      if (this.displayData.total) {
-        metrics.push({
-          category: 'cholesterol',
-          metricName: 'total_cholesterol',
-          value: this.displayData.total,
-          unit: 'mg/dL',
-          normalMin: 125,
-          normalMax: 200,
-          status: this.displayData.total >= 125 && this.displayData.total <= 200 ? 'normal' : 'abnormal',
-          measuredDate: this.visitDate || this.uploadDate
-        })
-      }
-      if (this.displayData.ldl) {
-        metrics.push({
-          category: 'cholesterol',
-          metricName: 'ldl',
-          value: this.displayData.ldl,
-          unit: 'mg/dL',
-          normalMin: 50,
-          normalMax: 130,
-          status: this.displayData.ldl >= 50 && this.displayData.ldl <= 130 ? 'normal' : 'abnormal',
-          measuredDate: this.visitDate || this.uploadDate
-        })
-      }
-      if (this.displayData.hdl) {
-        metrics.push({
-          category: 'cholesterol',
-          metricName: 'hdl',
-          value: this.displayData.hdl,
-          unit: 'mg/dL',
-          normalMin: 40,
-          normalMax: 100,
-          status: this.displayData.hdl >= 40 && this.displayData.hdl <= 100 ? 'normal' : 'abnormal',
-          measuredDate: this.visitDate || this.uploadDate
-        })
-      }
-      if (this.displayData.triglycerides) {
-        metrics.push({
-          category: 'cholesterol',
-          metricName: 'triglycerides',
-          value: this.displayData.triglycerides,
-          unit: 'mg/dL',
-          normalMin: 50,
-          normalMax: 150,
-          status: this.displayData.triglycerides >= 50 && this.displayData.triglycerides <= 150 ? 'normal' : 'abnormal',
-          measuredDate: this.visitDate || this.uploadDate
-        })
-      }
-      break
+    if (field.includes('fasting')) metricName = 'fasting'
+    else if (field.includes('post') && field.includes('meal')) metricName = 'post_meal'
+    else if (field.includes('random')) metricName = 'random'
+    else if (field.includes('hba1c')) metricName = 'hba1c'
 
-    case 'thyroid':
-      if (this.displayData.tsh) {
-        metrics.push({
-          category: 'thyroid',
-          metricName: 'tsh',
-          value: this.displayData.tsh,
-          unit: 'mIU/L',
-          normalMin: 0.4,
-          normalMax: 4.0,
-          status: this.displayData.tsh >= 0.4 && this.displayData.tsh <= 4.0 ? 'normal' : 'abnormal',
-          measuredDate: this.visitDate || this.uploadDate
-        })
-      }
-      if (this.displayData.t3) {
-        metrics.push({
-          category: 'thyroid',
-          metricName: 't3',
-          value: this.displayData.t3,
-          unit: 'ng/dL',
-          normalMin: 60,
-          normalMax: 200,
-          status: this.displayData.t3 >= 60 && this.displayData.t3 <= 200 ? 'normal' : 'abnormal',
-          measuredDate: this.visitDate || this.uploadDate
-        })
-      }
-      if (this.displayData.t4) {
-        metrics.push({
-          category: 'thyroid',
-          metricName: 't4',
-          value: this.displayData.t4,
-          unit: 'mcg/dL',
-          normalMin: 4.5,
-          normalMax: 12.5,
-          status: this.displayData.t4 >= 4.5 && this.displayData.t4 <= 12.5 ? 'normal' : 'abnormal',
-          measuredDate: this.visitDate || this.uploadDate
-        })
-      }
-      break
+    if (['fasting', 'post_meal', 'random', 'hba1c'].includes(metricName) || 
+        field.includes('sugar') || field.includes('glucose')) {
+      category = 'blood_sugar'
+    }
+
+    const fieldInfo = getFieldInfo(category, metricName, numericValue)
+    
+    if (fieldInfo && fieldInfo.unit) {
+      metrics.push({
+        category: category,
+        metricName: metricName,
+        value: numericValue,
+        unit: fieldInfo.unit
+      })
+    }
   }
 
   return metrics
+}
+
+/**
+ * Synchronize metrics for this record with the ExtractedMetric collection
+ */
+medicalRecordSchema.methods.syncMetrics = async function(this: IMedicalRecord): Promise<void> {
+  try {
+    const ExtractedMetric = mongoose.model('ExtractedMetric')
+    
+    // Only sync if status is Completed
+    if (this.status !== 'Completed') {
+      await ExtractedMetric.deleteMany({ recordId: this._id.toString() }).exec()
+      return
+    }
+
+    // Extract raw metrics from displayData
+    const rawMetrics = await this.extractMetrics()
+    
+    // Enrich with metadata and required fields
+    const formattedMetrics = rawMetrics.map((m: any) => {
+      const fieldInfo = getFieldInfo(m.category, m.metricName, m.value)
+      return {
+        ...m,
+        recordId: this._id.toString(),
+        unit: fieldInfo.unit || m.unit,
+        normalMin: fieldInfo.normalMin,
+        normalMax: fieldInfo.normalMax,
+        status: fieldInfo.status,
+        measuredDate: this.visitDate || this.uploadDate || new Date()
+      }
+    })
+
+    // Update database (delete old, insert new)
+    await ExtractedMetric.deleteMany({ recordId: this._id.toString() }).exec()
+    
+    if (formattedMetrics.length > 0) {
+      await ExtractedMetric.insertMany(formattedMetrics)
+    }
+    
+    console.log(`[Sync] Metrics synchronized for record: ${this._id} (${formattedMetrics.length} metrics)`)
+  } catch (error) {
+    console.error(`[Sync] Failed to synchronize metrics for record: ${this._id}`, error)
+  }
 }
 
 medicalRecordSchema.methods.validateData = function(this: IMedicalRecord): boolean {
@@ -448,6 +346,40 @@ medicalRecordSchema.pre<IMedicalRecord>('save', function(next) {
   }
   next()
 })
+
+// Post-save hook to trigger metric synchronization
+medicalRecordSchema.post<IMedicalRecord>('save', async function(doc) {
+  await doc.syncMetrics()
+})
+
+// Post-remove/deleteOne hooks to cleanup metrics
+const cleanupMetrics = async function(this: any, doc: any) {
+  let id: any = null
+  
+  if (doc && doc._id) {
+    id = doc._id
+  } else if (this && typeof this.getFilter === 'function') {
+    const filter = this.getFilter()
+    id = filter._id || filter.id
+  } else if (this && this._id) {
+    id = this._id
+  }
+
+  if (id) {
+    try {
+      const ExtractedMetric = mongoose.model('ExtractedMetric')
+      const result = await ExtractedMetric.deleteMany({ recordId: id.toString() }).exec()
+      console.log(`[Sync] Cleanup: Deleted ${result.deletedCount} metrics for record: ${id}`)
+    } catch (error) {
+      console.error(`[Sync] Cleanup failed for record: ${id}`, error)
+    }
+  } else {
+    console.warn('[Sync] Cleanup: No record ID found in hook context', { doc, filter: this?.getFilter?.() })
+  }
+}
+
+medicalRecordSchema.post<IMedicalRecord>('deleteOne', { document: true, query: true }, cleanupMetrics)
+medicalRecordSchema.post<IMedicalRecord>('findOneAndDelete', cleanupMetrics)
 
 // Export the model
 export const MedicalRecord = mongoose.model<IMedicalRecord>('MedicalRecord', medicalRecordSchema)

@@ -186,7 +186,7 @@ const Metrics: React.FC = () => {
                         {data.unit}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <Badge variant={data.status === "normal" ? "success" : data.status === "high" ? "warning" : "error"}>
+                        <Badge color={data.status === "normal" ? "green" : data.status === "high" ? "yellow" : "red"}>
                           {data.status}
                         </Badge>
                       </td>

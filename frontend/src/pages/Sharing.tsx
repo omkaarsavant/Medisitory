@@ -126,7 +126,7 @@ const Sharing: React.FC = () => {
                         {log.timestamp}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <Badge variant={log.action === "Viewed" ? "info" : "success"}>
+                        <Badge color={log.action === "Viewed" ? "blue" : "green"}>
                           {log.action}
                         </Badge>
                       </td>

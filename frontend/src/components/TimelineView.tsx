@@ -38,7 +38,12 @@ const TimelineView: React.FC<TimelineViewProps> = ({ records }) => {
     const grouped: GroupedRecords = {};
     
     records.forEach(record => {
-      const date = new Date(record.date || record.createdAt);
+      const dateStr = record.date || record.visitDate || record.uploadDate || record.createdAt;
+      if (!dateStr) return;
+      
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return;
+
       const year = date.getFullYear();
       const month = months[date.getMonth()];
 
@@ -137,7 +142,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({ records }) => {
 
               return (
                 <div key={month} className="relative flex flex-col items-center">
-                  <div className={`absolute ${idx % 2 === 0 ? '-top-12' : '-bottom-12'} whitespace-nowrap`}>
+                  <div className="absolute -top-12 whitespace-nowrap">
                     <p className="text-xs font-black uppercase tracking-widest text-gray-900">
                       {month}
                     </p>
@@ -148,7 +153,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({ records }) => {
                   >
                     {count}
                   </button>
-                  <div className={`absolute ${idx % 2 === 0 ? '-bottom-12' : '-top-12'} whitespace-nowrap text-center`}>
+                  <div className="absolute -bottom-12 whitespace-nowrap text-center">
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
                       {count === 1 ? 'Report' : 'Reports'}
                     </p>
@@ -168,16 +173,22 @@ const TimelineView: React.FC<TimelineViewProps> = ({ records }) => {
           <div className="absolute left-4 top-0 bottom-0 w-1 bg-blue-100 md:hidden" />
           
           <div className="space-y-12">
-            {groupedRecords[selectedYear][selectedMonth].sort((a, b) => new Date(b.date || b.createdAt).getTime() - new Date(a.date || a.createdAt).getTime()).map((record, idx) => (
-              <div key={record._id || record.id} className="relative flex items-center justify-center md:justify-between w-full">
+            {groupedRecords[selectedYear][selectedMonth].sort((a, b) => {
+              const dateA = new Date(a.date || a.visitDate || a.uploadDate || a.createdAt);
+              const dateB = new Date(b.date || b.visitDate || b.uploadDate || b.createdAt);
+              return dateB.getTime() - dateA.getTime();
+            }).map((record, idx) => {
+              const recordDate = new Date(record.date || record.visitDate || record.uploadDate || record.createdAt);
+              return (
+                <div key={record._id || record.id} className="relative flex items-center justify-center md:justify-between w-full">
                 {/* Desktop alternating layout */}
                 <div className={`hidden md:flex w-[45%] items-center ${idx % 2 === 0 ? 'justify-end pr-8' : 'justify-start pl-8 order-last'}`}>
                   <div className={`text-right ${idx % 2 === 0 ? 'text-right' : 'text-left'}`}>
                     <p className="text-4xl font-black text-gray-100 uppercase leading-none">
-                      {new Date(record.date || record.createdAt).toLocaleDateString('en-GB', { day: '2-digit' })}
+                      {recordDate.toLocaleDateString('en-GB', { day: '2-digit' })}
                     </p>
                     <p className="text-xs font-bold text-gray-300 uppercase tracking-widest mt-1">
-                      {new Date(record.date || record.createdAt).toLocaleDateString('en-GB', { month: 'short' })}
+                      {recordDate.toLocaleDateString('en-GB', { month: 'short' })}
                     </p>
                   </div>
                 </div>
@@ -193,31 +204,43 @@ const TimelineView: React.FC<TimelineViewProps> = ({ records }) => {
                   >
                     <div className="flex items-center justify-between mb-3">
                       <Badge color="blue" className="px-3 py-1 font-black italic text-[10px]">
-                        {new Date(record.date || record.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        {recordDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                       </Badge>
                       <div className="p-2 bg-gray-50 rounded-xl group-hover:bg-blue-50 transition-colors">
                         <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600" />
                       </div>
                     </div>
                     <h4 className="text-base font-black text-gray-900 uppercase tracking-tight line-clamp-1">
-                      {record.category.replace(/_/g, ' ')}
+                      {(() => {
+                        const cat = (record.category || 'custom').toLowerCase();
+                        const mapping: Record<string, string> = {
+                          'blood_sugar': 'Blood Sugar',
+                          'bp': 'Blood Pressure',
+                          'thyroid': 'Thyroid',
+                          'cholesterol': 'Cholesterol',
+                          'opd': 'OPD',
+                          'imaging': 'Imaging',
+                          'lab': 'Lab'
+                        };
+                        return mapping[cat] || cat.replace(/_/g, ' ');
+                      })()}
                     </h4>
-                    <div className="flex items-center mt-3 text-xs text-gray-500 font-medium space-x-4">
+                    <div className="flex items-center mt-3 text-xs text-gray-400 font-medium space-x-4">
                       <div className="flex items-center space-x-1 min-w-0">
                         <FileText className="w-3 h-3 flex-shrink-0" />
-                        <span className="truncate">{record.doctor || 'Health Report'}</span>
+                        <span className="truncate text-[10px] font-bold uppercase tracking-widest">{record.doctorName || record.doctor || 'Health Report'}</span>
                       </div>
-                      {record.hospital && (
+                      {(record.hospitalName || record.hospital) && (
                         <div className="flex items-center space-x-1 min-w-0">
                           <Calendar className="w-3 h-3 flex-shrink-0" />
-                          <span className="truncate">{record.hospital}</span>
+                          <span className="truncate text-[10px] font-bold uppercase tracking-widest">{record.hospitalName || record.hospital}</span>
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
               </div>
-            ))}
+            )})}
           </div>
         </div>
       )}

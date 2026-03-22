@@ -7,7 +7,7 @@ import {
   getUploadPreview,
   deleteUpload
 } from '../controllers/uploadController'
-import { extractData, confirmExtraction } from '../controllers/ocrController'
+import { extractData, confirmExtraction, createManualRecord } from '../controllers/ocrController'
 
 // Configure multer for file uploads
 const storage = multer.memoryStorage()
@@ -38,5 +38,8 @@ router.post('/:id/extract', extractData)
 
 // Confirm Extraction (matching frontend path)
 router.post('/:id/confirm', confirmExtraction)
+
+// Manual Entry
+router.post('/manual', createManualRecord)
 
 export default router

@@ -23,57 +23,60 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const { records, setRecords } = useRecordStore()
+  const { records, fetchRecords } = useRecordStore()
 
+  // Fetch initial data on mount
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const initData = async () => {
       setLoading(true)
-      setError(null)
-
       try {
-        // Get records to calculate stats
-        const filters = { limit: 10 }
-        const response = await getRecords(filters)
-        const records = response.data.records
-        setRecords(records)
-
-        // Calculate stats
-        const totalRecords = response.data.total
-        const recentUploadsCount = records.filter(r =>
-          new Date(r.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-        ).length
-        const processedCount = records.filter(r => r.status === 'processed').length
-        const errorCount = records.filter(r => r.status === 'error').length
-
-        setStats([
-          { title: "Latest Readings", value: processedCount.toString(), change: `+${processedCount}`, changeType: "increase", unit: "processed" },
-          { title: "Recent Uploads", value: recentUploadsCount.toString(), change: `+${recentUploadsCount}`, changeType: "increase", unit: "this week" },
-          { title: "Total Records", value: totalRecords.toString(), change: `+${totalRecords}`, changeType: "increase", unit: "all time" }
-        ])
-
-        // Set recent uploads
-        setRecentUploads(records.slice(0, 4).map(record => ({
-          id: record._id || record.id,
-          category: record.category,
-          date: new Date(record.uploadDate || record.createdAt).toLocaleDateString(),
-          status: record.status
-        })))
-
-        // Set health alerts (example alerts)
-        setHealthAlerts([
-          { type: "warning", title: "High Blood Sugar", description: "Recent fasting levels are above target" },
-          { type: "info", title: "Monthly Summary", description: "Your health trends are looking stable" }
-        ])
-
-      } catch (error) {
-        setError(error instanceof Error ? error.message : 'Failed to load dashboard')
+        await fetchRecords()
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err)
+        setError('Failed to load dashboard data. Please try again.')
       } finally {
         setLoading(false)
       }
     }
+    initData()
+  }, []) // Empty dependency array = run once on mount
 
-    fetchDashboardData()
-  }, [])
+  // Reactively compute stats whenever global `records` change
+  useEffect(() => {
+    if (!records) return
+
+    // Calculate stats
+    const recentUploadsCount = records.filter(r =>
+      new Date(r.createdAt || Date.now()) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    ).length
+    const processedCount = records.filter(r => (r.status || '').toLowerCase() === 'processed' || (r.status || '').toLowerCase() === 'completed').length
+    const totalRecords = records.length
+
+    setStats([
+      { title: "Latest Readings", value: processedCount.toString(), change: `+${processedCount}`, changeType: "increase", unit: "processed" },
+      { title: "Recent Uploads", value: recentUploadsCount.toString(), change: `+${recentUploadsCount}`, changeType: "increase", unit: "this week" },
+      { title: "Total Records", value: totalRecords.toString(), change: `+${totalRecords}`, changeType: "increase", unit: "all time" }
+    ])
+
+    // Set recent uploads
+    setRecentUploads(records.slice(0, 4).map(record => {
+      const rawDate = new Date(record.visitDate || record.uploadDate || record.createdAt || Date.now())
+      const localDate = new Date(rawDate.getTime() + rawDate.getTimezoneOffset() * 60000)
+      
+      return {
+        id: record._id || record.id,
+        category: record.category,
+        date: localDate.toLocaleDateString(),
+        status: record.status
+      }
+    }))
+
+    // Set health alerts (example alerts)
+    setHealthAlerts([
+      { type: "warning", title: "High Blood Sugar", description: "Recent fasting levels are above target" },
+      { type: "info", title: "Monthly Summary", description: "Your health trends are looking stable" }
+    ])
+  }, [records])
 
   if (loading) {
     return (
@@ -146,7 +149,19 @@ const Dashboard: React.FC = () => {
                     >
                       <div className="flex items-center space-x-4">
                         <Badge color={['completed', 'active', 'processed'].includes((upload.status || '').toLowerCase()) ? "green" : (upload.status || '').toLowerCase() === "pending" ? "yellow" : "red"}>
-                          {upload.category.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                          {(() => {
+                            const cat = (upload.category || 'custom').toLowerCase();
+                            const mapping: Record<string, string> = {
+                              'blood_sugar': 'Blood Sugar',
+                              'bp': 'Blood Pressure',
+                              'thyroid': 'Thyroid',
+                              'cholesterol': 'Cholesterol',
+                              'opd': 'OPD',
+                              'imaging': 'Imaging',
+                              'lab': 'Lab'
+                            };
+                            return mapping[cat] || cat.replace(/_/g, ' ');
+                          })()}
                         </Badge>
                         <div>
                           <p className="text-sm font-medium text-gray-900">{upload.date}</p>

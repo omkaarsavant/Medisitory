@@ -28,22 +28,23 @@ export async function uploadFile(req: any, res: Response): Promise<void> {
   try {
     logger.info('Processing file upload request')
 
-    // Validate that we have file and category
-    const category = req.body.category
-    
-    if (!req.file || !category) {
+    // Validate that we have file
+    if (!req.file) {
       const error = new RequestValidationError(
-        'File or category missing from request',
+        'File missing from request',
         'MISSING_REQUIRED_DATA'
       )
       logger.error('Upload error:', error.message)
       res.status(400).json({
         success: false,
+        message: error.message,
         error: error.message,
         errorCode: error.errorCode
       })
       return
     }
+
+    const category = req.body.category
 
     const file = req.file
 
@@ -57,6 +58,24 @@ export async function uploadFile(req: any, res: Response): Promise<void> {
       )
 
       logger.info(`Cloudinary upload successful: ${cloudinaryResult.publicId}`)
+
+      // If skipRecord is true, just return the upload result (used for manual entry)
+      if (req.body.skipRecord === 'true' || req.body.skipRecord === true) {
+        logger.info('skipRecord flag detected, skipping medical record creation')
+        res.status(200).json({
+          success: true,
+          data: {
+            fileUrl: cloudinaryResult.url,
+            fileSize: file.size,
+            fileName: file.originalname,
+            publicId: cloudinaryResult.publicId,
+            format: cloudinaryResult.format,
+            secureUrl: cloudinaryResult.secureUrl
+          },
+          message: 'File uploaded successfully (no record created)'
+        })
+        return
+      }
 
       // Map category name to slug
       const categoryMap: Record<string, string> = {
@@ -188,7 +207,7 @@ export async function getUploadPreview(req: Request, res: Response): Promise<voi
     try {
       const cloudinaryService = require('../services/cloudinaryService')
       const fileInfo = await cloudinaryService.getFileFromCloudinary(
-        path.basename(medicalRecord.imagePath)
+        path.basename(medicalRecord.imagePath || '')
       )
 
       // Return preview data

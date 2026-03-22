@@ -15,16 +15,17 @@ const API_KEY = process.env.GEMINI_API_KEY
 const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null
 
 /**
- * Extract medical data from OCR text using AI
+ * Extract medical data from OCR text using AI with automatic category detection
  */
 export async function extractMedicalDataWithAI(
   ocrText: string,
-  category: string
+  category: string = 'detect'
 ): Promise<{
   fields: Record<string, any>
   patientName: string | null
   confidence: number
   analysis: string
+  detectedCategory: string
 }> {
   if (!genAI) {
     logger.warn('Gemini API key not found in environment variables')
@@ -38,31 +39,47 @@ export async function extractMedicalDataWithAI(
 
     const prompt = `
       You are a specialized medical data extractor. 
-      Analyze the following OCR text from a medical report and extract the specific health metrics for the category: "${category}".
+      Analyze the following OCR text from a medical report.
 
       OCR TEXT:
       """
       ${ocrText}
       """
 
+      TASK:
+      1. Determine the medical category of the report (e.g., "blood_sugar", "bp", "cholesterol", "thyroid", "opd").
+      2. If you are unsure or it doesn't fit the others, use "custom".
+      3. For the detected category, extract the specific metrics ONLY using these keys:
+         - IF "blood_sugar":
+            - "fasting": Fasting Blood Sugar (FBS)
+            - "post_meal": Postprandial Blood Sugar (PPBS)
+            - "random": Random Blood Sugar (RBS)
+            - "hba1c": HbA1c
+         - IF "bp":
+            - "systolic": Systolic Blood Pressure
+            - "diastolic": Diastolic Blood Pressure
+            - "pulse": Heart Rate / Pulse
+         - IF others: Extract relevant metrics with descriptive internal keys.
+      4. Extract the patient's full name if visible.
+
       INSTRUCTIONS:
-      1. Extract numeric values for relevant tests (e.g. Fasting, Post Prandial, Random Sugar, HbA1c for 'blood_sugar').
-      2. Extract the patient's full name if clearly visible (e.g. "Name: Mr. Dummy").
-      3. Return ONLY a valid JSON object with the following fields:
-         - "fields": An object mapping internal field names to values (numbers only where possible)
-         - "patientName": A string with the identified patient name (or null if not found)
-         - "confidence": A number between 0 and 1 representing your overall confidence
-         - "analysis": A brief 1-sentence summary of what was found
-      4. For "blood_sugar" category, use these internal keys: "fasting", "post_meal", "random", "hba1c".
-      5. If a value is missing, set it to null.
-      6. Correct common OCR typos (e.g. "o" for "0", "l" for "1").
+      - Return ONLY a valid JSON object.
+      - Use ONLY the internal keys specified above for Blood Sugar and BP.
+      - Use these fields in the JSON:
+         - "category": The detected category ID (lowercase, e.g. "blood_sugar", "bp")
+         - "fields": Object mapping internal keys to values (numbers OR strings like "120/80")
+         - "patientName": String (or null if not found)
+         - "confidence": Number (0-1) representing your overall confidence
+         - "analysis": Brief 1-sentence summary of what was found
+      - Correct OCR typos (e.g. "o" for "0").
+      - Set missing pre-set fields to null.
     `
 
     const result = await model.generateContent(prompt)
     const response = await result.response
     const text = response.text()
 
-    // Extract JSON from response (handling potential markdown formatting)
+    // Extract JSON from response
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
       throw new Error('AI returned an invalid response format')
@@ -70,13 +87,14 @@ export async function extractMedicalDataWithAI(
 
     const data = JSON.parse(jsonMatch[0])
 
-    logger.info(`AI extraction successful: ${data.confidence.toFixed(2)} confidence`)
+    logger.info(`AI extraction successful: Detected ${data.category} with ${data.confidence.toFixed(2)} confidence`)
 
     return {
       fields: data.fields || {},
       patientName: data.patientName || null,
       confidence: data.confidence || 0,
-      analysis: data.analysis || 'Extraction successful'
+      analysis: data.analysis || 'Extraction successful',
+      detectedCategory: data.category || 'custom'
     }
 
   } catch (error: any) {

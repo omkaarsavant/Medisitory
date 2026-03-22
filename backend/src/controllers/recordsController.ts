@@ -5,6 +5,8 @@ import { MedicalRecord } from '../models/MedicalRecord'
 import { logger } from '../utils/logger'
 import { RequestValidationError } from '../errors/requestValidationError'
 import { isValidObjectId } from 'mongoose'
+import { parseNumericValue, getFieldInfo } from '../utils/metrics'
+import { ExtractedMetric } from '../models/ExtractedMetric'
 
 /**
  * Records controller
@@ -53,9 +55,9 @@ export async function getRecords(req: Request, res: Response): Promise<void> {
       return
     }
 
-    if (isNaN(limitNumber) || limitNumber < 1 || limitNumber > 100) {
+    if (isNaN(limitNumber) || limitNumber < 1 || limitNumber > 1000) {
       const error = new RequestValidationError(
-        'Invalid limit (must be 1-100)',
+        'Invalid limit (must be 1-1000)',
         'INVALID_LIMIT'
       )
       logger.error('Records error:', error.message)
@@ -137,7 +139,7 @@ export async function getRecords(req: Request, res: Response): Promise<void> {
 
     // Build options
     const options = {
-      sort: { uploadDate: -1 },
+      sort: { uploadDate: -1, visitDate: -1 },
       limit: limitNumber,
       skip: skip,
       lean: true
@@ -324,7 +326,7 @@ export async function updateRecord(req: Request, res: Response): Promise<void> {
     // Update display data (merge extracted + manual)
     record.displayData = { ...record.extractedData.fields, ...record.manualData }
 
-    // Save updated record
+    // Save updated record (this will trigger the post-save syncMetrics hook)
     const updatedRecord = await record.save()
 
     logger.info(`Record updated: ${recordId}`)
@@ -418,18 +420,7 @@ export async function deleteRecord(req: Request, res: Response): Promise<void> {
         // Continue with DB deletion even if Cloudinary fails
       }
 
-      // Delete associated metrics
-      try {
-        const { ExtractedMetric } = require('../models/ExtractedMetric')
-        if (ExtractedMetric) {
-          await ExtractedMetric.deleteMany({ recordId }).exec()
-          logger.info(`Associated metrics deleted for record: ${recordId}`)
-        }
-      } catch (metricError) {
-        logger.warn(`Failed to delete metrics for record ${recordId}:`, metricError)
-      }
-
-      // Delete from database
+      // Delete from database (this will trigger the post-deleteOne sync cleanup hook)
       await MedicalRecord.deleteOne({ _id: recordId }).exec()
 
       logger.info(`Record deleted: ${recordId}`)

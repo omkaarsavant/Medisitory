@@ -69,18 +69,22 @@ export interface UploadFileResponse {
     uploadId: string
     fileUrl: string
     fileSize: number
+    fileName: string
     category: string
+    publicId: string
   }
 }
 
 export interface ExtractDataResponse {
   success: boolean
   data: {
-    fields: Record<string, string>
+    fields: Record<string, any>
     patientName?: string
     confidence: number
     missingFields: string[]
+    processedText: string
     rawText?: string
+    detectedCategory?: string
   }
 }
 
@@ -93,16 +97,19 @@ export interface MedicalRecord {
   _id?: string
   category: string
   date: string
+  visitDate?: string
   uploadDate?: string
   doctor?: string
+  doctorName?: string
   hospital?: string
-  imagePath: string
-  fileName: string
-  fileSize: number
+  hospitalName?: string
+  imagePath?: string
+  fileName?: string
+  fileSize?: number
   fileType?: string
   status: 'processing' | 'processed' | 'error' | 'Completed' | 'Pending' | 'Active'
-  extractedData?: Record<string, string>
-  manualData?: Record<string, string>
+  extractedData?: Record<string, any>
+  manualData?: Record<string, any>
   notes?: string
   aiFindings?: string
   aiNotes?: string
@@ -137,11 +144,14 @@ export interface DeleteRecordResponse {
 }
 
 // API functions
-export const uploadFile = async (file: File, category: string): Promise<UploadFileResponse> => {
+export const uploadFile = async (file: File, category: string, skipRecord: boolean = false): Promise<UploadFileResponse> => {
   try {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('category', category)
+    if (skipRecord) {
+      formData.append('skipRecord', 'true')
+    }
 
     const response = await apiClient.post<UploadFileResponse>('/api/upload', formData, {
       headers: {
@@ -156,10 +166,10 @@ export const uploadFile = async (file: File, category: string): Promise<UploadFi
   }
 }
 
-export const extractData = async (uploadId: string): Promise<ExtractDataResponse> => {
+export const extractData = async (uploadId: string, category: string = ''): Promise<ExtractDataResponse> => {
   try {
     const response = await apiClient.post<ExtractDataResponse>(`/api/upload/${uploadId}/extract`, {
-      category: 'auto' // or pass actual category
+      category
     }, {
       timeout: 60000
     })
@@ -171,16 +181,48 @@ export const extractData = async (uploadId: string): Promise<ExtractDataResponse
   }
 }
 
-export const confirmExtraction = async (uploadId: string, corrections: Record<string, string>): Promise<ConfirmExtractionResponse> => {
+export const confirmExtraction = async (
+  uploadId: string, 
+  manualCorrections: Record<string, any>, 
+  category?: string,
+  date?: string,
+  time?: string
+): Promise<ConfirmExtractionResponse> => {
   try {
     const response = await apiClient.post<ConfirmExtractionResponse>(`/api/upload/${uploadId}/confirm`, {
-      manualCorrections: corrections
+      manualCorrections,
+      category,
+      date,
+      time
     })
 
     return response.data
   } catch (error) {
     console.error('Confirm extraction error:', error)
     throw new Error('Failed to confirm extraction')
+  }
+}
+
+export interface ManualAddRecordData {
+  category: string
+  date: string
+  time?: string
+  doctor?: string
+  hospital?: string
+  metrics: Record<string, any>
+  imagePath?: string
+  publicId?: string
+  fileName?: string
+  fileSize?: number
+}
+
+export const manualAddRecord = async (data: ManualAddRecordData): Promise<GetRecordResponse> => {
+  try {
+    const response = await apiClient.post<GetRecordResponse>('/api/upload/manual', data)
+    return response.data
+  } catch (error) {
+    console.error('Manual add record error:', error)
+    throw new Error('Failed to add record manually')
   }
 }
 
@@ -274,10 +316,10 @@ export const uploadFileWithProgress = async (
   }
 }
 
-export const getAnalyticsData = async (category: string, days: number = 30): Promise<any> => {
+export const getAnalyticsData = async (category: string, days: number = 30, _cb?: number): Promise<any> => {
   try {
     const response = await apiClient.get(`/api/analytics/metrics`, {
-      params: { category, days }
+      params: { category, days, _cb }
     })
     return response.data
   } catch (error) {
@@ -307,5 +349,6 @@ export default {
   deleteRecord,
   uploadFileWithProgress,
   getAnalyticsData,
-  getAnalyticsSummary
+  getAnalyticsSummary,
+  manualAddRecord
 }

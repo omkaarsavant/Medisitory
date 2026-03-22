@@ -17,25 +17,20 @@ export async function getMetricsData(req: Request, res: Response): Promise<void>
     }
 
     const daysInt = parseInt(days as string)
-    const endDate = new Date()
-    const startDate = new Date()
-    startDate.setDate(endDate.getDate() - daysInt)
+    const endDate = new Date(Date.now() + 24 * 60 * 60 * 1000) // +24h buffer for timezones
+    const startDate = new Date(endDate.getTime() - daysInt * 24 * 60 * 60 * 1000)
 
-    // Previous period for comparison
-    const prevStartDate = new Date()
-    prevStartDate.setDate(startDate.getDate() - daysInt)
-
-    const query: any = {
+    // Fetch all metrics for this category up to the end date
+    // This allows us to find a baseline even if it's outside the comparison window
+    const allMetrics = await ExtractedMetric.find({
       category,
-      measuredDate: { $gte: prevStartDate, $lte: endDate }
-    }
-
-    const allMetrics = await ExtractedMetric.find(query)
-      .sort({ measuredDate: 1 })
+      measuredDate: { $lte: endDate }
+    })
+      .sort({ measuredDate: 1 }) // Oldest first (for chronological charts)
       .lean()
 
     const currentPeriod = allMetrics.filter(m => m.measuredDate >= startDate)
-    const previousPeriod = allMetrics.filter(m => m.measuredDate < startDate)
+    const remainingMetrics = allMetrics.filter(m => m.measuredDate < startDate)
 
     // Group current metrics by metricName for timeseries
     const timeseries: Record<string, any[]> = {}
@@ -61,15 +56,28 @@ export async function getMetricsData(req: Request, res: Response): Promise<void>
     // Calculate comparisons
     const comparisons: Record<string, any> = {}
     Object.keys(timeseries).forEach(metricName => {
-      const currentAvg = currentPeriod
-        .filter(m => m.metricName === metricName)
-        .reduce((sum, m) => sum + m.value, 0) / 
-        (currentPeriod.filter(m => m.metricName === metricName).length || 1)
+      const metricMatches = currentPeriod.filter(m => m.metricName === metricName)
+      const currentAvg = metricMatches.reduce((sum, m) => sum + m.value, 0) / (metricMatches.length || 1)
       
-      const previousAvg = previousPeriod
-        .filter(m => m.metricName === metricName)
-        .reduce((sum, m) => sum + m.value, 0) / 
-        (previousPeriod.filter(m => m.metricName === metricName).length || 1)
+      // Calculate previous baseline
+      let previousAvg = 0
+      
+      // 1. Try to get data from the same-length period immediately preceding the current one
+      const prevStartDate = new Date(startDate.getTime() - daysInt * 24 * 60 * 60 * 1000)
+      const precedingWindowMetrics = remainingMetrics.filter(m => 
+        m.metricName === metricName && m.measuredDate >= prevStartDate
+      )
+      
+      if (precedingWindowMetrics.length > 0) {
+        previousAvg = precedingWindowMetrics.reduce((sum, m) => sum + m.value, 0) / precedingWindowMetrics.length
+      } else {
+        // 2. Fallback: Use the most recent single value available before the current period
+        // Since remainingMetrics is sorted 1 (Oldest first), we need the LAST one for that metricName
+        const latestBeforeWindow = [...remainingMetrics].reverse().find(m => m.metricName === metricName)
+        if (latestBeforeWindow) {
+          previousAvg = latestBeforeWindow.value
+        }
+      }
       
       const percentChange = previousAvg ? ((currentAvg - previousAvg) / previousAvg) * 100 : 0
       

@@ -91,12 +91,6 @@ export const useUploadFile = (
         body: formData,
         headers: {
           'Content-Type': 'multipart/form-data'
-        },
-        onUploadProgress: (progressEvent) => {
-          if (onProgress) {
-            const progress = Math.round((progressEvent.loaded / progressEvent.total) * 100)
-            onProgress(progress)
-          }
         }
       })
 
