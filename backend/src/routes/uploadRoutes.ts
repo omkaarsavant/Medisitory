@@ -7,7 +7,7 @@ import {
   getUploadPreview,
   deleteUpload
 } from '../controllers/uploadController'
-import { extractData, confirmExtraction, createManualRecord } from '../controllers/ocrController'
+import { extractData, confirmExtraction, createManualRecord, explainReport } from '../controllers/ocrController'
 
 // Configure multer for file uploads
 const storage = multer.memoryStorage()
@@ -41,5 +41,12 @@ router.post('/:id/confirm', confirmExtraction)
 
 // Manual Entry
 router.post('/manual', createManualRecord)
+
+// Know Your Report (Explain)
+router.post(
+  '/explain',
+  uploadMock.single('file'),
+  explainReport
+)
 
 export default router

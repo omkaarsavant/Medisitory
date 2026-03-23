@@ -1,9 +1,9 @@
 // === backend/src/controllers/ocrController.ts ===
 
 import { Request, Response } from 'express'
-import { extractTextFromMedicalFile } from '../services/ocrService'
+import { extractTextFromMedicalFile, extractTextFromBuffer } from '../services/ocrService'
 import { extractMedicalData, generatePreview, validateExtractedData } from '../services/dataExtractionService'
-import { extractMedicalDataWithAI, generateMedicalInsights } from '../services/aiService'
+import { extractMedicalDataWithAI, generateMedicalInsights, explainReportWithAI } from '../services/aiService'
 import MedicalRecord from '../models/MedicalRecord'
 import ExtractedMetric from '../models/ExtractedMetric'
 import { logger } from '../utils/logger'
@@ -21,12 +21,6 @@ import { parseNumericValue, getFieldInfo } from '../utils/metrics'
 
 /**
  * Extract data from medical record
- *
- * This endpoint performs OCR on a medical record and extracts
- * medical data for user review and confirmation.
- *
- * @param req Express request object
- * @param res Express response object
  */
 export async function extractData(req: Request, res: Response): Promise<void> {
   try {
@@ -266,9 +260,8 @@ export async function confirmExtraction(req: Request, res: Response): Promise<vo
       }
       
       // Update patient name if it's in the corrections (usually from the input field)
-      // We no longer save patientName to the MedicalRecord model as per user request
       if (finalFields.patientName) {
-        delete finalFields.patientName // Remove from medical metrics
+        delete finalFields.patientName 
       }
 
       const extractionResult = {
@@ -370,10 +363,10 @@ export async function createManualRecord(req: Request, res: Response): Promise<v
 
     const medicalRecord = new MedicalRecord({
       category: category.toLowerCase().replace(/ /g, '_'),
-      uploadDate: new Date(), // Automatic device/upload time
+      uploadDate: new Date(), 
       doctorName: doctor || '',
       hospitalName: hospital || '',
-      visitDate: visitTimestamp, // User provided visit time
+      visitDate: visitTimestamp, 
       displayData: metrics || {},
       status: 'Completed',
       fileName: fileName || 'Manual Entry',
@@ -410,6 +403,54 @@ export async function createManualRecord(req: Request, res: Response): Promise<v
     res.status(500).json({
       success: false,
       error: 'Failed to create manual record',
+      details: error.message
+    })
+  }
+}
+
+/**
+ * Explain medical report in simple terms
+ */
+export async function explainReport(req: Request, res: Response): Promise<void> {
+  try {
+    const file = req.file
+    
+    if (!file) {
+      res.status(400).json({ success: false, error: 'No report file provided' })
+      return
+    }
+
+    logger.info(`Explaining report: ${file.originalname} (${file.size} bytes)`)
+
+    // 1. Extract text from file buffer
+    const ocrResult = await extractTextFromBuffer(file.buffer, file.originalname)
+    
+    if (ocrResult.error) {
+      logger.warn(`OCR extraction error: ${ocrResult.error}`)
+    }
+
+    if (!ocrResult.processedText || ocrResult.processedText.trim().length === 0) {
+      res.status(422).json({
+        success: false,
+        error: 'No text could be extracted from this report. Please ensure the image is clear.',
+        errorCode: 'OCR_EMPTY_RESULT'
+      })
+      return
+    }
+
+    // 2. Use AI to explain in simple terms
+    const explanation = await explainReportWithAI(ocrResult.processedText)
+
+    res.json({
+      success: true,
+      data: explanation
+    })
+
+  } catch (error: any) {
+    logger.error('Error explaining report:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to analyze report',
       details: error.message
     })
   }

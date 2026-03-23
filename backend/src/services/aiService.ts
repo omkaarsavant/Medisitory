@@ -102,6 +102,7 @@ export async function extractMedicalDataWithAI(
     throw new Error(`AI Extraction failed: ${error.message}`)
   }
 }
+
 /**
  * Generate medical insights based on extracted data
  */
@@ -119,7 +120,7 @@ export async function generateMedicalInsights(
 
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite-preview' })
-    
+
     // Format fields for the prompt
     const metricsString = Object.entries(fields)
       .filter(([_, v]) => v !== null && v !== undefined)
@@ -161,9 +162,153 @@ export async function generateMedicalInsights(
 
   } catch (error: any) {
     logger.error('Failed to generate medical insights:', error)
-    return { 
-      findings: 'Automated analysis is currently unavailable.', 
-      notes: 'Please review your results with a medical professional.' 
+    return {
+      findings: 'Automated analysis is currently unavailable.',
+      notes: 'Please review your results with a medical professional.'
     }
+  }
+}
+
+/**
+ * Explain a medical report in simple terms for a layperson
+ */
+export async function explainReportWithAI(ocrText: string): Promise<any> {
+  if (!genAI) {
+    logger.warn('Gemini API key not found in environment variables')
+    throw new Error('AI analysis not configured')
+  }
+
+  try {
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite-preview' })
+
+    const prompt = `
+You are an AI Medical Report Analyzer designed for average people with no medical background.
+
+Analyze the following OCR text extracted from a medical report:
+"""
+${ocrText}
+"""
+
+TASK:
+Correct OCR typos (e.g. "o" for "0").
+1. Identify what kind of medical report this is (e.g., Blood Test, Blood Sugar Report, Cholesterol Test, Thyroid Test, Blood Pressure Report, Ultrasound, X-Ray, etc.).
+2. Extract the important medical tests mentioned in the report.
+3. For each test, determine: Test Name, Reported Value, Normal Range (if visible), and Status (Normal, Slightly Abnormal, or Abnormal).
+4. Explain what each test measures in 1 short sentence using very simple language.
+5. Write a clear health explanation for a person with no medical background.
+6. Identify the most important findings from the report.
+7. Mention possible health risks suggested by abnormal values (clearly state NOT a diagnosis).
+8. Suggest simple lifestyle improvements (diet, exercise, hydration, sleep) that are SPECIFICALLY tailored to the findings in this report. For example, if indicators show high sugar, focus on diabetic-friendly diet tips; if cholesterol is high, focus on heart health. Ensure the tips are practical and non-medical. Do NOT give medications or prescriptions.
+9. Mention trends (improving, worsening, stable) if relevant.
+
+FORMAT YOUR RESPONSE AS VALID JSON ONLY:
+{
+  "reportType": "Friendly Name of Report Type",
+  "summary": "1-2 sentence high-level summary",
+  "tests": [
+    {
+      "name": "Test Name",
+      "value": "Value",
+      "range": "Normal Range",
+      "status": "Normal | Slightly Abnormal | Abnormal",
+      "simpleExplanation": "Simple 1-sentence explanation"
+    }
+  ],
+  "importantFindings": ["Finding 1", "Finding 2"],
+  "healthExplanation": "Detailed but simple health explanation",
+  "lifestyleSuggestions": {
+    "diet": ["Suggestion 1", "Suggestion 2"],
+    "exercise": ["Suggestion 1"],
+    "hydration": ["Suggestion 1"],
+    "sleep": ["Suggestion 1"]
+  },
+  "trends": "Optional trend note"
+}
+`
+
+    const result = await model.generateContent(prompt)
+    const response = await result.response
+    let text = response.text()
+
+    // Clean JSON if needed
+    text = text.replace(/```json/g, '').replace(/```/g, '').trim()
+
+    const jsonMatch = text.match(/\{[\s\S]*\}/)
+    if (!jsonMatch) {
+      throw new Error('AI returned an invalid response format')
+    }
+
+    return JSON.parse(jsonMatch[0])
+
+  } catch (error: any) {
+    logger.error('Failed to explain report with AI:', error)
+    throw new Error(`AI Analysis failed: ${error.message}`)
+  }
+}
+
+/**
+ * Calculate a holistic health score (0-100) based on latest metrics
+ */
+export async function calculateHealthScore(metrics: any[]): Promise<{ score: number; analysis: string }> {
+  if (!genAI) {
+    logger.warn('Gemini API key not found in environment variables')
+    return { score: 0, analysis: 'AI score unavailable' }
+  }
+
+  if (!metrics || metrics.length === 0) {
+    return { score: 100, analysis: 'No health data recorded yet. Your score starts at 100.' }
+  }
+
+  try {
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite-preview' })
+
+    const metricsString = metrics
+      .map(m => `${m.metricName}: ${m.value} ${m.unit} (Status: ${m.status})`)
+      .join('\n')
+
+    const prompt = `
+Analyze the following latest healthcare metrics for a patient and provide a holistic health score:
+
+METRICS:
+${metricsString}
+
+TASK:
+1. Calculate a single "Health Score" from 0 to 100.
+   - 100 represents optimal health.
+   - Deduct points for "high", "low", or "abnormal" statuses based on their clinical significance.
+   - If multiple metrics for the same thing exist, prioritize the most recent.
+2. Provide a 1-sentence analysis of the overall health status.
+
+INSTRUCTIONS:
+- Return ONLY a valid JSON object.
+- Do NOT include any markdown formatting.
+
+FORMAT:
+{
+  "score": 85,
+  "analysis": "Your overall health is good, but your fasting sugar is slightly high."
+}
+`
+
+    const result = await model.generateContent(prompt)
+    const response = await result.response
+    let text = response.text()
+
+    // Clean JSON if needed
+    text = text.replace(/```json/g, '').replace(/```/g, '').trim()
+    const jsonMatch = text.match(/\{[\s\S]*\}/)
+    if (!jsonMatch) {
+      throw new Error('AI returned an invalid response format')
+    }
+
+    const data = JSON.parse(jsonMatch[0])
+    return {
+      score: data.score !== undefined ? Number(data.score) : 0,
+      analysis: data.analysis || 'Analysis complete'
+    }
+
+  } catch (error: any) {
+    logger.error('Failed to calculate health score:', error)
+    return { score: 0, analysis: 'Score calculation failed' }
   }
 }

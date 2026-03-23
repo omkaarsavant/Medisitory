@@ -92,6 +92,27 @@ export interface ConfirmExtractionResponse {
   success: boolean
 }
 
+export interface ReportExplanation {
+  reportType: string
+  summary: string
+  tests: {
+    name: string
+    value: string
+    range: string
+    status: 'Normal' | 'Slightly Abnormal' | 'Abnormal'
+    simpleExplanation: string
+  }[]
+  importantFindings: string[]
+  healthExplanation: string
+  lifestyleSuggestions: {
+    diet: string[]
+    exercise: string[]
+    hydration: string[]
+    sleep: string[]
+  }
+  trends?: string
+}
+
 export interface MedicalRecord {
   id: string
   _id?: string
@@ -141,6 +162,19 @@ export interface UpdateRecordResponse {
 
 export interface DeleteRecordResponse {
   success: boolean
+}
+
+export interface DashboardSummary {
+  healthScore: number
+  abnormalCount: number
+  abnormalMetricNames: string[]
+  totalMetricsCount: number
+  totalReadingsCount: number
+}
+
+export interface GetDashboardSummaryResponse {
+  success: boolean
+  data: DashboardSummary
 }
 
 // API functions
@@ -223,6 +257,28 @@ export const manualAddRecord = async (data: ManualAddRecordData): Promise<GetRec
   } catch (error) {
     console.error('Manual add record error:', error)
     throw new Error('Failed to add record manually')
+  }
+}
+
+/**
+ * Explain a medical report in simple terms
+ */
+export const explainReport = async (file: File): Promise<ReportExplanation> => {
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    const response = await apiClient.post<{ success: boolean; data: ReportExplanation }>('/api/upload/explain', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      timeout: 60000
+    })
+    
+    return response.data.data
+  } catch (error) {
+    console.error('Explain report error:', error)
+    throw new Error('Failed to analyze report. Please try again with a clearer image.')
   }
 }
 
@@ -338,6 +394,16 @@ export const getAnalyticsSummary = async (): Promise<any> => {
   }
 }
 
+export const getDashboardSummary = async (): Promise<GetDashboardSummaryResponse> => {
+  try {
+    const response = await apiClient.get<GetDashboardSummaryResponse>(`/api/analytics/dashboard-summary`)
+    return response.data
+  } catch (error) {
+    console.error('Get dashboard summary error:', error)
+    throw new Error('Failed to fetch dashboard summary')
+  }
+}
+
 // Export all functions for easy import
 export default {
   uploadFile,
@@ -350,5 +416,7 @@ export default {
   uploadFileWithProgress,
   getAnalyticsData,
   getAnalyticsSummary,
-  manualAddRecord
+  getDashboardSummary,
+  manualAddRecord,
+  explainReport
 }

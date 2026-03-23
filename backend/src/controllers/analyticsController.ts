@@ -3,6 +3,7 @@
 import { Request, Response } from 'express'
 import { ExtractedMetric } from '../models/ExtractedMetric'
 import { logger } from '../utils/logger'
+import { calculateHealthScore } from '../services/aiService'
 
 /**
  * Get enhanced analytics data for health metrics
@@ -129,6 +130,62 @@ export async function getSummary(req: Request, res: Response): Promise<void> {
     })
   } catch (error: any) {
     logger.error('Error fetching metrics summary:', error)
+    res.status(500).json({ success: false, error: 'Internal server error' })
+  }
+}
+
+/**
+ * Get holistic dashboard summary (Health Score and Abnormal Count)
+ */
+export async function getDashboardSummary(req: Request, res: Response): Promise<void> {
+  try {
+    // 1. Get total metrics count across all unique types (latest only)
+    const latestMetrics = await ExtractedMetric.aggregate([
+      { $sort: { measuredDate: -1 } },
+      { $group: {
+        _id: '$metricName',
+        value: { $first: '$value' },
+        unit: { $first: '$unit' },
+        status: { $first: '$status' },
+        measuredDate: { $first: '$measuredDate' }
+      }},
+      { $project: {
+        _id: 0,
+        metricName: '$_id',
+        value: 1,
+        unit: 1,
+        status: 1,
+        measuredDate: 1
+      }}
+    ])
+
+    // 2. Identify abnormal metrics from the latest set
+    const abnormalMetrics = latestMetrics.filter(m => 
+      ['high', 'low', 'abnormal'].includes(m.status)
+    )
+    
+    const abnormalCount = abnormalMetrics.length
+    const abnormalMetricNames = abnormalMetrics.map(m => m.metricName)
+
+    // 3. Get total readings count for context (optional, but keep totalRecords if needed)
+    const totalReadingsCount = await ExtractedMetric.countDocuments()
+
+    // 4. Calculate Health Score via AI
+    const healthData = await calculateHealthScore(latestMetrics)
+
+    res.json({
+      success: true,
+      data: {
+        healthScore: healthData.score,
+        healthAnalysis: healthData.analysis,
+        abnormalCount,
+        abnormalMetricNames,
+        totalMetricsCount: latestMetrics.length,
+        totalReadingsCount
+      }
+    })
+  } catch (error: any) {
+    logger.error('Error fetching dashboard summary:', error)
     res.status(500).json({ success: false, error: 'Internal server error' })
   }
 }

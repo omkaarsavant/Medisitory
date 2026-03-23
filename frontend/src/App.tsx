@@ -8,6 +8,7 @@ import Records from './pages/Records'
 import RecordDetails from './pages/RecordDetails'
 import Upload from './pages/Upload'
 import Analytics from './pages/Analytics'
+import KnowYourReport from './pages/KnowYourReport'
 import NotFound from './pages/NotFound'
 
 const App: React.FC = () => {
@@ -19,6 +20,7 @@ const App: React.FC = () => {
         <Route path='records/:id' element={<RecordDetails />} />
         <Route path='upload' element={<Upload />} />
         <Route path='analytics' element={<Analytics />} />
+        <Route path='know-your-report' element={<KnowYourReport />} />
         <Route path='*' element={<NotFound />} />
       </Route>
     </Routes>

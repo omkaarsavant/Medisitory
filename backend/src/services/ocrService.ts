@@ -174,6 +174,68 @@ export function isPDF(url: string): boolean {
 }
 
 /**
+ * Extract text from buffer using Tesseract
+ */
+export async function extractTextFromBuffer(
+  buffer: Buffer,
+  fileName: string = 'internal_file'
+): Promise<{
+  text: string
+  confidence: number
+  language: string
+  rawText: string
+  processedText: string
+  error?: string
+}> {
+  try {
+    logger.info(`Starting OCR extraction from buffer: ${fileName}`)
+
+    // Create worker for OCR
+    const worker = await Tesseract.createWorker('eng', 1, {
+      logger: (m) => {
+        if (m.status === 'recognizing text') {
+          logger.debug(`OCR progress: ${m.progress * 100}%`)
+        }
+      }
+    })
+
+    // Perform OCR
+    const { data } = await worker.recognize(buffer)
+
+    // Clean up
+    await worker.terminate()
+
+    // Calculate confidence
+    const confidence = data.confidence || 0
+
+    // Process text
+    const rawText = data.text.trim()
+    const processedText = cleanOCRText(rawText)
+
+    logger.info(`OCR extraction successful: ${confidence.toFixed(2)} confidence`)
+
+    return {
+      text: processedText,
+      confidence: confidence / 100, // Convert to 0-1 range
+      language: 'eng',
+      rawText,
+      processedText
+    }
+
+  } catch (error: any) {
+    logger.error('OCR buffer extraction failed:', error)
+    return {
+      text: '',
+      confidence: 0,
+      language: 'eng',
+      rawText: '',
+      processedText: '',
+      error: error.message || 'Unknown OCR error'
+    }
+  }
+}
+
+/**
  * Extract text from image or PDF
  */
 export async function extractTextFromMedicalFile(

@@ -1,6 +1,8 @@
 // === frontend/src/pages/Analytics.tsx ===
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
 import { 
   LineChart, Line, AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
@@ -25,6 +27,8 @@ const Analytics: React.FC = () => {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [exporting, setExporting] = useState(false)
+  const contentRef = useRef<HTMLDivElement>(null)
 
   const { records } = useRecordStore()
 
@@ -54,6 +58,60 @@ const Analytics: React.FC = () => {
 
     fetchData()
   }, [activeTab, subCategory, timeRange, records])
+
+  const handleExportPDF = async () => {
+    if (!contentRef.current) return
+    setExporting(true)
+    try {
+      const canvas = await html2canvas(contentRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#f9fafb',
+        logging: false
+      })
+      const imgData = canvas.toDataURL('image/jpeg', 0.92)
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+      const pageW = pdf.internal.pageSize.getWidth()
+      const pageH = pdf.internal.pageSize.getHeight()
+
+      // Header
+      pdf.setFillColor(37, 99, 235)
+      pdf.rect(0, 0, pageW, 20, 'F')
+      pdf.setTextColor(255, 255, 255)
+      pdf.setFontSize(14)
+      pdf.setFont('helvetica', 'bold')
+      const tabLabel = activeTab === 'blood_sugar' ? 'Blood Sugar' : activeTab === 'blood_pressure' ? 'Blood Pressure' : (subCategory.charAt(0).toUpperCase() + subCategory.slice(1))
+      pdf.text(`Health Analytics — ${tabLabel} (${timeRange} Days)`, 10, 13)
+      pdf.setFontSize(8)
+      pdf.setFont('helvetica', 'normal')
+      pdf.text('MedVault — Generated ' + new Date().toLocaleString('en-GB'), pageW - 10, 13, { align: 'right' })
+
+      // Charts image below header
+      const headerH = 22
+      const availH = pageH - headerH - 5
+      const imgAspect = canvas.height / canvas.width
+      const imgW = pageW - 10
+      const imgH = Math.min(imgW * imgAspect, availH)
+      pdf.addImage(imgData, 'JPEG', 5, headerH, imgW, imgH)
+
+      // If image is taller than one page, add additional pages
+      if (imgW * imgAspect > availH) {
+        let yOffset = availH
+        const remainingH = imgW * imgAspect - availH
+        let pages = Math.ceil(remainingH / (pageH - 5))
+        for (let i = 0; i < pages; i++) {
+          pdf.addPage()
+          pdf.addImage(imgData, 'JPEG', 5, -(headerH + yOffset), imgW, imgW * imgAspect)
+          yOffset += pageH - 5
+        }
+      }
+
+      const fileName = `analytics_${tabLabel.toLowerCase().replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.pdf`
+      pdf.save(fileName)
+    } finally {
+      setExporting(false)
+    }
+  }
 
   const tabs = [
     { id: 'blood_sugar', label: 'Sugar', icon: Droplets, color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -432,24 +490,33 @@ const Analytics: React.FC = () => {
         )}
 
         {/* Analytics Content */}
-        {loading ? (
-          <div className="flex justify-center items-center h-96">
-            <LoadingSpinner />
-          </div>
-        ) : error ? (
-          <ErrorMessage message={error} />
-        ) : (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {activeTab === 'blood_sugar' && renderSugarAnalytics()}
-            {activeTab === 'blood_pressure' && renderBloodPressureAnalytics()}
-            {activeTab === 'other' && renderOtherAnalytics(subCategory)}
-          </div>
-        )}
+        <div ref={contentRef}>
+          {loading ? (
+            <div className="flex justify-center items-center h-96">
+              <LoadingSpinner />
+            </div>
+          ) : error ? (
+            <ErrorMessage message={error} />
+          ) : (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+              {activeTab === 'blood_sugar' && renderSugarAnalytics()}
+              {activeTab === 'blood_pressure' && renderBloodPressureAnalytics()}
+              {activeTab === 'other' && renderOtherAnalytics(subCategory)}
+            </div>
+          )}
+        </div>
 
         {/* Export Footer */}
         <div className="mt-12 flex justify-center">
-          <Button variant="outline" icon={<Download size={16} />} className="bg-white hover:bg-gray-50 transition-colors">
-            Export Comprehensive Report (PDF)
+          <Button
+            variant="outline"
+            icon={<Download size={16} />}
+            className="bg-white hover:bg-gray-50 transition-colors"
+            onClick={handleExportPDF}
+            loading={exporting}
+            disabled={loading || !!error}
+          >
+            {exporting ? 'Exporting…' : 'Export Visualizations (PDF)'}
           </Button>
         </div>
       </div>

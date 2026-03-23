@@ -11,11 +11,11 @@ interface CardProps {
 }
 
 export const Card: React.FC<CardProps> = ({ children, className = '', variant = 'default', onClick }) => {
-  const baseClasses = 'bg-white rounded-lg border border-gray-200 shadow-sm'
+  const baseClasses = 'rounded-lg shadow-sm'
   const variantClasses = {
-    default: 'bg-white border-gray-200',
-    primary: 'bg-blue-50 border-blue-200',
-    secondary: 'bg-gray-50 border-gray-200'
+    default: 'bg-white border border-gray-200',
+    primary: 'bg-blue-50 border border-blue-200',
+    secondary: 'bg-gray-50 border border-gray-200'
   }
 
   return (

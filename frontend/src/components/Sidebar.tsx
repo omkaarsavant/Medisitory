@@ -43,6 +43,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       exact: false
     },
     {
+      name: 'Know Your Report',
+      path: '/know-your-report',
+      icon: Search, // Using Search for now, or I can import another one
+      exact: false
+    },
+    {
       name: 'Calendar',
       path: '/calendar',
       icon: Calendar,

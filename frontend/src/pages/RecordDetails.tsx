@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import jsPDF from 'jspdf'
 import { useParams, useNavigate } from 'react-router-dom'
 import { 
   Calendar, 
@@ -30,6 +31,135 @@ const RecordDetails: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
 
   const isPDF = record?.fileName?.toLowerCase().endsWith('.pdf') || record?.imagePath?.toLowerCase().includes('.pdf');
+  const [downloading, setDownloading] = useState(false)
+
+  const handleDownloadPDF = async () => {
+    if (!record) return
+    setDownloading(true)
+    try {
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+      const pageW = doc.internal.pageSize.getWidth()
+      const margin = 15
+      let y = margin
+
+      // ── Header ──
+      doc.setFillColor(37, 99, 235)
+      doc.rect(0, 0, pageW, 28, 'F')
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(18)
+      doc.setFont('helvetica', 'bold')
+      const catMap: Record<string, string> = { blood_sugar: 'Blood Sugar', bp: 'Blood Pressure', thyroid: 'Thyroid', cholesterol: 'Cholesterol', opd: 'OPD', imaging: 'Imaging', lab: 'Lab' }
+      const catLabel = catMap[(record.category || 'custom').toLowerCase()] || (record.category || 'Medical').replace(/_/g, ' ')
+      doc.text(`${catLabel} Report`, margin, 18)
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'normal')
+      doc.text('MedVault — Generated ' + new Date().toLocaleString('en-GB'), margin, 24)
+      y = 38
+
+      // ── Record Info ──
+      doc.setTextColor(30, 30, 30)
+      doc.setFontSize(11)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Record Information', margin, y)
+      y += 6
+      doc.setDrawColor(220, 220, 220)
+      doc.line(margin, y, pageW - margin, y)
+      y += 5
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(10)
+      const infoRows = [
+        ['Category', catLabel],
+        ['Visit Date', (() => { const d = new Date(record.visitDate || record.uploadDate || record.createdAt); return d.toLocaleDateString('en-GB') })()],
+        ['Doctor', record.doctorName || record.doctor || '—'],
+        ['Hospital', record.hospitalName || record.hospital || '—'],
+        ['Status', record.status || '—'],
+        ['Uploaded', new Date(record.uploadDate || record.createdAt).toLocaleString('en-GB')],
+      ]
+      infoRows.forEach(([label, val]) => {
+        doc.setFont('helvetica', 'bold'); doc.text(label + ':', margin, y)
+        doc.setFont('helvetica', 'normal'); doc.text(String(val), margin + 42, y)
+        y += 6
+      })
+      y += 4
+
+      // ── Extracted Values ──
+      const displayFields = record.manualData || record.extractedData || {}
+      const fields = (record as any).displayData || {}
+      const allFields = Object.keys(fields).length ? fields : displayFields
+      if (Object.keys(allFields).length > 0) {
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(11)
+        doc.text('Extracted Values', margin, y); y += 6
+        doc.line(margin, y, pageW - margin, y); y += 5
+        doc.setFontSize(10)
+        Object.entries(allFields).forEach(([key, val]) => {
+          if (y > 265) { doc.addPage(); y = margin }
+          doc.setFont('helvetica', 'bold'); doc.text(key.replace(/_/g, ' ') + ':', margin, y)
+          doc.setFont('helvetica', 'normal'); doc.text(String(val), margin + 60, y)
+          y += 6
+        })
+        y += 4
+      }
+
+      // ── AI Insights ──
+      if (record.aiFindings || record.aiNotes) {
+        if (y > 240) { doc.addPage(); y = margin }
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(11)
+        doc.text('AI Insights', margin, y); y += 6
+        doc.line(margin, y, pageW - margin, y); y += 5
+        doc.setFontSize(10)
+        if (record.aiFindings) {
+          doc.setFont('helvetica', 'bold'); doc.text('Primary Findings:', margin, y); y += 5
+          doc.setFont('helvetica', 'normal')
+          const findingLines = doc.splitTextToSize(record.aiFindings, pageW - margin * 2)
+          findingLines.forEach((line: string) => { if (y > 270) { doc.addPage(); y = margin }; doc.text(line, margin, y); y += 5 })
+          y += 3
+        }
+        if (record.aiNotes) {
+          if (y > 240) { doc.addPage(); y = margin }
+          doc.setFont('helvetica', 'bold'); doc.text('Recommended Steps:', margin, y); y += 5
+          doc.setFont('helvetica', 'normal')
+          const noteLines = doc.splitTextToSize(record.aiNotes, pageW - margin * 2)
+          noteLines.forEach((line: string) => { if (y > 270) { doc.addPage(); y = margin }; doc.text(line, margin, y); y += 5 })
+          y += 3
+        }
+        // Disclaimer
+        doc.setFontSize(7); doc.setTextColor(150, 150, 150)
+        doc.text('* AI-generated insights are for informational purposes only. Consult a qualified medical professional.', margin, y)
+        doc.setTextColor(30, 30, 30)
+        y += 8
+      }
+
+      // ── Source Document (image only) ──
+      if (record.imagePath && !isPDF) {
+        try {
+          const img = new Image()
+          img.crossOrigin = 'anonymous'
+          await new Promise<void>((resolve, reject) => {
+            img.onload = () => resolve()
+            img.onerror = () => reject()
+            img.src = record.imagePath!
+          })
+          const canvas = document.createElement('canvas')
+          canvas.width = img.naturalWidth; canvas.height = img.naturalHeight
+          canvas.getContext('2d')!.drawImage(img, 0, 0)
+          const imgData = canvas.toDataURL('image/jpeg', 0.85)
+          const maxW = pageW - margin * 2
+          const ratio = img.naturalHeight / img.naturalWidth
+          const imgH = Math.min(maxW * ratio, 120)
+          if (y + imgH + 10 > 280) { doc.addPage(); y = margin }
+          doc.setFont('helvetica', 'bold'); doc.setFontSize(11)
+          doc.text('Source Document', margin, y); y += 6
+          doc.line(margin, y, pageW - margin, y); y += 5
+          doc.addImage(imgData, 'JPEG', margin, y, maxW, imgH)
+        } catch { /* skip if image fails to load */ }
+      }
+
+      const safeName = (catLabel + '_report').replace(/\s+/g, '_').toLowerCase()
+      doc.save(`${safeName}_${new Date().toISOString().slice(0,10)}.pdf`)
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   const handleDelete = async () => {
     if (!id) return
@@ -150,8 +280,8 @@ const RecordDetails: React.FC = () => {
             <Badge color={getStatusColor(record.status)}>
               {record.status}
             </Badge>
-            <Button variant="outline" icon={<Download className="w-4 h-4" />}>
-              Download
+            <Button variant="outline" icon={<Download className="w-4 h-4" />} onClick={handleDownloadPDF} loading={downloading}>
+              {downloading ? 'Generating…' : 'Download PDF'}
             </Button>
             <Button variant="outline" icon={<Printer className="w-4 h-4" />}>
               Print
