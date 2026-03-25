@@ -7,11 +7,12 @@ import { Button } from './Button'
 interface ErrorMessageProps {
   message: string
   onRetry?: () => void
+  className?: string
 }
 
-export const ErrorMessage: React.FC<ErrorMessageProps> = ({ message, onRetry }) => {
+export const ErrorMessage: React.FC<ErrorMessageProps> = ({ message, onRetry, className }) => {
   return (
-    <div className="flex flex-col items-center justify-center space-y-6 p-8 bg-white rounded-lg border border-red-200">
+    <div className={`flex flex-col items-center justify-center space-y-6 p-8 bg-white rounded-lg border border-red-200 ${className || ''}`}>
       <div className="text-6xl text-red-200">
         <AlertTriangle />
       </div>

@@ -33,7 +33,14 @@ import {
   Clock
 } from 'lucide-react'
 
-const Upload: React.FC = () => {
+interface UploadProps {
+  embedded?: boolean
+  onSuccess?: () => void
+  onCancel?: () => void
+  prefilledDoctor?: string
+}
+
+const Upload: React.FC<UploadProps> = ({ embedded = false, onSuccess, onCancel, prefilledDoctor = '' }) => {
   const navigate = useNavigate()
   const { addRecord } = useRecordStore()
   
@@ -45,20 +52,23 @@ const Upload: React.FC = () => {
 
   // Upload State
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [prescriptionFile, setPrescriptionFile] = useState<File | null>(null)
   const [category, setCategory] = useState<string>('Auto-Detect')
   const [progress, setProgress] = useState<number>(0)
   const [uploadId, setUploadId] = useState<string | null>(null)
   const [extractedData, setExtractedData] = useState<any | null>(null)
   const [showRawText, setShowRawText] = useState<boolean>(false)
   const [manualFile, setManualFile] = useState<File | null>(null)
+  const [manualPrescriptionFile, setManualPrescriptionFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const prescriptionInputRef = useRef<HTMLInputElement>(null)
 
   // Manual State
   const [manualData, setManualData] = useState({
     date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0],
     time: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' }),
     isTimeModified: false,
-    doctor: '',
+    doctor: prefilledDoctor || '',
     hospital: '',
     metrics: {} as Record<string, any>
   })
@@ -139,7 +149,7 @@ const Upload: React.FC = () => {
     try {
       // 1. Upload file
       const backendCat = category === 'Auto-Detect' ? '' : getBackendCategory(category)
-      const uploadResp = await uploadFileWithProgress(selectedFile, backendCat, (p) => setProgress(p))
+      const uploadResp = await uploadFileWithProgress(selectedFile, backendCat, (p) => setProgress(p), undefined, prescriptionFile || undefined)
       setUploadId(uploadResp.data.uploadId)
       setUploadStatus('processing')
 
@@ -238,16 +248,17 @@ const Upload: React.FC = () => {
 
       // 1. Upload file if exists
       let fileData = {}
-      if (manualFile) {
+      if (manualFile || manualPrescriptionFile) {
         try {
           // Use skipRecord=true to avoid duplicate MedicalRecord creation
-          const uploadResp = await uploadFile(manualFile, category, true)
+          const uploadResp = await uploadFile(manualFile, category, true, manualPrescriptionFile || undefined)
           if (uploadResp.success && uploadResp.data) {
             fileData = {
               imagePath: uploadResp.data.fileUrl,
               publicId: uploadResp.data.publicId,
               fileName: uploadResp.data.fileName,
-              fileSize: uploadResp.data.fileSize
+              fileSize: uploadResp.data.fileSize,
+              prescriptionImageUrl: uploadResp.data.prescriptionImageUrl
             }
           }
         } catch (uploadErr) {
@@ -296,14 +307,17 @@ const Upload: React.FC = () => {
   const resetAll = () => {
     setUploadStatus('ready')
     setSelectedFile(null)
+    setPrescriptionFile(null)
     setCategory(mode === 'upload' ? 'Auto-Detect' : '')
     setExtractedData(null)
     setError(null)
+    setManualFile(null)
+    setManualPrescriptionFile(null)
     setManualData({
       date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0],
       time: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' }),
       isTimeModified: false,
-      doctor: '',
+      doctor: prefilledDoctor || '',
       hospital: '',
       metrics: {}
     })
@@ -311,29 +325,28 @@ const Upload: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12 pb-32 min-h-screen animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 space-y-4 md:space-y-0 text-left">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 md:mb-12 space-y-6 lg:space-y-0 text-left">
         <div>
-          <h1 className="text-4xl font-black text-gray-900 uppercase tracking-tighter">Add Medical Report</h1>
+          <h1 className="text-3xl md:text-4xl font-black text-gray-900 uppercase tracking-tighter">Add Medical Report</h1>
           <div className="flex flex-wrap items-center gap-2 mt-3">
-            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest italic mr-2 border-r border-gray-100 pr-3">Expand your medical history</p>
+            <p className="text-xs md:text-sm font-bold text-gray-400 uppercase tracking-widest italic mr-2 border-r border-gray-100 pr-3">Expand your medical history</p>
             {['Blood Sugar', 'Blood Pressure', 'Thyroid', 'Cholesterol', 'OPD', 'Imaging'].map(tag => (
-              <Badge key={tag} color="blue" className="text-[8px] font-black italic bg-blue-50/50 text-blue-600 border-none px-2 py-0.5">{tag}</Badge>
+              <Badge key={tag} color="blue" className="text-[10px] md:text-[8px] font-black italic bg-blue-50/50 text-blue-600 border-none px-2 py-0.5">{tag}</Badge>
             ))}
           </div>
         </div>
-        
         {/* Mode Toggle */}
-        <div className="flex p-1 bg-gray-100 rounded-2xl md:w-auto">
+        <div className="flex p-1 bg-gray-100 rounded-2xl w-full lg:w-auto overflow-x-auto">
           <button 
             onClick={() => handleModeToggle('upload')}
-            className={`flex items-center space-x-2 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${mode === 'upload' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+            className={`flex-1 lg:flex-none flex items-center justify-center space-x-2 px-4 md:px-6 py-3 md:py-2 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${mode === 'upload' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
           >
             <UploadIcon className="w-4 h-4" />
             <span>Upload File</span>
           </button>
           <button 
             onClick={() => handleModeToggle('manual')}
-            className={`flex items-center space-x-2 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${mode === 'manual' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+            className={`flex-1 lg:flex-none flex items-center justify-center space-x-2 px-4 md:px-6 py-3 md:py-2 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${mode === 'manual' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
           >
             <PlusCircle className="w-4 h-4" />
             <span>Manual Entry</span>
@@ -377,48 +390,80 @@ const Upload: React.FC = () => {
 
         {/* mode: UPLOAD */}
         {mode === 'upload' && uploadStatus === 'ready' && (
-          <Card 
-            className={`p-10 border-4 border-dashed rounded-[2.5rem] text-center cursor-pointer transition-all duration-500 ${selectedFile ? 'border-green-400 bg-green-50 shadow-inner' : 'border-gray-100 hover:border-blue-400 bg-white shadow-2xl hover:shadow-blue-100/50'}`}
-            onClick={handleBrowseClick}
-          >
-            {!selectedFile ? (
-              <div className="space-y-6">
-                <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mx-auto text-blue-500 group-hover:bg-blue-100 transition-colors">
-                  <UploadIcon className="w-10 h-10 animate-pulse" />
+          <div className="space-y-4">
+            <Card 
+              className={`p-10 border-4 border-dashed rounded-[2.5rem] text-center cursor-pointer transition-all duration-500 ${selectedFile ? 'border-green-400 bg-green-50 shadow-inner' : 'border-gray-100 hover:border-blue-400 bg-white shadow-2xl hover:shadow-blue-100/50'}`}
+              onClick={handleBrowseClick}
+            >
+              {!selectedFile ? (
+                <div className="space-y-6">
+                  <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mx-auto text-blue-500 group-hover:bg-blue-100 transition-colors">
+                    <UploadIcon className="w-10 h-10 animate-pulse" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">Drop your reports here</h3>
+                    <p className="text-sm font-bold text-gray-400 uppercase italic mt-2">PDF, JPG, PNG up to 20MB</p>
+                  </div>
+                  <Button variant="outline" className="px-8 py-3 rounded-full border-2 border-blue-500 text-blue-600 font-black hover:bg-blue-50">
+                    Select File
+                  </Button>
                 </div>
-                <div>
-                  <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">Drop your reports here</h3>
-                  <p className="text-sm font-bold text-gray-400 uppercase italic mt-2">PDF, JPG, PNG up to 20MB</p>
+              ) : (
+                <div className="flex flex-col items-center space-y-6">
+                  <div className="w-24 h-24 bg-green-100 rounded-3xl flex items-center justify-center mx-auto text-green-600 shadow-lg">
+                    <FileText className="w-12 h-12" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xl font-black text-gray-900 truncate max-w-sm uppercase tracking-tighter">{selectedFile.name}</p>
+                    <Badge color="green" className="mt-2 px-4 py-1 font-black italic">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</Badge>
+                  </div>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setSelectedFile(null); }}
+                    className="text-xs font-black text-red-500 hover:text-red-600 uppercase tracking-widest hover:underline"
+                  >
+                    Change File
+                  </button>
                 </div>
-                <Button variant="outline" className="px-8 py-3 rounded-full border-2 border-blue-500 text-blue-600 font-black hover:bg-blue-50">
-                  Select File
-                </Button>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center space-y-6">
-                <div className="w-24 h-24 bg-green-100 rounded-3xl flex items-center justify-center mx-auto text-green-600 shadow-lg">
-                  <FileText className="w-12 h-12" />
+              )}
+              <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept=".pdf,.png,.jpg,.jpeg" />
+            </Card>
+
+            <Card 
+              className={`p-6 border-2 border-dashed rounded-[2rem] text-center cursor-pointer transition-all duration-300 ${prescriptionFile ? 'border-blue-400 bg-blue-50' : 'border-gray-100 hover:border-gray-300 bg-white'}`}
+              onClick={() => prescriptionInputRef.current?.click()}
+            >
+              {!prescriptionFile ? (
+                <div className="flex items-center justify-center space-x-3 text-gray-400 group">
+                  <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
+                    <PlusCircle className="w-5 h-5" />
+                  </div>
+                  <span className="font-bold text-sm uppercase tracking-widest group-hover:text-blue-500 transition-colors">Attach Prescription Image (Optional)</span>
                 </div>
-                <div className="text-center">
-                  <p className="text-xl font-black text-gray-900 truncate max-w-sm uppercase tracking-tighter">{selectedFile.name}</p>
-                  <Badge color="green" className="mt-2 px-4 py-1 font-black italic">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</Badge>
+              ) : (
+                <div className="flex items-center justify-between px-4">
+                  <div className="flex items-center space-x-3 text-blue-600">
+                    <CheckCircle2 className="w-5 h-5" />
+                    <span className="font-bold text-sm truncate max-w-[200px] sm:max-w-xs">{prescriptionFile.name}</span>
+                  </div>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setPrescriptionFile(null); }}
+                    className="text-xs font-black text-red-500 hover:text-red-600 uppercase tracking-widest hover:underline px-4 py-2"
+                  >
+                    Remove
+                  </button>
                 </div>
-                <button 
-                  onClick={(e) => { e.stopPropagation(); setSelectedFile(null); }}
-                  className="text-xs font-black text-red-500 hover:text-red-600 uppercase tracking-widest hover:underline"
-                >
-                  Change File
-                </button>
-              </div>
-            )}
-            <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept=".pdf,.png,.jpg,.jpeg" />
-          </Card>
+              )}
+              <input type="file" ref={prescriptionInputRef} onChange={(e) => {
+                if (e.target.files?.[0]) setPrescriptionFile(e.target.files[0])
+              }} className="hidden" accept=".png,.jpg,.jpeg" />
+            </Card>
+          </div>
         )}
 
         {/* mode: MANUAL */}
         {mode === 'manual' && uploadStatus === 'ready' && category && (
-          <Card className="p-8 space-y-8 animate-in slide-in-from-bottom-4 duration-500 shadow-2xl">
-            <div className="grid md:grid-cols-3 gap-8 pb-8 border-b border-gray-100">
+          <Card className="p-4 md:p-8 space-y-8 animate-in slide-in-from-bottom-4 duration-500 shadow-2xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 pb-8 border-b border-gray-100">
               <DatePicker 
                 label="VISIT DATE" 
                 value={manualData.date} 
@@ -481,6 +526,28 @@ const Upload: React.FC = () => {
                     >
                       <span className="truncate">{manualFile ? manualFile.name : 'Choose File'}</span>
                       {manualFile && <Badge color="green" className="text-[8px] px-1 py-0">Selected</Badge>}
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Prescription Image (Optional)</label>
+                <div className="relative">
+                  <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+                  <div className="flex items-center">
+                    <input 
+                      type="file" 
+                      id="manual-prescription-upload"
+                      className="hidden"
+                      onChange={(e) => setManualPrescriptionFile(e.target.files?.[0] || null)}
+                      accept=".png,.jpg,.jpeg"
+                    />
+                    <label 
+                      htmlFor="manual-prescription-upload"
+                      className={`w-full pl-10 pr-4 py-3 bg-gray-50 border-transparent rounded-2xl focus:ring-2 focus:ring-blue-500 hover:bg-white transition-all text-sm font-bold cursor-pointer flex items-center justify-between ${manualPrescriptionFile ? 'text-blue-600' : 'text-gray-400'}`}
+                    >
+                      <span className="truncate">{manualPrescriptionFile ? manualPrescriptionFile.name : 'Choose File'}</span>
+                      {manualPrescriptionFile && <Badge color="blue" className="text-[8px] px-1 py-0">Attached</Badge>}
                     </label>
                   </div>
                 </div>
@@ -579,13 +646,13 @@ const Upload: React.FC = () => {
 
             <div className="grid md:grid-cols-2 gap-8">
               <div className="space-y-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center">
                     <span className="mr-2">Visit Information</span>
-                    <div className="flex-1 h-[1px] bg-gray-100" />
+                    <div className="hidden sm:block flex-1 h-[1px] bg-gray-100" />
                   </h4>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <DatePicker 
                     label="VISIT DATE" 
                     value={manualData.date} 
@@ -671,11 +738,11 @@ const Upload: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex space-x-4 pt-6">
-              <Button onClick={handleConfirmExtraction} className="flex-1 py-6 rounded-3xl bg-green-600 hover:bg-black text-white font-black uppercase tracking-widest transition-all">
+            <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 pt-6">
+              <Button onClick={handleConfirmExtraction} className="flex-1 py-4 sm:py-6 rounded-3xl bg-green-600 hover:bg-black text-white font-black uppercase tracking-widest transition-all">
                 Confirm & Sync
               </Button>
-              <Button onClick={resetAll} variant="outline" className="flex-1 py-6 rounded-3xl border-gray-200 text-gray-400 font-black uppercase tracking-widest hover:bg-gray-50">
+              <Button onClick={onCancel || resetAll} variant="outline" className="flex-1 py-4 sm:py-6 rounded-3xl border-gray-200 text-gray-400 font-black uppercase tracking-widest hover:bg-gray-50">
                 Cancel
               </Button>
             </div>
@@ -693,8 +760,8 @@ const Upload: React.FC = () => {
               <p className="mt-4 text-gray-400 font-bold uppercase italic tracking-widest">Successfully added to your medical history</p>
             </div>
             <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-              <Button onClick={() => navigate('/records')} className="w-full sm:w-auto px-12 py-4 rounded-2xl bg-black text-white font-black uppercase tracking-widest shadow-xl">
-                View History
+              <Button onClick={() => { if (onSuccess) onSuccess(); else navigate('/records'); }} className="w-full sm:w-auto px-12 py-4 rounded-2xl bg-black text-white font-black uppercase tracking-widest shadow-xl">
+                {embedded ? 'Return to Patient' : 'View History'}
               </Button>
               <Button onClick={resetAll} variant="outline" className="w-full sm:w-auto px-12 py-4 rounded-2xl border-2 border-gray-100 text-gray-500 font-black uppercase tracking-widest">
                 Add Another

@@ -28,8 +28,8 @@ export async function uploadFile(req: any, res: Response): Promise<void> {
   try {
     logger.info('Processing file upload request')
 
-    // Validate that we have file
-    if (!req.file) {
+    // Validate that we have at least one file
+    if (!req.file && (!req.files || (!req.files['file'] && !req.files['prescriptionFile']))) {
       const error = new RequestValidationError(
         'File missing from request',
         'MISSING_REQUIRED_DATA'
@@ -46,18 +46,32 @@ export async function uploadFile(req: any, res: Response): Promise<void> {
 
     const category = req.body.category
 
-    const file = req.file
+    const file = req.file || (req.files && req.files['file'] ? req.files['file'][0] : null)
+    const prescriptionFile = req.files && req.files['prescriptionFile'] ? req.files['prescriptionFile'][0] : null
 
     logger.info(`Uploading file: ${file.originalname} (category: ${category})`)
 
     try {
-      // Upload to Cloudinary
-      const cloudinaryResult = await uploadToCloudinary(
-        file.buffer,
-        file.originalname
-      )
+      // Upload primary file to Cloudinary
+      let cloudinaryResult: any = { url: '', publicId: '' }
+      if (file) {
+        cloudinaryResult = await uploadToCloudinary(
+          file.buffer,
+          file.originalname
+        )
+        logger.info(`Cloudinary upload successful: ${cloudinaryResult.publicId}`)
+      }
 
-      logger.info(`Cloudinary upload successful: ${cloudinaryResult.publicId}`)
+      let prescriptionImageUrl = ''
+      if (prescriptionFile) {
+        logger.info(`Uploading prescription file: ${prescriptionFile.originalname}`)
+        const pResult = await uploadToCloudinary(
+          prescriptionFile.buffer,
+          prescriptionFile.originalname
+        )
+        prescriptionImageUrl = pResult.secureUrl
+        logger.info(`Prescription Cloudinary upload successful`)
+      }
 
       // If skipRecord is true, just return the upload result (used for manual entry)
       if (req.body.skipRecord === 'true' || req.body.skipRecord === true) {
@@ -65,12 +79,13 @@ export async function uploadFile(req: any, res: Response): Promise<void> {
         res.status(200).json({
           success: true,
           data: {
-            fileUrl: cloudinaryResult.url,
-            fileSize: file.size,
-            fileName: file.originalname,
-            publicId: cloudinaryResult.publicId,
-            format: cloudinaryResult.format,
-            secureUrl: cloudinaryResult.secureUrl
+            fileUrl: cloudinaryResult.url || prescriptionImageUrl,
+            fileSize: file ? file.size : (prescriptionFile ? prescriptionFile.size : 0),
+            fileName: file ? file.originalname : (prescriptionFile ? prescriptionFile.originalname : 'Manual Entry'),
+            publicId: cloudinaryResult.publicId || '',
+            format: cloudinaryResult.format || '',
+            secureUrl: cloudinaryResult.secureUrl || prescriptionImageUrl,
+            prescriptionImageUrl
           },
           message: 'File uploaded successfully (no record created)'
         })
@@ -96,10 +111,11 @@ export async function uploadFile(req: any, res: Response): Promise<void> {
         patientId: '000000000000000000000000', // Dummy valid ObjectId string
         category: categorySlug,
         uploadDate: new Date(),
-        imagePath: cloudinaryResult.url,
-        publicId: cloudinaryResult.publicId,
-        fileName: file.originalname,
-        fileSize: file.size,
+        imagePath: cloudinaryResult.url || '',
+        publicId: cloudinaryResult.publicId || '',
+        fileName: file ? file.originalname : (prescriptionFile ? prescriptionFile.originalname : 'Manual Entry'),
+        fileSize: file ? file.size : (prescriptionFile ? prescriptionFile.size : 0),
+        prescriptionImageUrl: prescriptionImageUrl || undefined,
         extractedData: {
           fields: {},
           confidence: 0,

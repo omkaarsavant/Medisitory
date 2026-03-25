@@ -13,6 +13,7 @@ interface ButtonProps {
   disabled?: boolean
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
   type?: 'button' | 'submit' | 'reset'
+  title?: string
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -24,7 +25,8 @@ export const Button: React.FC<ButtonProps> = ({
   loading = false,
   disabled = false,
   onClick,
-  type = 'button'
+  type = 'button',
+  title
 }) => {
   const baseClasses = 'inline-flex items-center justify-center rounded-md transition-all duration-200'
   const variantClasses = {

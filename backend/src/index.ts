@@ -15,9 +15,16 @@ import routes from './routes'
 // Initialize services
 initializeCloudinary()
 
+import http from 'http'
+import { initializeSocket } from './services/socketService'
+
 // Initialize Express app
 const app = express()
+const server = http.createServer(app)
 const PORT = process.env.PORT || 5000
+
+// Initialize Socket.io
+initializeSocket(server)
 
 // Middleware setup
 app.use(helmet())
@@ -50,10 +57,10 @@ app.get('/health', (req, res) => {
 })
 
 // Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`🚀 MedVault backend server running on port ${PORT}`)
   console.log(`📍 Backend URL: http://localhost:${PORT}`)
   console.log(`✅ Environment: ${process.env.NODE_ENV || 'development'}`)
 })
 
-export default app
+export default server

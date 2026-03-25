@@ -37,6 +37,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       exact: false
     },
     {
+      name: 'Doctors',
+      path: '/manage-shares',
+      icon: Users,
+      exact: false
+    },
+    {
       name: 'Analytics',
       path: '/analytics',
       icon: BarChart3,

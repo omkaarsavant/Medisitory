@@ -145,22 +145,22 @@ const KnowYourReport: React.FC = () => {
 
             {error && <ErrorMessage message={error} className="mt-4" />}
 
-            <div className="pt-10 grid grid-cols-1 md:grid-cols-4 gap-4 border-t border-gray-50">
+            <div className="pt-10 grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-gray-50">
               <div className="flex flex-col items-center p-4 rounded-2xl bg-white shadow-sm border border-gray-100">
                 <Search className="w-6 h-6 text-indigo-400 mb-2" />
-                <span className="text-xs font-bold text-gray-600">Deep Scan</span>
+                <span className="text-xs font-bold text-gray-600 text-center">Deep Scan</span>
               </div>
               <div className="flex flex-col items-center p-4 rounded-2xl bg-white shadow-sm border border-gray-100">
                 <Info className="w-6 h-6 text-blue-400 mb-2" />
-                <span className="text-xs font-bold text-gray-600">Simple View</span>
+                <span className="text-xs font-bold text-gray-600 text-center">Simple View</span>
               </div>
               <div className="flex flex-col items-center p-4 rounded-2xl bg-white shadow-sm border border-gray-100">
                 <Activity className="w-6 h-6 text-amber-400 mb-2" />
-                <span className="text-xs font-bold text-gray-600">Metrics</span>
+                <span className="text-xs font-bold text-gray-600 text-center">Metrics</span>
               </div>
               <div className="flex flex-col items-center p-4 rounded-2xl bg-white shadow-sm border border-gray-100">
                 <CheckCircle2 className="w-6 h-6 text-green-400 mb-2" />
-                <span className="text-xs font-bold text-gray-600">Lifestyle</span>
+                <span className="text-xs font-bold text-gray-600 text-center">Lifestyle</span>
               </div>
             </div>
           </div>
@@ -204,8 +204,8 @@ const KnowYourReport: React.FC = () => {
                       <Activity className="w-6 h-6 text-blue-500" />
                       <span>Test Analysis</span>
                     </h3>
-                    <div className="overflow-hidden rounded-2xl border border-gray-100 shadow-sm">
-                      <table className="w-full text-left border-collapse">
+                    <div className="overflow-x-auto rounded-2xl border border-gray-100 shadow-sm">
+                      <table className="w-full text-left border-collapse min-w-[600px]">
                         <thead>
                           <tr className="bg-gray-50/50">
                             <th className="px-6 py-4 text-sm font-bold text-gray-600 uppercase tracking-wider">Test Name</th>
@@ -219,13 +219,13 @@ const KnowYourReport: React.FC = () => {
                               <tr className="hover:bg-gray-50/30 transition-colors">
                                 <td className="px-6 py-4">
                                   <div className="font-bold text-gray-800">{test.name}</div>
-                                  <div className="text-xs text-gray-400 font-medium">Range: {test.range}</div>
+                                  <div className="text-xs text-gray-400 font-medium whitespace-nowrap">Range: {test.range}</div>
                                 </td>
                                 <td className="px-6 py-4">
-                                  <span className="text-lg font-bold text-indigo-600">{test.value}</span>
+                                  <span className="text-lg font-bold text-indigo-600 whitespace-nowrap">{test.value}</span>
                                 </td>
                                 <td className="px-6 py-4">
-                                  <div className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(test.status)}`}>
+                                  <div className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold border whitespace-nowrap ${getStatusColor(test.status)}`}>
                                     {getStatusIcon(test.status)}
                                     <span>{test.status}</span>
                                   </div>

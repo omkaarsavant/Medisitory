@@ -344,7 +344,7 @@ export async function createManualRecord(req: Request, res: Response): Promise<v
   try {
     const { 
       category, date, time, doctor, hospital, metrics,
-      imagePath, publicId, fileName, fileSize 
+      imagePath, publicId, fileName, fileSize, prescriptionImageUrl
     } = req.body
 
     logger.info(`Creating manual medical record for category: ${category}`)
@@ -372,7 +372,8 @@ export async function createManualRecord(req: Request, res: Response): Promise<v
       fileName: fileName || 'Manual Entry',
       fileSize: fileSize || 0,
       imagePath: imagePath || '',
-      publicId: publicId || ''
+      publicId: publicId || '',
+      prescriptionImageUrl: prescriptionImageUrl || undefined
     })
 
     // Save medical record (this will trigger the post-save syncMetrics hook)

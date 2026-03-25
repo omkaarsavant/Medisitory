@@ -23,7 +23,7 @@ const router = Router()
 // Upload file
 router.post(
   '/',
-  uploadMock.single('file'),
+  uploadMock.fields([{ name: 'file', maxCount: 1 }, { name: 'prescriptionFile', maxCount: 1 }]),
   uploadFile // The controller function name in uploadController.ts is uploadFile
 )
 

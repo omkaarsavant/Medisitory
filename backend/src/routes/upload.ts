@@ -27,7 +27,7 @@ const upload = multer({
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true)
     } else {
-      cb(new Error('Invalid file type'), false)
+      cb(null, false)
     }
   }
 })
@@ -44,7 +44,7 @@ const upload = multer({
  */
 router.post(
   '/',
-  upload.single('file'),
+  upload.fields([{ name: 'file', maxCount: 1 }, { name: 'prescriptionFile', maxCount: 1 }]),
   validateFormData,
   validateFileCategory,
   validateUploadFile,

@@ -28,8 +28,21 @@ import { CLOUDINARY_CONFIG } from '../utils/constants'
  */
 export function validateUploadFile(req: any, res: Response, next: NextFunction): void {
   try {
-    // Check if file exists in request
-    if (!req.file) {
+    // Collect all files to validate
+    let filesToValidate = [];
+    if (req.file) {
+      filesToValidate.push(req.file);
+    } else if (req.files) {
+      if (req.files['file'] && req.files['file'].length > 0) {
+        filesToValidate.push(req.files['file'][0]);
+      }
+      if (req.files['prescriptionFile'] && req.files['prescriptionFile'].length > 0) {
+        filesToValidate.push(req.files['prescriptionFile'][0]);
+      }
+    }
+
+    // Check if primary file exists in request
+    if (filesToValidate.length === 0) {
       const error = new RequestValidationError(
         'No file uploaded',
         'NO_FILE_UPLOADED'
@@ -43,110 +56,46 @@ export function validateUploadFile(req: any, res: Response, next: NextFunction):
       return
     }
 
-    const file = req.file
-
-    // Validate file size
     const maxSize = CLOUDINARY_CONFIG.maxFileSize || 5242880 // 5MB in bytes
-    if (file.size > maxSize) {
-      const error = new RequestValidationError(
-        'File size exceeds 5MB',
-        'FILE_SIZE_EXCEEDED'
-      )
-      logger.error('File validation error:', error.message)
-      res.status(413).json({
-        success: false,
-        error: error.message,
-        errorCode: error.errorCode
-      })
-      return
-    }
-
-    // Validate file type
     const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf']
     const allowedExtensions = ['.jpg', '.jpeg', '.png', '.pdf']
 
-    // Check MIME type
-    if (!allowedTypes.includes(file.mimetype)) {
-      const error = new RequestValidationError(
-        'File type not supported',
-        'INVALID_FILE_TYPE'
-      )
-      logger.error('File validation error:', error.message)
-      res.status(400).json({
-        success: false,
-        error: error.message,
-        errorCode: error.errorCode
-      })
-      return
-    }
-
-    // Check file extension
-    const fileExtension = path.extname(file.originalname).toLowerCase()
-    if (!allowedExtensions.includes(fileExtension)) {
-      const error = new RequestValidationError(
-        'File extension not supported',
-        'INVALID_FILE_EXTENSION'
-      )
-      logger.error('File validation error:', error.message)
-      res.status(400).json({
-        success: false,
-        error: error.message,
-        errorCode: error.errorCode
-      })
-      return
-    }
-
-    // Validate MIME type matches extension for images
-    if (file.mimetype.startsWith('image/') && !['.jpg', '.jpeg', '.png'].includes(fileExtension)) {
-      const error = new RequestValidationError(
-        'MIME type does not match file extension',
-        'MIME_TYPE_MISMATCH'
-      )
-      logger.error('File validation error:', error.message)
-      res.status(400).json({
-        success: false,
-        error: error.message,
-        errorCode: error.errorCode
-      })
-      return
-    }
-
-    // Additional security checks
-    if (file.mimetype === 'application/pdf') {
-      // Check for potential PDF exploits
-      if (file.buffer.length < 10) {
-        const error = new RequestValidationError(
-          'Invalid PDF file',
-          'INVALID_PDF'
-        )
-        logger.error('File validation error:', error.message)
-        res.status(400).json({
-          success: false,
-          error: error.message,
-          errorCode: error.errorCode
-        })
-        return
+    for (const file of filesToValidate) {
+      // Validate file size
+      if (file.size > maxSize) {
+        throw new RequestValidationError('File size exceeds 5MB', 'FILE_SIZE_EXCEEDED')
       }
+
+      // Check MIME type
+      if (!allowedTypes.includes(file.mimetype)) {
+        throw new RequestValidationError('File type not supported', 'INVALID_FILE_TYPE')
+      }
+
+      // Check file extension
+      const fileExtension = require('path').extname(file.originalname).toLowerCase()
+      if (!allowedExtensions.includes(fileExtension)) {
+        throw new RequestValidationError('File extension not supported', 'INVALID_FILE_EXTENSION')
+      }
+
+      // Validate MIME type matches extension for images
+      if (file.mimetype.startsWith('image/') && !['.jpg', '.jpeg', '.png'].includes(fileExtension)) {
+        throw new RequestValidationError('MIME type does not match file extension', 'MIME_TYPE_MISMATCH')
+      }
+
+      // Additional security checks
+      if (file.mimetype === 'application/pdf' && file.buffer.length < 10) {
+        throw new RequestValidationError('Invalid PDF file', 'INVALID_PDF')
+      }
+
+      // Check for potentially malicious files
+      if (file.mimetype.startsWith('image/') && file.size < 1000) {
+        throw new RequestValidationError('Invalid image file', 'INVALID_IMAGE')
+      }
+      
+      logger.info(`File validation passed for: ${file.originalname}`)
     }
 
-    // Check for potentially malicious files
-    if (file.mimetype.startsWith('image/') && file.size < 1000) {
-      // Very small image files might be corrupted or malicious
-      const error = new RequestValidationError(
-        'Invalid image file',
-        'INVALID_IMAGE'
-      )
-      logger.error('File validation error:', error.message)
-      res.status(400).json({
-        success: false,
-        error: error.message,
-        errorCode: error.errorCode
-      })
-      return
-    }
-
-    // File is valid, proceed to next middleware
-    logger.info(`File validation successful: ${file.originalname} (${file.size} bytes)`)
+    // All files are valid, proceed to next middleware
     next()
 
   } catch (error) {

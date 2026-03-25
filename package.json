@@ -14,7 +14,15 @@
   "devDependencies": {
     "concurrently": "^8.2.2"
   },
-  "keywords": ["medical", "records", "healthcare"],
+  "keywords": [
+    "medical",
+    "records",
+    "healthcare"
+  ],
   "author": "MedVault Team",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1"
+  }
 }

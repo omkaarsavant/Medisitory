@@ -6,6 +6,8 @@ import uploadRoutes from './uploadRoutes'
 import recordsRoutes from './records'
 import ocrRoutes from './ocr'
 import analyticsRoutes from './analytics'
+import appointmentRoutes from './appointments'
+import doctorAccessRoutes from './doctorAccess'
 
 const router = Router()
 
@@ -16,6 +18,8 @@ router.use('/api', Router()
   .use('/records', recordsRoutes)
   .use('/ocr', ocrRoutes)
   .use('/analytics', analyticsRoutes)
+  .use('/appointments', appointmentRoutes)
+  .use('/doctor-access', doctorAccessRoutes)
 )
 
 export default router

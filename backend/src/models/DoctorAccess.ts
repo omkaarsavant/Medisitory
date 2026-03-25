@@ -35,11 +35,14 @@ const doctorAccessSchema: Schema<IDoctorAccess> = new Schema(
     },
     doctorEmail: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
       lowercase: true,
       validate: {
-        validator: isValidEmail,
+        validator: function(v: string) {
+          if (!v) return true // Allow empty
+          return /^\S+@\S+\.\S+$/.test(v)
+        },
         message: 'Invalid email address'
       }
     },
@@ -66,7 +69,13 @@ const doctorAccessSchema: Schema<IDoctorAccess> = new Schema(
       type: Date,
       required: true,
       validate: {
-        validator: (value: Date) => value > new Date(),
+        validator: function(this: any, value: Date) {
+          // Only validate on new documents, not existing ones
+          if (this.isNew) {
+            return value > new Date()
+          }
+          return true
+        },
         message: 'Expiration date must be in the future'
       }
     },

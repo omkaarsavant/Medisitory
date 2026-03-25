@@ -72,6 +72,7 @@ export interface UploadFileResponse {
     fileName: string
     category: string
     publicId: string
+    prescriptionImageUrl?: string
   }
 }
 
@@ -125,15 +126,25 @@ export interface MedicalRecord {
   hospital?: string
   hospitalName?: string
   imagePath?: string
+  prescriptionImageUrl?: string
   fileName?: string
   fileSize?: number
   fileType?: string
+  fileUrl?: string
   status: 'processing' | 'processed' | 'error' | 'Completed' | 'Pending' | 'Active'
+  displayData?: Record<string, any>
   extractedData?: Record<string, any>
   manualData?: Record<string, any>
   notes?: string
   aiFindings?: string
   aiNotes?: string
+  aiAnalysis?: {
+    summary?: string
+    [key: string]: any
+  }
+  isRestricted?: boolean
+  doctorNotes?: string
+  hasNewDoctorNote?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -178,10 +189,15 @@ export interface GetDashboardSummaryResponse {
 }
 
 // API functions
-export const uploadFile = async (file: File, category: string, skipRecord: boolean = false): Promise<UploadFileResponse> => {
+export const uploadFile = async (file: File | null, category: string, skipRecord: boolean = false, prescriptionFile?: File): Promise<UploadFileResponse> => {
   try {
     const formData = new FormData()
-    formData.append('file', file)
+    if (file) {
+      formData.append('file', file)
+    }
+    if (prescriptionFile) {
+      formData.append('prescriptionFile', prescriptionFile)
+    }
     formData.append('category', category)
     if (skipRecord) {
       formData.append('skipRecord', 'true')
@@ -248,6 +264,7 @@ export interface ManualAddRecordData {
   publicId?: string
   fileName?: string
   fileSize?: number
+  prescriptionImageUrl?: string
 }
 
 export const manualAddRecord = async (data: ManualAddRecordData): Promise<GetRecordResponse> => {
@@ -345,11 +362,15 @@ export const uploadFileWithProgress = async (
   file: File,
   category: string,
   onProgress: (progress: number) => void,
-  cancelToken?: CancelTokenSource
+  cancelToken?: CancelTokenSource,
+  prescriptionFile?: File
 ): Promise<UploadFileResponse> => {
   try {
     const formData = new FormData()
     formData.append('file', file)
+    if (prescriptionFile) {
+      formData.append('prescriptionFile', prescriptionFile)
+    }
     formData.append('category', category)
 
     const response = await apiClient.post<UploadFileResponse>('/api/upload', formData, {

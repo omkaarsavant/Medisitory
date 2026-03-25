@@ -18,7 +18,8 @@ import {
   Search,
   CheckCircle2,
   Bell,
-  ArrowRight
+  ArrowRight,
+  Shield
 } from 'lucide-react'
 
 const Dashboard: React.FC = () => {
@@ -115,6 +116,31 @@ const Dashboard: React.FC = () => {
           </Badge>
         </div>
       </div>
+
+      {/* Doctor Notes Notifications */}
+      {records.some(r => r.hasNewDoctorNote) && (
+        <Card 
+          className="p-4 bg-indigo-600 text-white border-none shadow-lg animate-in slide-in-from-top-4 duration-500 cursor-pointer hover:bg-indigo-700 transition-all flex items-center justify-between group"
+          onClick={() => {
+            const firstWithNote = records.find(r => r.hasNewDoctorNote)
+            if (firstWithNote) navigate(`/records/${firstWithNote._id || firstWithNote.id}`)
+          }}
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+              <Shield className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <p className="text-xs font-black uppercase tracking-widest opacity-80">New Physician Observation</p>
+              <h4 className="text-sm font-bold">A doctor has added professional notes to your recent reports.</h4>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">View Observations</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </div>
+        </Card>
+      )}
 
       {/* Main Insights Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

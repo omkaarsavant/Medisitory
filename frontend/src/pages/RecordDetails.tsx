@@ -22,6 +22,8 @@ import {
 } from 'lucide-react'
 import { Card, Badge, Button, LoadingSpinner, ErrorMessage } from '../components'
 import { getRecord, MedicalRecord, deleteRecord } from '../services/api'
+import { clearNoteNotification } from '../services/doctorAccessService'
+import { Shield, Sparkles } from 'lucide-react'
 
 const RecordDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -190,6 +192,10 @@ const RecordDetails: React.FC = () => {
         const response = await getRecord(id)
         if (response.success) {
           setRecord(response.data.record)
+          // If there's a new note, clear the notification flag when the user views it
+          if (response.data.record.hasNewDoctorNote) {
+            await clearNoteNotification(id)
+          }
         } else {
           setError('Record not found')
         }
@@ -360,73 +366,121 @@ const RecordDetails: React.FC = () => {
           </Card>
         </div>
 
-        {/* Source Document Preview */}
-        <Card className="p-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-2">
-              <div className="p-2 bg-gray-100 rounded-lg">
-                <Eye className="w-5 h-5 text-gray-600" />
+        {/* Source Documents Preview */}
+        <div className={`grid grid-cols-1 ${record.prescriptionImageUrl ? 'xl:grid-cols-2' : ''} gap-6`}>
+          <Card className="p-8 h-full">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-2">
+                <div className="p-2 bg-gray-100 rounded-lg">
+                  <Eye className="w-5 h-5 text-gray-600" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">Source Document</h3>
               </div>
-              <h3 className="text-lg font-bold text-gray-900">Source Document</h3>
+              {record.imagePath && (
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => window.open(record.imagePath || '', '_blank')}
+                    className="text-xs h-8"
+                  >
+                    <ExternalLink className="w-3 h-3 mr-1" />
+                    Open Full
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      const link = document.createElement('a');
+                      link.href = record.imagePath || '';
+                      link.download = record.fileName || 'medical-record';
+                      link.click();
+                    }}
+                    className="text-xs h-8"
+                  >
+                    <Download className="w-3 h-3 mr-1" />
+                    Download
+                  </Button>
+                </div>
+              )}
             </div>
-            {record.imagePath && (
-              <div className="flex space-x-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => window.open(record.imagePath || '', '_blank')}
-                  className="text-xs h-8"
-                >
-                  <ExternalLink className="w-3 h-3 mr-1" />
-                  Open Full
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    const link = document.createElement('a');
-                    link.href = record.imagePath || '';
-                    link.download = record.fileName || 'medical-record';
-                    link.click();
-                  }}
-                  className="text-xs h-8"
-                >
-                  <Download className="w-3 h-3 mr-1" />
-                  Download
-                </Button>
-              </div>
-            )}
-          </div>
-          
-          <div className={`bg-gray-100 rounded-xl overflow-hidden border border-gray-200 min-h-[400px] flex items-center justify-center ${!record.imagePath ? 'bg-white' : ''}`}>
-            {record.imagePath ? (
-              isPDF ? (
-                <iframe 
-                  src={`${record.imagePath}#toolbar=0`} 
-                  className="w-full h-[600px] border-none"
-                  title="Medical record PDF preview"
-                />
+            
+            <div className={`bg-gray-100 rounded-xl overflow-hidden border border-gray-200 min-h-[400px] flex items-center justify-center ${!record.imagePath ? 'bg-white' : ''}`}>
+              {record.imagePath ? (
+                isPDF ? (
+                  <iframe 
+                    src={`${record.imagePath}#toolbar=0`} 
+                    className="w-full h-[600px] border-none"
+                    title="Medical record PDF preview"
+                  />
+                ) : (
+                  <div className="relative group cursor-zoom-in w-full h-full">
+                    <img 
+                      src={record.imagePath} 
+                      alt="Medical Record" 
+                      className="w-full h-full object-contain max-h-[800px] mx-auto transition-transform duration-300 group-hover:scale-[1.02]"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 pointer-events-none" />
+                  </div>
+                )
               ) : (
-                <div className="relative group cursor-zoom-in w-full">
+                <div className="text-center space-y-4 max-w-sm p-8">
+                  <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto text-blue-500 shadow-sm border border-blue-100">
+                    <Info className="w-10 h-10" />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-black text-gray-900 uppercase tracking-tighter">No Document Attached</h4>
+                    <p className="text-sm font-bold text-gray-400 mt-2">This record was added manually without an accompanying source document (PDF/Image).</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {record.prescriptionImageUrl && (
+            <Card className="p-8 h-full border-2 border-blue-50 bg-gradient-to-br from-white to-blue-50/20">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-2">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <FileText className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900">Attached Prescription</h3>
+                </div>
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => window.open(record.prescriptionImageUrl || '', '_blank')}
+                    className="text-xs h-8 border-blue-200 text-blue-700 hover:bg-blue-50"
+                  >
+                    <ExternalLink className="w-3 h-3 mr-1" />
+                    Open Full
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      const link = document.createElement('a');
+                      link.href = record.prescriptionImageUrl || '';
+                      link.download = `prescription-${record.fileName || 'document'}`;
+                      link.click();
+                    }}
+                    className="text-xs h-8 border-blue-200 text-blue-700 hover:bg-blue-50"
+                  >
+                    <Download className="w-3 h-3 mr-1" />
+                    Download
+                  </Button>
+                </div>
+              </div>
+              <div className="bg-gray-100 rounded-xl overflow-hidden border border-gray-200 min-h-[400px] flex items-center justify-center">
+                <div className="relative group cursor-zoom-in w-full h-full">
                   <img 
-                    src={record.imagePath} 
-                    alt="Medical Record" 
-                    className="w-full h-auto object-contain max-h-[800px] mx-auto transition-transform duration-300 group-hover:scale-[1.02]"
+                    src={record.prescriptionImageUrl} 
+                    alt="Prescription" 
+                    className="w-full h-full object-contain max-h-[800px] mx-auto transition-transform duration-300 group-hover:scale-[1.02]"
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 pointer-events-none" />
                 </div>
-              )
-            ) : (
-              <div className="text-center space-y-4 max-w-sm p-8">
-                <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto text-blue-500 shadow-sm border border-blue-100">
-                  <Info className="w-10 h-10" />
-                </div>
-                <div>
-                  <h4 className="text-xl font-black text-gray-900 uppercase tracking-tighter">No Document Attached</h4>
-                  <p className="text-sm font-bold text-gray-400 mt-2">This record was added manually without an accompanying source document (PDF/Image).</p>
-                </div>
               </div>
-            )}
-          </div>
-        </Card>
+            </Card>
+          )}
+        </div>
 
         {/* Record Details */}
         <Card className="p-8">
@@ -478,15 +532,34 @@ const RecordDetails: React.FC = () => {
                 )}
               </div>
 
-              {/* Disclaimer */}
-              <div className="mt-4 flex items-start space-x-2 text-[10px] text-gray-400 italic px-2">
-                <AlertCircle className="w-3 h-3 flex-shrink-0 mt-0.5" />
-                <p>
-                  Important: These automated findings are generated by AI for informational purposes only. They do not constitute a medical diagnosis or treatment advice. Always consult with a qualified medical professional for the interpretation of your laboratory results.
-                </p>
+                {/* Doctor's Recommendation Section */}
+                {record.doctorNotes && (
+                  <div className="mt-8">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <div className="p-2 bg-indigo-50 rounded-lg">
+                        <Shield className="w-5 h-5 text-indigo-600" />
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-900">Physician's Recommendation</h3>
+                    </div>
+                    <Card className="p-6 bg-indigo-50/30 border-indigo-100 shadow-sm relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 p-4 opacity-5">
+                        <Shield className="w-20 h-20 text-indigo-600" />
+                      </div>
+                      <p className="text-gray-800 font-medium leading-relaxed italic">
+                        "{record.doctorNotes}"
+                      </p>
+                    </Card>
+                  </div>
+                )}
+
+                <div className="mt-4 flex items-start space-x-2 text-[10px] text-gray-400 italic px-2">
+                  <AlertCircle className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                  <p>
+                    Important: These automated findings are generated by AI for informational purposes only. They do not constitute a medical diagnosis or treatment advice. Always consult with a qualified medical professional for the interpretation of your laboratory results.
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
 
             <div className="pt-6 border-t border-gray-100 flex flex-wrap gap-3">

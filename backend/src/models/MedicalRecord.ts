@@ -10,6 +10,7 @@ export interface IMedicalRecord extends Document {
   category: string
   uploadDate: Date
   imagePath?: string
+  prescriptionImageUrl?: string
   publicId?: string
   fileName?: string
   fileSize?: number
@@ -29,6 +30,8 @@ export interface IMedicalRecord extends Document {
   visitDate: Date
   status: string
   isShared: string[]
+  doctorNotes: string
+  hasNewDoctorNote: boolean
   createdAt: Date
   updatedAt: Date
   validateData(): boolean
@@ -57,6 +60,11 @@ const medicalRecordSchema = new Schema(
       required: false,
       trim: true,
       default: ''
+    },
+    prescriptionImageUrl: {
+      type: String,
+      required: false,
+      trim: true
     },
     publicId: {
       type: String,
@@ -148,6 +156,15 @@ const medicalRecordSchema = new Schema(
     isShared: {
       type: [String],
       default: []
+    },
+    doctorNotes: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    hasNewDoctorNote: {
+      type: Boolean,
+      default: false
     }
   },
   {
