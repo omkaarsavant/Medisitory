@@ -2,9 +2,14 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
   ArrowLeft, Shield, Trash2, Calendar, FileText, ExternalLink, Clock, AlertTriangle, 
-  Edit3, X, CheckSquare, Square, Save, Search, MessageSquare, Users
+  Edit3, X, CheckSquare, Square, Save, Search, MessageSquare, Users, UserPlus, Send,
+  CheckCircle, XCircle, Loader2, Copy, Check, QrCode
 } from 'lucide-react'
-import { getActiveShares, revokeAccess, updateShareRecords, DoctorAccess } from '../services/doctorAccessService'
+import { Html5QrcodeScanner } from 'html5-qrcode'
+import { 
+  getActiveShares, revokeAccess, updateShareRecords, DoctorAccess,
+  sendDoctorRequest, getMyRequests, DoctorRequestData
+} from '../services/doctorAccessService'
 import { getRecords, MedicalRecord } from '../services/api'
 import { Card, Badge, Button } from '../components'
 import { useChatStore } from '../store/chatStore'
@@ -24,9 +29,42 @@ const ManageShares: React.FC = () => {
   const [isUpdating, setIsUpdating] = useState(false)
   const [editSearchTerm, setEditSearchTerm] = useState('')
 
+  // Add Doctor Modal State
+  const [isAddDoctorOpen, setIsAddDoctorOpen] = useState(false)
+  const [doctorIdInput, setDoctorIdInput] = useState('')
+  const [patientNameInput, setPatientNameInput] = useState('Jane Doe')
+  const [sendingRequest, setSendingRequest] = useState(false)
+  const [sendSuccess, setSendSuccess] = useState(false)
+  const [isScanning, setIsScanning] = useState(false)
+
+
+
   useEffect(() => {
     fetchData()
   }, [])
+
+  const startScanning = () => {
+    setIsScanning(true)
+    setTimeout(() => {
+      const scanner = new Html5QrcodeScanner(
+        "qr-reader-doctor",
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        false
+      )
+
+      scanner.render((decodedText) => {
+        scanner.clear()
+        setIsScanning(false)
+        setDoctorIdInput(decodedText.toUpperCase())
+      }, (err) => {
+        // Ignore errors
+      })
+    }, 100)
+  }
+
+  const stopScanning = () => {
+    setIsScanning(false)
+  }
 
   const fetchData = async () => {
     try {
@@ -38,7 +76,6 @@ const ManageShares: React.FC = () => {
       
       setShares(sharesData)
       
-      // Create a map of records for easy lookup
       const recordMap: Record<string, MedicalRecord> = {}
       recordsData.data.records.forEach(r => {
         recordMap[r._id || r.id] = r
@@ -53,6 +90,8 @@ const ManageShares: React.FC = () => {
       setLoading(false)
     }
   }
+
+
 
   const handleRevoke = async (token: string) => {
     if (!window.confirm('Are you sure you want to revoke this access? The doctor will no longer be able to view these records.')) {
@@ -98,6 +137,30 @@ const ManageShares: React.FC = () => {
     }
   }
 
+  const handleSendRequest = async () => {
+    if (!doctorIdInput.trim()) {
+      alert('Please enter a Doctor ID')
+      return
+    }
+    try {
+      setSendingRequest(true)
+      await sendDoctorRequest(doctorIdInput.trim(), patientNameInput || 'Patient')
+      setSendSuccess(true)
+      setTimeout(() => {
+        setSendSuccess(false)
+        setIsAddDoctorOpen(false)
+        setDoctorIdInput('')
+      }, 1500)
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || 'Failed to send request'
+      alert(msg)
+    } finally {
+      setSendingRequest(false)
+    }
+  }
+
+
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-20 font-sans">
       <nav className="bg-white border-b border-gray-100 px-6 py-4 sticky top-0 z-30 shadow-sm">
@@ -105,26 +168,24 @@ const ManageShares: React.FC = () => {
           <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-50 rounded-full transition-colors font-black">
             <ArrowLeft className="w-5 h-5 text-gray-500" />
           </button>
-          <div>
+          <div className="flex-1">
             <h1 className="text-xl font-black text-gray-900 uppercase tracking-widest">My Doctors</h1>
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Medical Consultations & Chat</p>
           </div>
+          <button
+            onClick={() => setIsAddDoctorOpen(true)}
+            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black uppercase tracking-widest text-[11px] transition-all shadow-lg shadow-indigo-200 active:scale-95 flex items-center gap-2"
+          >
+            <UserPlus className="w-4 h-4" />
+            Add Doctor
+          </button>
         </div>
       </nav>
 
       <main className="max-w-5xl mx-auto p-6 lg:p-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="bg-gray-900 rounded-[2.5rem] p-10 mb-12 text-white shadow-2xl shadow-indigo-100 relative overflow-hidden">
-          <div className="relative z-10 w-full max-w-2xl">
-            <h2 className="text-4xl font-black tracking-tighter mb-4 flex items-center gap-4 italic uppercase">
-              Clinician Network
-              <Badge color="blue" className="bg-blue-600 text-white border-none text-[10px] font-black uppercase tracking-widest italic py-1 px-4 rounded-full">Realtime</Badge>
-            </h2>
-            <p className="text-gray-400 font-medium leading-relaxed text-lg">
-              Communicate securely with your doctors about specific medical records. Only the verified clinicians listed below have active access to your reports.
-            </p>
-          </div>
-          <Users className="absolute right-[-40px] bottom-[-40px] w-80 h-80 text-white/5 -rotate-12" />
-        </div>
+
+
+
 
         {loading ? (
           <div className="text-center py-20">
@@ -144,9 +205,16 @@ const ManageShares: React.FC = () => {
               <Shield className="w-12 h-12 text-gray-200" />
             </div>
             <h3 className="text-2xl font-black text-gray-900 uppercase tracking-widest mb-3">Privacy Shield Active</h3>
-            <p className="text-gray-500 font-medium max-w-sm mx-auto text-lg leading-relaxed">
-              You haven't authorized any clinicians yet. Your medical history remains completely encrypted and private.
+            <p className="text-gray-500 font-medium max-w-sm mx-auto text-lg leading-relaxed mb-8">
+              You haven't connected with any clinicians yet. Add a doctor using their unique ID to get started.
             </p>
+            <button
+              onClick={() => setIsAddDoctorOpen(true)}
+              className="px-10 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black uppercase tracking-widest text-sm transition-all shadow-xl shadow-indigo-200 active:scale-95 inline-flex items-center gap-3"
+            >
+              <UserPlus className="w-5 h-5" />
+              Add Your First Doctor
+            </button>
           </div>
         ) : (
           <div className="space-y-8">
@@ -172,9 +240,16 @@ const ManageShares: React.FC = () => {
                   
                   <div className="flex flex-wrap gap-3">
                     <button 
-                      onClick={() => {
-                        const shareRecords = share.recordIds.map(id => records[id]).filter(Boolean) as MedicalRecord[]
-                        openChat(share.shareToken, 'patient', 'Patient', shareRecords)
+                      onClick={async () => {
+                        try {
+                          const freshData = await (await import('../services/doctorAccessService')).getSharedRecords(share.shareToken, true)
+                          const sharedOnly = (freshData.records || []).filter((r: any) => !r.isRestricted)
+                          openChat(share.shareToken, 'patient', 'Patient', share.doctorName || 'Doctor', sharedOnly as MedicalRecord[])
+                        } catch {
+                          // Fallback to local records map
+                          const shareRecords = share.recordIds.map(id => records[id]).filter(Boolean) as MedicalRecord[]
+                          openChat(share.shareToken, 'patient', 'Patient', share.doctorName || 'Doctor', shareRecords)
+                        }
                       }}
                       className="inline-flex items-center justify-center gap-3 px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black uppercase tracking-widest text-[11px] transition-all shadow-xl shadow-indigo-100 active:scale-95 flex-1 sm:flex-none"
                     >
@@ -242,6 +317,109 @@ const ManageShares: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Add Doctor Modal */}
+      {isAddDoctorOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
+          <Card className="w-full max-w-lg bg-white rounded-[3rem] p-0 shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden animate-in zoom-in-95 duration-300 border-none">
+            <div className="p-10 bg-gradient-to-br from-indigo-600 to-indigo-700 text-white relative">
+              <div className="relative z-10">
+                <h2 className="text-3xl font-black tracking-tight uppercase italic leading-none mb-2">Connect Doctor</h2>
+                <p className="text-indigo-200 font-medium text-sm">Enter the doctor's unique ID to send a connection request</p>
+              </div>
+              <button 
+                onClick={() => { setIsAddDoctorOpen(false); setSendSuccess(false); stopScanning() }} 
+                className="absolute top-8 right-8 p-3 hover:bg-white/10 rounded-full transition-colors text-white z-10"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              <UserPlus className="absolute right-[-20px] bottom-[-20px] w-40 h-40 text-white/10" />
+            </div>
+
+            {sendSuccess ? (
+              <div className="p-12 text-center">
+                <div className="w-20 h-20 bg-emerald-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                  <CheckCircle className="w-10 h-10 text-emerald-500" />
+                </div>
+                <h3 className="text-xl font-black text-gray-900 uppercase tracking-widest mb-2">Request Sent!</h3>
+                <p className="text-gray-500 font-medium">Waiting for the doctor to accept your request.</p>
+              </div>
+            ) : isScanning ? (
+              <div className="p-10 space-y-6 animate-in zoom-in-95 duration-300">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Scan Doctor QR</h3>
+                  <button onClick={stopScanning} className="text-[10px] font-black text-red-500 uppercase tracking-widest flex items-center gap-1">
+                    <X className="w-3 h-3" /> Stop Scanning
+                  </button>
+                </div>
+                <div id="qr-reader-doctor" className="w-full overflow-hidden rounded-3xl border-2 border-indigo-100 shadow-inner bg-gray-50 aspect-square flex items-center justify-center">
+                  <div className="animate-pulse text-indigo-300">Initializing Camera...</div>
+                </div>
+                <p className="text-[10px] text-center text-gray-400 uppercase tracking-[0.2em] font-black">Align the doctor's QR code within the frame</p>
+              </div>
+            ) : (
+              <div className="p-10 space-y-6">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center px-1">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Doctor's Unique ID</label>
+                    <button 
+                      onClick={startScanning}
+                      className="text-[10px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2 hover:text-indigo-700 transition-colors"
+                    >
+                      <QrCode className="w-3.5 h-3.5" />
+                      Scan QR
+                    </button>
+                  </div>
+                  <input 
+                    type="text"
+                    placeholder="e.g. DOC-A3X9K2"
+                    value={doctorIdInput}
+                    onChange={e => setDoctorIdInput(e.target.value.toUpperCase())}
+                    className="w-full px-6 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-black text-gray-900 text-lg tracking-widest placeholder:text-gray-300 placeholder:font-medium placeholder:tracking-normal"
+                    autoFocus
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Your Name (visible to the doctor)</label>
+                  <input 
+                    type="text"
+                    placeholder="Your name"
+                    value={patientNameInput}
+                    onChange={e => setPatientNameInput(e.target.value)}
+                    className="w-full px-6 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-gray-700 placeholder:text-gray-300"
+                  />
+                </div>
+                <div className="flex gap-4 pt-4">
+                  <Button 
+                    variant="outline"
+                    onClick={() => setIsAddDoctorOpen(false)}
+                    className="rounded-2xl border-gray-200 text-gray-400 font-black uppercase tracking-widest text-[11px] px-8 h-14 flex-1 hover:bg-white"
+                  >
+                    Cancel
+                  </Button>
+                  <button
+                    onClick={handleSendRequest}
+                    disabled={sendingRequest || !doctorIdInput.trim()}
+                    className="flex-1 h-14 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-2xl font-black uppercase tracking-widest text-[11px] transition-all shadow-xl shadow-indigo-100 active:scale-95 flex items-center justify-center gap-2"
+                  >
+                    {sendingRequest ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        Send Request
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
 
       {/* Access Configuration Engine */}
       {editingShare && (

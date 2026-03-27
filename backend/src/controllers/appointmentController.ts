@@ -75,11 +75,16 @@ export const createAppointment = async (req: CustomRequest, res: Response) => {
     const finalUserId = userId || actorId
     const finalDoctorId = doctorId || actorId
 
+    // If doctor is creating, set a default consultation fee
+    const paymentAmount = req.body.paymentAmount ?? (doctorId ? 500 : 0)
+
     const appointment = await Appointment.create({
       ...req.body,
       userId: finalUserId,
       doctorId: finalDoctorId,
-      patientName: patientName || 'Patient'
+      patientName: patientName || 'Patient',
+      paymentAmount,
+      paymentStatus: 'Pending'
     })
 
     try {
@@ -135,6 +140,12 @@ export const deleteAppointment = async (req: CustomRequest, res: Response) => {
     const userId = req.user?.id || 'demo_user'
     if (appointment.userId !== userId && appointment.userId !== '000000000000000000000000') {
       return res.status(401).json({ success: false, message: 'Not authorized' })
+    }
+
+    // Prevent patient from deleting doctor-scheduled appointments
+    const isDoctorCreated = appointment.doctorId && appointment.doctorId !== userId && appointment.doctorId !== 'demo_user'
+    if (isDoctorCreated) {
+      return res.status(403).json({ success: false, message: 'Cannot delete doctor-scheduled appointments' })
     }
 
     await appointment.deleteOne()

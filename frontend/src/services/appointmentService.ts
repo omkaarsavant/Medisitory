@@ -39,6 +39,11 @@ export interface IAppointment {
   preVisitQuestions: string[];
   postVisitNotes: string;
   suggestedFollowUp: string;
+  paymentStatus: 'Pending' | 'Paid' | 'Failed';
+  paymentAmount: number;
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+  paidAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -74,6 +79,7 @@ export interface CreateAppointmentDTO {
   reminderType?: '1 day before' | '1 hour before' | 'anytime' | 'none';
   customReminderTime?: string;
   preVisitQuestions?: string[];
+  paymentAmount?: number;
 }
 
 export const createAppointment = async (data: CreateAppointmentDTO): Promise<IAppointment> => {
@@ -93,4 +99,37 @@ export const updateAppointment = async (id: string, data: UpdateAppointmentDTO):
 
 export const deleteAppointment = async (id: string): Promise<void> => {
   await apiClient.delete(`/api/appointments/${id}`)
+}
+
+// --- Payment APIs ---
+
+export interface PaymentOrderResponse {
+  orderId: string;
+  amount: number;
+  currency: string;
+  keyId: string;
+  appointment: {
+    _id: string;
+    doctorName: string;
+    patientName: string;
+    date: string;
+    time: string;
+  };
+}
+
+export const createPaymentOrder = async (appointmentId: string): Promise<PaymentOrderResponse> => {
+  const response = await apiClient.post('/api/payments/create-order', { appointmentId })
+  return response.data.data
+}
+
+export interface VerifyPaymentDTO {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+  appointmentId: string;
+}
+
+export const verifyPayment = async (data: VerifyPaymentDTO): Promise<IAppointment> => {
+  const response = await apiClient.post('/api/payments/verify', data)
+  return response.data.data
 }

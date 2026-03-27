@@ -5,13 +5,13 @@ import {
   Card, Badge, Button, Pagination, LoadingSpinner, ErrorMessage, TimelineView 
 } from '../components'
 import { 
-  ArrowLeft, ArrowRight, Search, Filter, Calendar, ChevronLeft, ChevronRight, Plus, Trash2, List, Layout, FileText, Stethoscope, X, SlidersHorizontal, Share2, CheckSquare, Square, Copy, Check, Shield
+  ArrowLeft, ArrowRight, Search, Filter, Calendar, ChevronLeft, ChevronRight, Plus, Trash2, List, Layout, FileText, Stethoscope, X, SlidersHorizontal, Share2, CheckSquare, Square, Copy, Check, Shield, UserX, Clock, Users
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import QRCode from 'react-qr-code'
 import { useRecordStore } from '../store/recordStore'
 import { deleteRecord } from '../services/api'
-import { createShareToken, DoctorAccess } from '../services/doctorAccessService'
+import { createShareToken, DoctorAccess, getActiveShares, updateShareRecords } from '../services/doctorAccessService'
 
 const Records: React.FC = () => {
   const navigate = useNavigate()
@@ -31,6 +31,17 @@ const Records: React.FC = () => {
   const [shareResult, setShareResult] = useState<DoctorAccess | null>(null)
   const [isSharing, setIsSharing] = useState(false)
   const [copied, setCopied] = useState(false)
+  
+  // New Connection Flow State
+  const [shares, setShares] = useState<DoctorAccess[]>([])
+  const [isSelectDoctorModalOpen, setIsSelectDoctorModalOpen] = useState(false)
+  const [isScopeControlModalOpen, setIsScopeControlModalOpen] = useState(false)
+  const [editingShare, setEditingShare] = useState<DoctorAccess | null>(null)
+  const [fetchingShares, setFetchingShares] = useState(false)
+  const [isNoDoctorModalOpen, setIsNoDoctorModalOpen] = useState(false)
+  const [tempSelectedIds, setTempSelectedIds] = useState<string[]>([])
+  const [isUpdatingScope, setIsUpdatingScope] = useState(false)
+  const [scopeSearchTerm, setScopeSearchTerm] = useState('')
   
   const { 
     records, 
@@ -137,7 +148,60 @@ const Records: React.FC = () => {
     }
   }
 
-  return (
+  const fetchActiveConnections = async () => {
+    try {
+      setFetchingShares(true)
+      const data = await getActiveShares()
+      setShares(data)
+      return data
+    } catch (err) {
+      console.error('Error fetching shares:', err)
+      return []
+    } finally {
+      setFetchingShares(false)
+    }
+  }
+
+  const handleShareButtonClick = async () => {
+    if (allRecords.length === 0) {
+      await fetchAllRecords()
+    }
+    const activeShares = await fetchActiveConnections()
+    if (activeShares.length === 0) {
+      setIsNoDoctorModalOpen(true)
+    } else {
+      setIsSelectDoctorModalOpen(true)
+    }
+  }
+
+  const openScopeControl = (share: DoctorAccess) => {
+    setEditingShare(share)
+    setTempSelectedIds([...share.recordIds])
+    setScopeSearchTerm('')
+    setIsSelectDoctorModalOpen(false)
+    setIsScopeControlModalOpen(true)
+  }
+
+  const toggleScopeRecord = (id: string) => {
+    setTempSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    )
+  }
+
+  const handleUpdateScope = async () => {
+    if (!editingShare) return
+    setIsUpdatingScope(true)
+    try {
+      const updated = await updateShareRecords(editingShare.shareToken, tempSelectedIds)
+      setShares(prev => prev.map(s => s.shareToken === editingShare.shareToken ? updated : s))
+      setIsScopeControlModalOpen(false)
+    } catch (err) {
+      alert('Failed to update scope')
+    } finally {
+      setIsUpdatingScope(false)
+    }
+  }
+   return (
     <div className="flex min-h-screen bg-gray-50/50">
       <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Header Section */}
@@ -194,16 +258,13 @@ const Records: React.FC = () => {
             )}
 
             <Button 
-              onClick={() => {
-                setIsSharingMode(!isSharingMode)
-                setSelectedShareIds([])
-                setShareResult(null)
-              }}
-              variant={isSharingMode ? "primary" : "outline"}
-              className={`rounded-xl px-4 flex items-center gap-2 ${isSharingMode ? 'bg-indigo-600 border-none text-white shadow-md' : 'bg-white border-gray-200'}`}
+              onClick={handleShareButtonClick}
+              variant="outline"
+              className="rounded-xl px-4 flex items-center gap-2 bg-white border-gray-200 hover:bg-gray-50 transition-all font-bold text-gray-700"
+              loading={fetchingShares}
             >
-              <Share2 className="w-4 h-4" />
-              <span className="hidden sm:inline">{isSharingMode ? 'Cancel Share' : 'Share Records'}</span>
+              <Share2 className="w-4 h-4 text-indigo-500" />
+              <span className="hidden sm:inline">Share Records</span>
             </Button>
           </div>
         </div>
@@ -548,6 +609,216 @@ const Records: React.FC = () => {
                 </Button>
               </div>
             )}
+          </Card>
+        </div>
+      )}
+      {/* No Doctor Connected Modal */}
+      {isNoDoctorModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
+          <Card className="w-full max-w-lg bg-white rounded-[3rem] p-0 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border-none">
+            <div className="p-10 bg-indigo-600 text-white relative">
+              <div className="relative z-10 text-center">
+                <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm border border-white/30 shadow-lg">
+                  <UserX className="w-10 h-10 text-white" />
+                </div>
+                <h2 className="text-3xl font-black tracking-tight uppercase italic leading-none mb-2">No Clinician Link</h2>
+                <p className="text-indigo-100 font-medium text-sm">You haven't connected with any doctors yet</p>
+              </div>
+              <Shield className="absolute right-[-20px] bottom-[-20px] w-40 h-40 text-black/5" />
+            </div>
+
+            <div className="p-10 text-center space-y-8">
+              <p className="text-gray-500 font-medium leading-relaxed px-4">
+                To share your records securely, you first need to add a doctor to your network using their Unique ID or QR Code.
+              </p>
+              <div className="flex flex-col gap-3">
+                <Button 
+                  onClick={() => navigate('/manage-shares')}
+                  className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-indigo-100"
+                >
+                  Manage Connections
+                </Button>
+                <button 
+                  onClick={() => setIsNoDoctorModalOpen(false)}
+                  className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-gray-600 transition-colors py-2"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Select Doctor Modal */}
+      {isSelectDoctorModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
+          <Card className="w-full max-w-lg bg-white rounded-[3rem] p-0 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border-none">
+            <div className="p-10 bg-gray-900 text-white relative">
+              <div className="relative z-10">
+                <h2 className="text-3xl font-black tracking-tight uppercase italic leading-none mb-2 text-indigo-400">Select Doctor</h2>
+                <p className="text-gray-400 font-medium text-sm">Choose a clinician to manage access scope</p>
+              </div>
+              <button 
+                onClick={() => setIsSelectDoctorModalOpen(false)} 
+                className="absolute top-8 right-8 p-3 hover:bg-white/10 rounded-full transition-colors text-white z-10"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              <Users className="absolute right-[-20px] bottom-[-20px] w-40 h-40 text-white/5" />
+            </div>
+
+            <div className="p-10 space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar">
+              {shares.map(share => (
+                <div 
+                  key={share.shareToken}
+                  onClick={() => openScopeControl(share)}
+                  className="flex items-center justify-between p-5 rounded-2xl bg-gray-50 border-2 border-transparent hover:border-indigo-500 hover:bg-indigo-50/30 transition-all cursor-pointer group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-100 group-hover:bg-indigo-600 group-hover:text-white transition-all text-gray-400">
+                      <Stethoscope className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="font-black text-gray-900 uppercase tracking-tight italic">{share.doctorName || 'Doctor'}</p>
+                      <div className="flex items-center gap-2">
+                        <Badge color="blue" className="px-1.5 py-0 text-[8px] font-black uppercase">{share.recordIds.length} Records Shared</Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" />
+                </div>
+              ))}
+            </div>
+            
+            <div className="p-8 bg-gray-50/50 border-t border-gray-100 flex justify-center">
+               <button 
+                 onClick={() => navigate('/manage-shares')}
+                 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest hover:underline flex items-center gap-2"
+               >
+                 <Plus className="w-3.5 h-3.5" />
+                 Connect with New Doctor
+               </button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Scope Control (Manage Access) Modal */}
+      {isScopeControlModalOpen && editingShare && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
+          <Card className="w-full max-w-2xl bg-white rounded-[3rem] p-0 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border-none flex flex-col max-h-[90vh]">
+            <div className="p-10 bg-indigo-600 text-white relative flex-shrink-0">
+              <div className="relative z-10 flex items-center gap-6">
+                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-xl">
+                  <Shield className="w-8 h-8 text-indigo-600" />
+                </div>
+                <div>
+                  <h2 className="text-3xl font-black tracking-tight uppercase italic leading-none mb-1">Manage Access</h2>
+                  <p className="text-indigo-100 font-medium text-sm">Controlling visibility for <span className="text-white font-black">{editingShare.doctorName}</span></p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsScopeControlModalOpen(false)} 
+                className="absolute top-8 right-8 p-3 hover:bg-white/10 rounded-full transition-colors text-white z-10"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-8 space-y-6 flex-1 flex flex-col overflow-hidden">
+              <div className="relative flex-shrink-0">
+                <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
+                <input 
+                  type="text"
+                  placeholder="SEARCH RECORDS TO SHARE..."
+                  value={scopeSearchTerm}
+                  onChange={e => setScopeSearchTerm(e.target.value)}
+                  className="w-full pl-14 pr-6 py-5 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-black text-gray-900 text-sm tracking-widest placeholder:text-gray-300"
+                />
+              </div>
+
+              <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3">
+                {allRecords
+                  .filter(r => {
+                    const cat = r.category || 'custom'
+                    return cat.toLowerCase().includes(scopeSearchTerm.toLowerCase()) || 
+                           (r.doctorName || '').toLowerCase().includes(scopeSearchTerm.toLowerCase())
+                  })
+                  .map(record => {
+                    const id = record._id || record.id || ''
+                    const isSelected = tempSelectedIds.includes(id)
+
+                    return (
+                      <div 
+                        key={id}
+                        onClick={() => toggleScopeRecord(id)}
+                        className={`flex items-center justify-between p-5 rounded-2xl border-2 transition-all cursor-pointer ${
+                          isSelected 
+                            ? 'bg-indigo-50 border-indigo-500 shadow-lg shadow-indigo-100/50' 
+                            : 'bg-white border-gray-100 hover:border-gray-200'
+                        }`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className={`p-2.5 rounded-xl transition-all ${isSelected ? 'bg-indigo-600 text-white' : 'bg-gray-50 text-gray-300'}`}>
+                            {isSelected ? (
+                              <CheckSquare className="w-5 h-5" />
+                            ) : (
+                              <Square className="w-5 h-5" />
+                            )}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-black text-gray-900 uppercase tracking-tight italic">{record.category || 'Record'}</p>
+                              <Badge color="blue" className="px-1 py-0 text-[7px] font-black uppercase">
+                                {new Date(record.visitDate || record.date).toLocaleDateString('en-GB')}
+                              </Badge>
+                            </div>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate max-w-[200px]">
+                              {record.doctorName || 'General Consultation'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+              </div>
+
+              <div className="pt-6 border-t border-gray-100 flex items-center justify-between flex-shrink-0">
+                <div className="flex items-center gap-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-indigo-500 rounded-full" />
+                    <span>{tempSelectedIds.length} Selected</span>
+                  </div>
+                  <button 
+                    onClick={() => setTempSelectedIds([])}
+                    className="hover:text-red-500 transition-colors"
+                  >
+                    Clear All
+                  </button>
+                </div>
+                <div className="flex gap-4">
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                        setIsScopeControlModalOpen(false)
+                        setIsSelectDoctorModalOpen(true)
+                    }}
+                    className="rounded-2xl border-gray-200 text-gray-400 font-black uppercase tracking-widest text-[11px] h-14 px-8 hover:bg-white"
+                  >
+                    Back
+                  </Button>
+                  <Button 
+                    variant="primary"
+                    loading={isUpdatingScope}
+                    onClick={handleUpdateScope}
+                    className="rounded-2xl bg-emerald-600 border-none text-white font-black uppercase tracking-widest text-[11px] h-14 px-10 shadow-xl shadow-emerald-100 hover:bg-emerald-700"
+                  >
+                    Update Access
+                  </Button>
+                </div>
+              </div>
+            </div>
           </Card>
         </div>
       )}

@@ -18,6 +18,7 @@ interface DoctorState {
   savedPatients: SavedPatient[]
   activeToken: string | null
   unreadCounts: Record<string, number>
+  doctorUniqueId: string | null
   
   // Actions
   addPatient: (data: SharedPatientData, token: string) => void
@@ -26,6 +27,7 @@ interface DoctorState {
   incrementUnread: (token: string) => void
   clearUnread: (token: string) => void
   clearAll: () => void
+  setDoctorUniqueId: (id: string) => void
 }
 
 export const useDoctorStore = create<DoctorState>()(
@@ -33,8 +35,8 @@ export const useDoctorStore = create<DoctorState>()(
     (set, get) => ({
       savedPatients: [],
       activeToken: null,
-
       unreadCounts: {},
+      doctorUniqueId: null,
 
       addPatient: (data: SharedPatientData, token: string) => {
         set((state) => {
@@ -103,7 +105,11 @@ export const useDoctorStore = create<DoctorState>()(
       },
 
       clearAll: () => {
-        set({ savedPatients: [], activeToken: null, unreadCounts: {} })
+        set({ savedPatients: [], activeToken: null, unreadCounts: {}, doctorUniqueId: null })
+      },
+
+      setDoctorUniqueId: (id: string) => {
+        set({ doctorUniqueId: id })
       }
     }),
     {

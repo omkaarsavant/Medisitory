@@ -3,10 +3,11 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Bell, User, Menu, X, Calendar as CalendarIcon, Clock, Shield, MessageSquare } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { getAppointments, IAppointment } from '../services/appointmentService'
+import { IAppointment } from '../services/appointmentService'
 import { useRecordStore } from '../store/recordStore'
 import { useChatStore } from '../store/chatStore'
 import { useDoctorStore } from '../store/doctorStore'
+import { useAppointmentStore } from '../store/appointmentStore'
 import { io } from 'socket.io-client'
 
 interface NavbarProps {
@@ -16,7 +17,7 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
   const navigate = useNavigate()
   const { records } = useRecordStore()
-  const [appointments, setAppointments] = useState<IAppointment[]>([])
+  const { appointments, fetchAppointments } = useAppointmentStore()
   const [showDropdown, setShowDropdown] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -24,24 +25,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
     navigate('/')
   }
 
-  const fetchAppointments = async () => {
-    try {
-      const data = await getAppointments()
-      // Sort: upcoming first, then past
-      data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      setAppointments(data)
-    } catch (err) {
-      console.error('Navbar: Failed to load appointments for notifications', err)
-    }
-  }
-
   // Fetch once on mount, and listen for clicks outside dropdown
   useEffect(() => {
     fetchAppointments()
     
-    // Optionally re-fetch periodically so if added in Calendar it updates here
-    const fetchInterval = setInterval(fetchAppointments, 30000)
-
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowDropdown(false)
@@ -49,7 +36,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => {
-      clearInterval(fetchInterval)
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [])

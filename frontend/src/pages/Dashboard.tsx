@@ -1,6 +1,6 @@
 // === frontend/src/pages/Dashboard.tsx ===
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Card from '../components/Card'
 import Badge from '../components/Badge'
 import LoadingSpinner from '../components/LoadingSpinner'
@@ -8,6 +8,8 @@ import ErrorMessage from '../components/ErrorMessage'
 import { useRecordStore } from '../store/recordStore'
 import { getDashboardSummary, DashboardSummary } from '../services/api'
 import { useNavigate } from 'react-router-dom'
+import { IAppointment } from '../services/appointmentService' // Added this import
+import { useAppointmentStore } from '../store/appointmentStore'
 import { 
   Activity, 
   AlertCircle, 
@@ -24,19 +26,25 @@ import {
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate()
-  const { records, fetchRecords } = useRecordStore()
+  const { records, fetchRecords } = useRecordStore() // Modified: added fetchRecords back
   const [summary, setSummary] = useState<DashboardSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [summaryLoading, setSummaryLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [recentUploads, setRecentUploads] = useState<any[]>([])
+  const { appointments, fetchAppointments } = useAppointmentStore() // Modified: changed fetchAppts to fetchAppointments
+  const [showDropdown, setShowDropdown] = useState(false) // Added this state
+  const dropdownRef = useRef<HTMLDivElement>(null) // Added this ref
 
   // Initial fetch
   useEffect(() => {
     const initData = async () => {
       setLoading(true)
       try {
-        await fetchRecords()
+        await Promise.all([
+          fetchRecords(),
+          fetchAppointments() // Modified: changed fetchAppts to fetchAppointments
+        ])
         const summaryData = await getDashboardSummary()
         setSummary(summaryData.data)
       } catch (err) {
@@ -47,6 +55,21 @@ const Dashboard: React.FC = () => {
       }
     }
     initData()
+  }, [])
+
+  // New useEffect block for dropdown and initial appointment fetch
+  useEffect(() => {
+    fetchAppointments() // Ensure appointments are fetched on mount
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
   }, [])
 
   // Reactively update summary whenever records change
@@ -319,14 +342,26 @@ const Dashboard: React.FC = () => {
                 <h3 className="font-bold text-lg">Health Reminders</h3>
               </div>
               <div className="space-y-3">
-                <div className="p-4 bg-white/10 rounded-2xl border border-white/10 hover:bg-white/20 transition-colors">
-                  <p className="text-sm font-bold">Upcoming Health Checkup</p>
-                  <p className="text-xs text-blue-100 mt-1 opacity-80">Next thyroid blood test in 12 days</p>
-                </div>
-                <div className="p-4 bg-white/10 rounded-2xl border border-white/10 hover:bg-white/20 transition-colors">
-                  <p className="text-sm font-bold">Medication Sync</p>
-                  <p className="text-xs text-blue-100 mt-1 opacity-80">Sync your prescribed doses later today</p>
-                </div>
+                {appointments.filter(a => new Date(a.date) >= new Date(new Date().setHours(0,0,0,0))).slice(0, 2).map(appt => (
+                  <div 
+                    key={appt._id}
+                    onClick={() => navigate('/calendar')}
+                    className="p-4 bg-white/10 rounded-2xl border border-white/10 hover:bg-white/20 transition-all cursor-pointer group"
+                  >
+                    <div className="flex justify-between items-start mb-1">
+                      <p className="text-sm font-bold truncate pr-2">Dr. {appt.doctorName}</p>
+                      <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-all" />
+                    </div>
+                    <p className="text-[10px] text-blue-100 font-medium uppercase tracking-widest opacity-80">
+                      {new Date(appt.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} • {appt.time}
+                    </p>
+                  </div>
+                ))}
+                {appointments.filter(a => new Date(a.date) >= new Date(new Date().setHours(0,0,0,0))).length === 0 && (
+                  <div className="p-4 text-center">
+                    <p className="text-xs text-blue-100 opacity-60">No upcoming appointments</p>
+                  </div>
+                )}
               </div>
             </div>
           </Card>

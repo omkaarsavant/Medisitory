@@ -77,7 +77,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   return (
     <aside className={`
-      fixed md:static inset-y-0 left-0 z-30 w-64 bg-white border-r border-gray-200 shadow-lg md:shadow-none transition-transform duration-300 transform
+      fixed md:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 shadow-lg md:shadow-none transition-transform duration-300 transform
       ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
     `}>
       {/* Sidebar header */}

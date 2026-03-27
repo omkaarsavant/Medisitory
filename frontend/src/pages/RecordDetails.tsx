@@ -22,8 +22,8 @@ import {
 } from 'lucide-react'
 import { Card, Badge, Button, LoadingSpinner, ErrorMessage } from '../components'
 import { getRecord, MedicalRecord, deleteRecord } from '../services/api'
-import { clearNoteNotification } from '../services/doctorAccessService'
-import { Shield, Sparkles } from 'lucide-react'
+import { clearNoteNotification, getActiveShares, updateShareRecords, DoctorAccess } from '../services/doctorAccessService'
+import { Shield, Sparkles, UserPlus, CheckSquare, Square, Save, Loader2, X } from 'lucide-react'
 
 const RecordDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -34,6 +34,48 @@ const RecordDetails: React.FC = () => {
 
   const isPDF = record?.fileName?.toLowerCase().endsWith('.pdf') || record?.imagePath?.toLowerCase().includes('.pdf');
   const [downloading, setDownloading] = useState(false)
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
+  const [shares, setShares] = useState<DoctorAccess[]>([])
+  const [fetchingShares, setFetchingShares] = useState(false)
+  const [togglingId, setTogglingId] = useState<string | null>(null)
+
+  const fetchShares = async () => {
+    try {
+      setFetchingShares(true)
+      const data = await getActiveShares()
+      setShares(data)
+    } finally {
+      setFetchingShares(false)
+    }
+  }
+
+  const toggleShare = async (share: DoctorAccess) => {
+    if (!record) return
+    const recordId = record._id || record.id
+    if (!recordId) return
+
+    setTogglingId(share.shareToken)
+    try {
+      let newRecordIds = [...share.recordIds]
+      if (newRecordIds.includes(recordId)) {
+        newRecordIds = newRecordIds.filter(id => id !== recordId)
+      } else {
+        newRecordIds.push(recordId)
+      }
+      
+      const updated = await updateShareRecords(share.shareToken, newRecordIds)
+      setShares(prev => prev.map(s => s.shareToken === share.shareToken ? updated : s))
+    } catch (err) {
+      alert('Failed to update share')
+    } finally {
+      setTogglingId(null)
+    }
+  }
+
+  const handleShareClick = () => {
+    setIsShareModalOpen(true)
+    fetchShares()
+  }
 
   const handleDownloadPDF = async () => {
     if (!record) return
@@ -286,6 +328,14 @@ const RecordDetails: React.FC = () => {
             <Badge color={getStatusColor(record.status)}>
               {record.status}
             </Badge>
+            <Button 
+              variant="primary" 
+              icon={<Share2 className="w-4 h-4" />} 
+              onClick={handleShareClick}
+              className="bg-indigo-600 hover:bg-indigo-700 border-none shadow-lg shadow-indigo-100"
+            >
+              Share Report
+            </Button>
             <Button variant="outline" icon={<Download className="w-4 h-4" />} onClick={handleDownloadPDF} loading={downloading}>
               {downloading ? 'Generating…' : 'Download PDF'}
             </Button>
@@ -572,6 +622,104 @@ const RecordDetails: React.FC = () => {
             </div>
           </div>
         </Card>
+
+        {/* Share Report Modal */}
+        {isShareModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
+            <Card className="w-full max-w-lg bg-white rounded-[3rem] p-0 shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden animate-in zoom-in-95 duration-300 border-none">
+              <div className="p-10 bg-gray-900 text-white relative">
+                <div className="relative z-10">
+                  <h2 className="text-3xl font-black tracking-tight uppercase italic leading-none mb-2">Scope Control</h2>
+                  <p className="text-indigo-300 font-medium text-sm">Manage clinician access to this report</p>
+                </div>
+                <button 
+                  onClick={() => setIsShareModalOpen(false)} 
+                  className="absolute top-8 right-8 p-3 hover:bg-white/10 rounded-full transition-colors text-white z-10"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+                <Shield className="absolute right-[-20px] bottom-[-20px] w-40 h-40 text-white/5" />
+              </div>
+
+              <div className="p-10 space-y-6">
+                {fetchingShares ? (
+                  <div className="py-12 text-center">
+                    <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mx-auto mb-4" />
+                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Fetching authorizations...</p>
+                  </div>
+                ) : shares.length === 0 ? (
+                  <div className="py-8 text-center space-y-6">
+                    <div className="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
+                      <UserPlus className="w-10 h-10 text-gray-200" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-black text-gray-900 uppercase tracking-widest mb-2">No Clinician Link</h3>
+                      <p className="text-gray-500 font-medium text-sm leading-relaxed px-4">
+                        You haven't connected with any doctors yet. Add a doctor to your network to share reports.
+                      </p>
+                    </div>
+                    <Button 
+                      onClick={() => navigate('/doctors')}
+                      variant="primary"
+                      className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-indigo-100"
+                    >
+                      Add Doctor First
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1 mb-2">Authorized Clinicians</p>
+                    {shares.map((share) => {
+                      const isShared = share.recordIds.includes(record._id || record.id || '')
+                      const isToggling = togglingId === share.shareToken
+                      
+                      return (
+                        <div 
+                          key={share.shareToken}
+                          onClick={() => !isToggling && toggleShare(share)}
+                          className={`flex items-center justify-between p-5 rounded-2xl border-2 transition-all cursor-pointer ${
+                            isShared 
+                              ? 'bg-indigo-50 border-indigo-500 shadow-lg shadow-indigo-100/50' 
+                              : 'bg-white border-gray-100 hover:border-gray-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className={`p-2.5 rounded-xl transition-all ${isShared ? 'bg-indigo-600 text-white' : 'bg-gray-50 text-gray-300'}`}>
+                              {isToggling ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                              ) : isShared ? (
+                                <CheckSquare className="w-5 h-5" />
+                              ) : (
+                                <Square className="w-5 h-5" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-black text-gray-900 uppercase tracking-tight italic">{share.doctorName || 'Doctor'}</p>
+                              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">ID: {share.shareToken.substring(0, 8)}...</p>
+                            </div>
+                          </div>
+                          {isShared && (
+                            <div className="w-2.5 h-2.5 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+
+                <div className="pt-4 flex gap-4">
+                  <Button 
+                    variant="outline"
+                    onClick={() => setIsShareModalOpen(false)}
+                    className="rounded-2xl border-gray-200 text-gray-400 font-black uppercase tracking-widest text-[11px] h-14 flex-1 hover:bg-white"
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   )

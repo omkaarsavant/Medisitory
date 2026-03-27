@@ -311,10 +311,7 @@ const SharedPatientView: React.FC<Props> = ({ data, onBack }) => {
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Clinical Group</span>
               <p className="font-extrabold text-indigo-600 text-xl italic uppercase tracking-tighter">{data.patient.bloodGroup}</p>
             </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Scope Mode</span>
-              <Badge color="blue" className="w-fit px-4 py-1.5 font-black text-[9px] uppercase tracking-widest italic bg-indigo-50 text-indigo-600 border-none shadow-sm">{data.accessType}</Badge>
-            </div>
+
             <div className="flex flex-col gap-1">
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Records Scope</span>
               <p className="font-black text-gray-900 text-xl italic">{sharedRecordsOnly.length} Reports</p>

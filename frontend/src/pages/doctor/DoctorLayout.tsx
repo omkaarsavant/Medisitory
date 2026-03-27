@@ -9,8 +9,7 @@ const DoctorLayout: React.FC = () => {
 
   const navItems = [
     { name: 'My Patients', path: '/doctor', icon: Users, exact: true },
-    { name: 'Appointments', path: '/doctor/appointments', icon: CalendarIcon, exact: false },
-    { name: 'Scan Patient QR', path: '/doctor/scan', icon: QrCode, exact: false }
+    { name: 'Appointments', path: '/doctor/appointments', icon: CalendarIcon, exact: false }
   ]
 
   const isActive = (path: string, exact: boolean) => {

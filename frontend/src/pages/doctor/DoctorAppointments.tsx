@@ -40,7 +40,8 @@ const DoctorAppointments: React.FC = () => {
     type: 'Checkup',
     status: 'Scheduled',
     reason: '',
-    notesForPatient: ''
+    notesForPatient: '',
+    paymentAmount: 500
   })
 
   useEffect(() => {
@@ -159,7 +160,8 @@ const DoctorAppointments: React.FC = () => {
                   type: 'Checkup',
                   status: 'Scheduled',
                   reason: '',
-                  notesForPatient: ''
+                  notesForPatient: '',
+                  paymentAmount: 500
                 })
                 setIsModalOpen(true)
               }}
@@ -194,13 +196,14 @@ const DoctorAppointments: React.FC = () => {
                     <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Date & Time</th>
                     <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Type</th>
                     <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Status</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Payment</th>
                     <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {appointments.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center">
+                      <td colSpan={6} className="px-6 py-12 text-center">
                         <p className="text-gray-400 font-bold uppercase tracking-widest text-sm">No appointments found</p>
                       </td>
                     </tr>
@@ -231,6 +234,18 @@ const DoctorAppointments: React.FC = () => {
                           <Badge color={appt.status === 'Cancelled' ? 'red' : appt.status === 'Scheduled' ? 'green' : 'yellow'}>
                             {appt.status}
                           </Badge>
+                        </td>
+                        <td className="px-6 py-4">
+                          {appt.paymentAmount > 0 ? (
+                            <div className="flex items-center gap-2">
+                              <Badge color={appt.paymentStatus === 'Paid' ? 'green' : appt.paymentStatus === 'Failed' ? 'red' : 'yellow'}>
+                                {appt.paymentStatus || 'Pending'}
+                              </Badge>
+                              <span className="text-[10px] font-bold text-gray-400">₹{appt.paymentAmount}</span>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">N/A</span>
+                          )}
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -411,14 +426,29 @@ const DoctorAppointments: React.FC = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Internal Notes / Reason</label>
-              <textarea 
-                placeholder="Internal notes regarding this appointment..." 
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium text-gray-700 h-24" 
-                value={formData.reason} 
-                onChange={e => setFormData({...formData, reason: e.target.value})} 
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Internal Notes / Reason</label>
+                <textarea 
+                  placeholder="Internal notes regarding this appointment..." 
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium text-gray-700 h-24" 
+                  value={formData.reason} 
+                  onChange={e => setFormData({...formData, reason: e.target.value})} 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest px-1">Consultation Fee (₹)</label>
+                <input 
+                  type="number" 
+                  min="0" 
+                  step="50" 
+                  className="w-full px-4 py-3 bg-emerald-50/30 border border-emerald-100 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-gray-700" 
+                  value={formData.paymentAmount || 0} 
+                  onChange={e => setFormData({...formData, paymentAmount: parseInt(e.target.value) || 0})} 
+                  placeholder="e.g. 500"
+                />
+                <p className="text-[10px] text-gray-400 px-1">Set to 0 for no charge. Patient will be prompted to pay this amount.</p>
+              </div>
             </div>
 
             <div className="space-y-2">

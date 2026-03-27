@@ -1,12 +1,111 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDoctorStore } from '../../store/doctorStore'
-import { Users, Clock, ArrowRight, Activity, Trash2, Search } from 'lucide-react'
+import { 
+  Users, Clock, ArrowRight, Activity, Trash2, Search, 
+  Copy, Check, UserCheck, UserX, Loader2, Bell, Hash, QrCode
+} from 'lucide-react'
+import { 
+  getDoctorUniqueId, getDoctorRequests, respondToRequest, 
+  getSharedRecords, DoctorRequestData 
+} from '../../services/doctorAccessService'
+import QRCode from 'react-qr-code'
 
 const DoctorDashboard: React.FC = () => {
-  const { savedPatients, removePatient, unreadCounts } = useDoctorStore()
+  const { savedPatients, removePatient, unreadCounts, doctorUniqueId, setDoctorUniqueId, addPatient } = useDoctorStore()
   const [searchTerm, setSearchTerm] = useState('')
+  const [copied, setCopied] = useState(false)
+  const [pendingRequests, setPendingRequests] = useState<DoctorRequestData[]>([])
+  const [respondingId, setRespondingId] = useState<string | null>(null)
+  const [showQr, setShowQr] = useState(false)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    // Fetch or generate doctor ID
+    const fetchDoctorId = async () => {
+      try {
+        const id = await getDoctorUniqueId(doctorUniqueId || undefined)
+        setDoctorUniqueId(id)
+      } catch (err) {
+        console.error('Error fetching doctor ID:', err)
+      }
+    }
+    if (!doctorUniqueId) {
+      fetchDoctorId()
+    }
+  }, [])
+
+  useEffect(() => {
+    // Validate saved patients — remove any whose share was revoked
+    const validatePatients = async () => {
+      for (const patient of savedPatients) {
+        try {
+          const patientData = await getSharedRecords(patient.shareToken, true)
+          // Always update the store with fresh data (including recordCount)
+          addPatient(patientData, patient.shareToken)
+        } catch (err: any) {
+          // 404 means share was revoked or expired — remove from store
+          if (err?.response?.status === 404) {
+            removePatient(patient.shareToken)
+          }
+        }
+      }
+    }
+    if (savedPatients.length > 0) {
+      validatePatients()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (doctorUniqueId) {
+      fetchPendingRequests()
+      // Poll every 10 seconds for new requests
+      const interval = setInterval(fetchPendingRequests, 10000)
+      return () => clearInterval(interval)
+    }
+  }, [doctorUniqueId])
+
+  const fetchPendingRequests = async () => {
+    if (!doctorUniqueId) return
+    try {
+      const data = await getDoctorRequests(doctorUniqueId)
+      setPendingRequests(data.filter(r => r.status === 'Pending'))
+    } catch (err) {
+      console.error('Error fetching requests:', err)
+    }
+  }
+
+  const handleCopyId = () => {
+    if (doctorUniqueId) {
+      navigator.clipboard.writeText(doctorUniqueId)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  const handleRespond = async (requestId: string, accept: boolean) => {
+    try {
+      setRespondingId(requestId)
+      const result = await respondToRequest(requestId, accept, 'Doctor')
+      
+      // If accepted, fetch the shared records and auto-save the patient
+      if (accept && result.data?.shareToken) {
+        try {
+          const patientData = await getSharedRecords(result.data.shareToken)
+          addPatient(patientData, result.data.shareToken)
+        } catch (err) {
+          console.error('Error fetching patient data after accept:', err)
+        }
+      }
+      
+      // Remove from pending
+      setPendingRequests(prev => prev.filter(r => r._id !== requestId))
+    } catch (err) {
+      alert('Failed to respond to request')
+    } finally {
+      setRespondingId(null)
+    }
+  }
 
   const handleRemove = (e: React.MouseEvent, token: string) => {
     e.stopPropagation()
@@ -33,6 +132,117 @@ const DoctorDashboard: React.FC = () => {
             </p>
           </div>
         </div>
+
+        {/* Doctor Unique ID Card */}
+        {doctorUniqueId && (
+          <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 rounded-[2rem] p-8 text-white shadow-2xl shadow-indigo-200/50 relative overflow-hidden">
+            <div className="relative z-10">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                <div>
+                  <p className="text-[10px] font-black text-indigo-200 uppercase tracking-[0.3em] mb-2 flex items-center gap-2">
+                    <Hash className="w-3.5 h-3.5" />
+                    Your Unique Doctor ID
+                  </p>
+                  <div className="flex items-center gap-4">
+                    <span className="text-4xl lg:text-5xl font-black tracking-[0.15em] text-white">{doctorUniqueId}</span>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={handleCopyId}
+                        className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all active:scale-90"
+                        title="Copy to clipboard"
+                      >
+                        {copied ? <Check className="w-5 h-5 text-emerald-300" /> : <Copy className="w-5 h-5" />}
+                      </button>
+                      <button 
+                        onClick={() => setShowQr(!showQr)}
+                        className={`p-3 rounded-xl transition-all active:scale-90 ${showQr ? 'bg-white text-indigo-700' : 'bg-white/10 hover:bg-white/20'}`}
+                        title="Display QR Code"
+                      >
+                        <QrCode className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                {showQr ? (
+                  <div className="bg-white p-4 rounded-3xl shadow-2xl animate-in zoom-in-95 duration-300">
+                    <QRCode 
+                      value={doctorUniqueId} 
+                      size={140}
+                      level="H"
+                      className="rounded-lg"
+                    />
+                  </div>
+                ) : (
+                  <div className="text-sm text-indigo-200 font-medium max-w-xs leading-relaxed">
+                    Share this ID with patients so they can send you a connection request from their MedVault app.
+                  </div>
+                )}
+              </div>
+            </div>
+            <Activity className="absolute right-[-30px] bottom-[-30px] w-60 h-60 text-white/5" />
+          </div>
+        )}
+
+        {/* Pending Requests Section */}
+        {pendingRequests.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Bell className="w-5 h-5 text-amber-500" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
+              </div>
+              <h2 className="text-[10px] font-black text-amber-600 uppercase tracking-[0.3em]">
+                Incoming Connection Requests ({pendingRequests.length})
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {pendingRequests.map(req => (
+                <div key={req._id} className="bg-white rounded-[2rem] p-6 border-2 border-amber-200 shadow-xl shadow-amber-50 hover:shadow-2xl transition-all">
+                  <div className="flex items-center gap-4 mb-5">
+                    <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center shadow-inner">
+                      <span className="text-amber-600 font-black text-xl">
+                        {req.patientName.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-black text-gray-900 tracking-tight">{req.patientName}</h3>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {new Date(req.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => handleRespond(req._id, true)}
+                      disabled={respondingId === req._id}
+                      className="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 text-white rounded-xl font-black uppercase tracking-widest text-[11px] transition-all shadow-lg shadow-emerald-100 active:scale-95 flex items-center justify-center gap-2"
+                    >
+                      {respondingId === req._id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          <UserCheck className="w-4 h-4" />
+                          Accept
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleRespond(req._id, false)}
+                      disabled={respondingId === req._id}
+                      className="flex-1 py-3.5 bg-gray-100 hover:bg-red-50 hover:text-red-600 disabled:bg-gray-50 text-gray-500 rounded-xl font-black uppercase tracking-widest text-[11px] transition-all active:scale-95 flex items-center justify-center gap-2 border border-gray-200 hover:border-red-200"
+                    >
+                      <UserX className="w-4 h-4" />
+                      Decline
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="relative w-full md:max-w-md group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
@@ -44,13 +254,7 @@ const DoctorDashboard: React.FC = () => {
               className="w-full pl-12 pr-4 py-4 bg-white border border-gray-100 rounded-[1.5rem] focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-xl shadow-gray-200/20 font-bold text-gray-700 placeholder:text-gray-300"
             />
           </div>
-          <button 
-            onClick={() => navigate('/doctor/scan')}
-            className="w-full md:w-auto px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-sm transition-all shadow-xl shadow-indigo-600/30 active:scale-95 flex items-center justify-center gap-2"
-          >
-            Connect New Patient
-            <ArrowRight className="w-4 h-4" />
-          </button>
+
         </div>
 
         {savedPatients.length === 0 ? (
@@ -60,15 +264,9 @@ const DoctorDashboard: React.FC = () => {
             </div>
             <h3 className="text-2xl font-black text-gray-900 tracking-tight mb-3">No active patient sessions</h3>
             <p className="text-gray-500 font-medium max-w-sm mx-auto mb-10 text-lg leading-relaxed">
-              Connect to a patient by scanning their secure MedVault QR code or entering their direct access token.
+              Share your unique ID <strong className="text-indigo-600">{doctorUniqueId}</strong> with patients, or scan their MedVault QR code to connect.
             </p>
-            <button 
-              onClick={() => navigate('/doctor/scan')}
-              className="px-10 py-4 bg-gray-900 hover:bg-black text-white rounded-2xl font-black uppercase tracking-widest text-sm transition-all shadow-2xl shadow-gray-900/20 active:scale-95 inline-flex items-center gap-3"
-            >
-              Scan Patient QR
-              <ArrowRight className="w-5 h-5" />
-            </button>
+
           </div>
         ) : filteredPatients.length === 0 ? (
           <div className="bg-white rounded-[2rem] p-12 text-center border border-gray-100 shadow-sm">

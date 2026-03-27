@@ -113,3 +113,42 @@ export const getChatHistory = async (token: string): Promise<Message[]> => {
     throw error
   }
 }
+
+// === Doctor Request APIs ===
+
+const REQUEST_URL = 'http://localhost:5000/api/doctor-requests'
+
+export interface DoctorRequestData {
+  _id: string
+  doctorUniqueId: string
+  patientId: string
+  patientName: string
+  status: 'Pending' | 'Accepted' | 'Rejected'
+  respondedAt?: string
+  createdAt: string
+}
+
+export const getDoctorUniqueId = async (sessionKey: string = 'default_doctor'): Promise<string> => {
+  const response = await axios.get(`${REQUEST_URL}/doctor-id?key=${sessionKey}`)
+  return response.data.data.doctorId
+}
+
+export const sendDoctorRequest = async (doctorUniqueId: string, patientName: string = 'Patient'): Promise<DoctorRequestData> => {
+  const response = await axios.post(`${REQUEST_URL}/send`, { doctorUniqueId, patientName })
+  return response.data.data
+}
+
+export const getMyRequests = async (): Promise<DoctorRequestData[]> => {
+  const response = await axios.get(`${REQUEST_URL}/patient`)
+  return response.data.data
+}
+
+export const getDoctorRequests = async (doctorId: string): Promise<DoctorRequestData[]> => {
+  const response = await axios.get(`${REQUEST_URL}/doctor/${doctorId}`)
+  return response.data.data
+}
+
+export const respondToRequest = async (id: string, accept: boolean, doctorName: string = 'Doctor'): Promise<any> => {
+  const response = await axios.post(`${REQUEST_URL}/${id}/respond`, { accept, doctorName })
+  return response.data
+}
