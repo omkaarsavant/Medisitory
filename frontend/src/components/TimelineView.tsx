@@ -85,19 +85,19 @@ const TimelineView: React.FC<TimelineViewProps> = ({ records }) => {
     <div className="space-y-8 pb-20 max-w-5xl mx-auto px-4">
       {/* Navigation Header */}
       {view !== 'YEARS' && (
-        <div className="flex items-center space-x-4 mb-8 translate-y-[-20px] animate-in fade-in slide-in-from-left-4 duration-300">
+        <div className="flex items-center space-x-4 mb-12 relative z-[60] animate-in fade-in slide-in-from-left-4 duration-300">
           <button 
             onClick={goBack}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-blue-600 bg-white shadow-sm border border-gray-100"
+            className="p-2.5 hover:bg-gray-100 rounded-full transition-all text-gray-400 hover:text-blue-600 bg-white shadow-lg border border-gray-100 flex-shrink-0 active:scale-90"
           >
             <ChevronLeft className="w-6 h-6" />
           </button>
-          <div className="flex items-center space-x-2 text-sm font-black text-gray-400 uppercase tracking-widest">
+          <div className="flex flex-wrap items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest min-w-0 bg-white/50 backdrop-blur-sm px-4 py-2 rounded-full border border-gray-100">
             <span className={view === 'MONTHS' ? 'text-blue-600' : ''}>{selectedYear}</span>
             {selectedMonth && (
               <>
-                <ChevronRight className="w-4 h-4" />
-                <span className="text-blue-600">{selectedMonth}</span>
+                <ChevronRight className="w-4 h-4 flex-shrink-0 text-gray-300" />
+                <span className="text-blue-600 truncate max-w-[120px]">{selectedMonth}</span>
               </>
             )}
           </div>
@@ -129,9 +129,90 @@ const TimelineView: React.FC<TimelineViewProps> = ({ records }) => {
         </div>
       )}
 
-      {/* Tier 2: Months View (Horizontal Timeline) */}
+      {/* Tier 2: Months View (Snake Timeline for Mobile) */}
       {view === 'MONTHS' && selectedYear && (
-        <div className="relative py-24 animate-in fade-in slide-in-from-right-4 duration-500">
+        <div className="md:hidden relative py-12 px-2 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          {/* Snake Path Logic */}
+          {(() => {
+            const activeMonths = months.map((month, idx) => ({ month, idx, hasRecords: groupedRecords[selectedYear][month]?.length > 0, count: groupedRecords[selectedYear][month]?.length || 0 }))
+                                     .filter(m => m.hasRecords);
+            
+            // Group months into pairs for the snake (2 per row on mobile)
+            const rows = [];
+            for (let i = 0; i < activeMonths.length; i += 2) {
+              rows.push(activeMonths.slice(i, i + 2));
+            }
+
+            return (
+              <div className="flex flex-col gap-24 relative z-10">
+                {rows.map((row, rowIndex) => {
+                  const isRTL = rowIndex % 2 === 1;
+                  const hasMoreRows = rowIndex < rows.length - 1;
+
+                  return (
+                    <div 
+                      key={rowIndex} 
+                      className={`relative flex items-center justify-around w-full ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}
+                    >
+                      {/* Horizontal Path Connector */}
+                      {row.length > 1 && (
+                        <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-200 -translate-y-1/2 -z-10 mx-auto max-w-[60%]" />
+                      )}
+
+                      {/* Curved Connector to Next Row */}
+                      {hasMoreRows && (
+                        <div className={`absolute top-1/2 h-[calc(100%+6rem)] w-1/3 border-gray-200 border-2 -z-10
+                          ${isRTL ? 'left-4 border-r-0 rounded-l-[3rem] -translate-x-1/2' : 'right-4 border-l-0 rounded-r-[3rem] translate-x-1/2'}
+                        `} />
+                      )}
+
+                      {row.map((m, colIndex) => {
+                        const stepNumber = activeMonths.findIndex(am => am.idx === m.idx) + 1;
+                        return (
+                          <div key={m.month} className="relative flex flex-col items-center group">
+                            {/* Step Indicator Section */}
+                            <div className="mb-4 text-center">
+                              <p className="text-[10px] font-black text-gray-400 tracking-widest uppercase">
+                                Step 0{stepNumber}
+                              </p>
+                              <h3 className="text-sm font-black text-gray-900 group-hover:text-blue-600 transition-colors">
+                                {m.month.slice(0, 3).toUpperCase()} '{selectedYear.toString().slice(-2)}
+                              </h3>
+                            </div>
+
+                            {/* Circular Bubble */}
+                            <div className="relative">
+                                <button
+                                    onClick={() => handleMonthClick(m.month)}
+                                    className={`relative z-20 w-16 h-16 rounded-full bg-white border-4 border-white shadow-xl flex items-center justify-center text-xl font-black transition-all duration-300 active:scale-90 ring-4 group-hover:ring-blue-100 ${m.count > 0 ? 'text-blue-600 ring-blue-50' : 'text-gray-300 ring-gray-100'}`}
+                                >
+                                    {m.count}
+                                </button>
+                                {/* Ripple Animation */}
+                                <div className="absolute inset-0 bg-blue-500 rounded-full animate-ping opacity-10 group-hover:opacity-20 -z-10" />
+                            </div>
+
+                            {/* Report Count Info */}
+                            <div className="mt-4 bg-white/50 backdrop-blur-sm px-3 py-1 rounded-full border border-gray-100 shadow-sm">
+                                <p className="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">
+                                    {m.count === 1 ? '1 Report' : `${m.count} Reports`}
+                                </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* Tier 2: Months View (Standard Horizontal for Desktop) */}
+      {view === 'MONTHS' && selectedYear && (
+        <div className="hidden md:block relative py-24 animate-in fade-in slide-in-from-right-4 duration-500">
           <div className="absolute top-1/2 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-100 to-transparent -translate-y-1/2" />
           <div className="relative flex justify-between items-center overflow-x-auto no-scrollbar px-8 gap-12 min-h-[160px]">
             {months.map((month, idx) => {
@@ -153,7 +234,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({ records }) => {
                   >
                     {count}
                   </button>
-                  <div className="absolute -bottom-12 whitespace-nowrap text-center">
+                  <div className="absolute -bottom-12 whitespace-nowrap text-center bg-white/80 px-2 rounded backdrop-blur-sm relative z-20">
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
                       {count === 1 ? 'Report' : 'Reports'}
                     </p>

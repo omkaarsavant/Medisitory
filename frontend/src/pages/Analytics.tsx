@@ -443,6 +443,16 @@ const Analytics: React.FC = () => {
               </button>
             ))}
           </div>
+          <Button
+            variant="outline"
+            icon={<Download size={16} />}
+            className="bg-white hover:bg-gray-50 transition-all font-black uppercase tracking-widest text-[10px] h-10 px-6 rounded-xl border-gray-100 shadow-sm"
+            onClick={handleExportPDF}
+            loading={exporting}
+            disabled={loading || !!error}
+          >
+            {exporting ? 'Exporting…' : 'Export PDF'}
+          </Button>
         </div>
 
         {/* Tab Navigation */}
@@ -506,19 +516,7 @@ const Analytics: React.FC = () => {
           )}
         </div>
 
-        {/* Export Footer */}
-        <div className="mt-12 flex justify-center">
-          <Button
-            variant="outline"
-            icon={<Download size={16} />}
-            className="bg-white hover:bg-gray-50 transition-colors"
-            onClick={handleExportPDF}
-            loading={exporting}
-            disabled={loading || !!error}
-          >
-            {exporting ? 'Exporting…' : 'Export Visualizations (PDF)'}
-          </Button>
-        </div>
+
       </div>
     </div>
   )

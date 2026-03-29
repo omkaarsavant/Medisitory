@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>MedVault | Medical Records</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-tint": "#0057ce",
+                        "outline-variant": "#c1c6d7",
+                        "inverse-surface": "#2e3132",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-bright": "#f8f9fa",
+                        "inverse-primary": "#b1c5ff",
+                        "on-primary-container": "#fefcff",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed": "#001946",
+                        "on-error-container": "#93000a",
+                        "background": "#f8f9fa",
+                        "surface": "#f8f9fa",
+                        "primary-fixed-dim": "#b1c5ff",
+                        "primary-container": "#036cfb",
+                        "surface-container": "#edeeef",
+                        "on-tertiary-container": "#fcfdfe",
+                        "on-background": "#191c1d",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed-variant": "#00513a",
+                        "tertiary-container": "#737576",
+                        "surface-container-low": "#f3f4f5",
+                        "tertiary": "#5a5c5d",
+                        "secondary-fixed": "#67fcc6",
+                        "tertiary-fixed-dim": "#c5c7c8",
+                        "surface-variant": "#e1e3e4",
+                        "surface-dim": "#d9dadb",
+                        "primary-fixed": "#dae2ff",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed": "#e1e3e4",
+                        "on-tertiary-fixed": "#191c1d",
+                        "on-surface-variant": "#414754",
+                        "primary": "#0055c9",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-tertiary-fixed-variant": "#454748",
+                        "on-secondary-fixed": "#002116",
+                        "on-error": "#ffffff",
+                        "surface-container-high": "#e7e8e9",
+                        "on-surface": "#191c1d",
+                        "on-secondary-container": "#007354",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-highest": "#e1e3e4",
+                        "secondary-fixed-dim": "#44dfab",
+                        "secondary-container": "#67fcc6",
+                        "error": "#ba1a1a",
+                        "secondary": "#006c4f",
+                        "on-primary-fixed-variant": "#00419e",
+                        "outline": "#717786"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            background-image:
+                radial-gradient(at 0% 0%, rgba(3, 108, 251, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(103, 252, 198, 0.05) 0px, transparent 50%);
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body class="font-body text-on-surface min-h-screen pb-32">
+
+    <!-- Hero Header Section -->
+    <section class="mb-8">
+        <div class="flex flex-col gap-1">
+            <span class="text-[10px] font-bold tracking-[0.2em] text-primary uppercase font-headline">MEDICAL HISTORY
+                ARCHIVE</span>
+            <h1 class="text-4xl font-extrabold text-on-surface font-headline leading-tight">Your Records</h1>
+        </div>
+        <div class="mt-6 flex flex-col gap-4">
+            <button
+                class="w-full bg-gradient-to-r from-primary to-primary-container text-on-primary py-4 rounded-lg font-bold shadow-lg flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
+                <span class="material-symbols-outlined" data-icon="share">share</span>
+                Share Records
+            </button>
+            <div class="flex bg-surface-container p-1 rounded-full">
+                <button
+                    class="flex-1 py-2 rounded-full bg-surface-container-lowest shadow-sm text-sm font-bold text-primary transition-all">List</button>
+                <button
+                    class="flex-1 py-2 rounded-full text-sm font-semibold text-on-surface-variant hover:text-on-surface transition-all">Timeline</button>
+            </div>
+        </div>
+    </section>
+    <!-- Filters Section -->
+    <section class="mb-8 space-y-4">
+        <div class="relative group">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline"
+                data-icon="search">search</span>
+            <input
+                class="w-full pl-12 pr-4 py-4 bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-primary/20 text-sm font-medium transition-all placeholder:text-outline"
+                placeholder="Quick Search" type="text" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+            <div class="relative">
+                <select
+                    class="w-full pl-4 pr-12 py-3 bg-white/50 backdrop-blur-sm border-none rounded-lg text-sm font-semibold appearance-none focus:ring-2 focus:ring-primary/20 relative z-10">
+                    <option>All</option>
+                    <option>Labs</option>
+                    <option>Imaging</option>
+                    <option>Vaccines</option>
+                </select>
+                <span
+                    class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline pointer-events-none z-20"
+                    data-icon="expand_e">expand_more</span>
+            </div>
+            <button
+                class="flex items-center justify-center gap-2 px-4 py-3 bg-white/50 backdrop-blur-sm rounded-lg text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-[18px]" data-icon="calendar_today">calendar_today</span>
+                Date Range
+            </button>
+        </div>
+    </section>
+    <!-- Records List -->
+    <section class="space-y-4">
+        <!-- Record 1: BLOOD SUGAR -->
+        <div
+            class="glass-card p-5 rounded-lg flex items-start gap-4 relative shadow-sm group hover:shadow-md transition-shadow">
+            <div class="w-12 h-12 rounded-full bg-error-container/30 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-error" data-icon="water_drop">water_drop</span>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="font-bold text-on-surface truncate pr-12">BLOOD SUGAR</h3>
+                    <span
+                        class="px-2 py-0.5 rounded-full bg-secondary-container/50 text-on-secondary-container text-[10px] font-bold">Completed</span>
+                </div>
+                <p class="text-sm text-on-surface-variant font-medium">General Consultation</p>
+                <p class="text-xs text-outline mt-1 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[14px]" data-icon="person">person</span>
+                    Dr. Sarah Williams
+                </p>
+            </div>
+            <div class="flex items-center gap-3 absolute right-5 top-1/2 -translate-y-1/2">
+                <button class="material-symbols-outlined text-outline hover:text-error transition-colors text-[20px]"
+                    data-icon="delete">delete</button>
+                <span class="material-symbols-outlined text-outline" data-icon="chevron_right">chevron_right</span>
+            </div>
+        </div>
+        <!-- Record 2: CUSTOM (Pending) -->
+        <div class="glass-card p-5 rounded-lg flex items-start gap-4 relative shadow-sm group">
+            <div class="w-12 h-12 rounded-full bg-primary-container/10 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-primary" data-icon="description">description</span>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="font-bold text-on-surface truncate pr-12">CUSTOM</h3>
+                    <span
+                        class="px-2 py-0.5 rounded-full bg-surface-variant text-on-surface-variant text-[10px] font-bold">Pending</span>
+                </div>
+                <p class="text-sm text-on-surface-variant font-medium">Medical Certificate</p>
+                <p class="text-xs text-outline mt-1 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span>
+                    Submitted 2h ago
+                </p>
+            </div>
+            <div class="flex items-center gap-3 absolute right-5 top-1/2 -translate-y-1/2">
+                <button class="material-symbols-outlined text-outline hover:text-error transition-colors text-[20px]"
+                    data-icon="delete">delete</button>
+                <span class="material-symbols-outlined text-outline" data-icon="chevron_right">chevron_right</span>
+            </div>
+        </div>
+        <!-- Record 3: CHEST X-RAY -->
+        <div class="glass-card p-5 rounded-lg flex items-start gap-4 relative shadow-sm group">
+            <div class="w-12 h-12 rounded-full bg-tertiary-fixed-dim/20 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-on-surface-variant" data-icon="radiology">radiology</span>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="font-bold text-on-surface truncate pr-12">CHEST X-RAY</h3>
+                    <span
+                        class="px-2 py-0.5 rounded-full bg-secondary-container/50 text-on-secondary-container text-[10px] font-bold">Completed</span>
+                </div>
+                <p class="text-sm text-on-surface-variant font-medium">Radiology Department</p>
+                <p class="text-xs text-outline mt-1 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[14px]" data-icon="person">person</span>
+                    Dr. Michael Chen
+                </p>
+            </div>
+            <div class="flex items-center gap-3 absolute right-5 top-1/2 -translate-y-1/2">
+                <button class="material-symbols-outlined text-outline hover:text-error transition-colors text-[20px]"
+                    data-icon="delete">delete</button>
+                <span class="material-symbols-outlined text-outline" data-icon="chevron_right">chevron_right</span>
+            </div>
+        </div>
+        <!-- Record 4: COVID-19 VACCINE -->
+        <div class="glass-card p-5 rounded-lg flex items-start gap-4 relative shadow-sm group">
+            <div class="w-12 h-12 rounded-full bg-secondary-container/20 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-secondary" data-icon="vaccines">vaccines</span>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="font-bold text-on-surface truncate pr-12">COVID-19 VACCINE</h3>
+                    <span
+                        class="px-2 py-0.5 rounded-full bg-secondary-container/50 text-on-secondary-container text-[10px] font-bold">Completed</span>
+                </div>
+                <p class="text-sm text-on-surface-variant font-medium">Immunization Hub</p>
+                <p class="text-xs text-outline mt-1 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[14px]" data-icon="verified">verified</span>
+                    Batch #CV-2099
+                </p>
+            </div>
+            <div class="flex items-center gap-3 absolute right-5 top-1/2 -translate-y-1/2">
+                <button class="material-symbols-outlined text-outline hover:text-error transition-colors text-[20px]"
+                    data-icon="delete">delete</button>
+                <span class="material-symbols-outlined text-outline" data-icon="chevron_right">chevron_right</span>
+            </div>
+        </div>
+    </section>
+    </main>
+    <!-- Floating Action Button -->
+    <button
+        class="fixed bottom-28 right-6 w-16 h-16 rounded-full bg-primary-container text-on-primary-container shadow-2xl flex items-center justify-center active:scale-90 transition-transform z-40">
+        <span class="material-symbols-outlined text-[32px] font-bold" data-icon="add">add</span>
+    </button>
+
+</body>
+
+</html>

@@ -29,17 +29,21 @@ export const Layout: React.FC = () => {
         {/* Main content */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Navbar */}
-          <Navbar onToggleSidebar={toggleSidebar} />
+          <div id="global-navbar">
+            <Navbar onToggleSidebar={toggleSidebar} />
+          </div>
 
           {/* Page content */}
           <main className="flex-1 overflow-y-auto bg-gray-50">
-            <div className="container mx-auto px-6 py-8">
+            <div id="main-content-container" className="container mx-auto md:px-6 md:py-8">
               <Outlet />
             </div>
           </main>
 
           {/* Footer */}
-          <Footer />
+          <div id="global-footer">
+            <Footer />
+          </div>
         </div>
       </div>
     </div>

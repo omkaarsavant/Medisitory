@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-surface": "#191c1d",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-container": "#007354",
+                        "on-background": "#191c1d",
+                        "secondary-container": "#67fcc6",
+                        "on-tertiary-fixed": "#191c1d",
+                        "surface-variant": "#e1e3e4",
+                        "surface-container-high": "#e7e8e9",
+                        "surface-container": "#edeeef",
+                        "primary": "#0055c9",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "surface-container-highest": "#e1e3e4",
+                        "primary-container": "#036cfb",
+                        "surface-dim": "#d9dadb",
+                        "error": "#ba1a1a",
+                        "on-error-container": "#93000a",
+                        "on-surface-variant": "#414754",
+                        "on-secondary-fixed": "#002116",
+                        "on-error": "#ffffff",
+                        "surface-container-low": "#f3f4f5",
+                        "secondary": "#006c4f",
+                        "tertiary-fixed": "#e1e3e4",
+                        "on-secondary-fixed-variant": "#00513a",
+                        "on-primary": "#ffffff",
+                        "surface": "#f8f9fa",
+                        "inverse-surface": "#2e3132",
+                        "on-primary-fixed": "#001946",
+                        "error-container": "#ffdad6",
+                        "outline": "#717786",
+                        "on-tertiary-container": "#fcfdfe",
+                        "inverse-primary": "#b1c5ff",
+                        "secondary-fixed-dim": "#44dfab",
+                        "tertiary": "#5a5c5d",
+                        "outline-variant": "#c1c6d7",
+                        "inverse-on-surface": "#f0f1f2",
+                        "surface-tint": "#0057ce",
+                        "surface-bright": "#f8f9fa",
+                        "on-primary-container": "#fefcff",
+                        "primary-fixed": "#dae2ff"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body class="bg-surface font-body text-on-surface min-h-screen flex items-center justify-center p-4">
+    <!-- Modal Backdrop Simulation -->
+    <div class="fixed inset-0 bg-on-surface/5 backdrop-blur-sm z-0"></div>
+    <!-- Doctor Selection Modal -->
+    <div
+        class="relative z-10 w-full max-w-md overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0_20px_40px_rgba(25,28,29,0.06)] border border-white/20">
+        <!-- Header -->
+        <header class="flex items-center justify-between px-6 py-5 border-b border-surface-container">
+            <h1 class="font-headline font-extrabold text-lg tracking-tight text-on-surface uppercase">SELECT DOCTOR</h1>
+            <button
+                class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors active:scale-90 duration-200">
+                <span class="material-symbols-outlined text-on-surface-variant">close</span>
+            </button>
+        </header>
+        <!-- Search Bar -->
+        <div class="px-6 pt-6 pb-2">
+            <div class="relative group">
+                <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                    <span class="material-symbols-outlined text-outline text-[20px]">search</span>
+                </div>
+                <input
+                    class="w-full bg-surface-container-low border-none rounded-xl pl-12 pr-4 py-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 placeholder:text-outline transition-all"
+                    placeholder="Search by name or specialty..." type="text" />
+            </div>
+        </div>
+        <!-- Content Area: Doctor List -->
+        <div class="px-6 py-4 space-y-4 max-h-[530px] overflow-y-auto">
+            <!-- Doctor Card 1 (Requested Content) -->
+            <div
+                class="group relative flex items-center gap-4 p-5 rounded-lg bg-surface-container-low hover:bg-white transition-all duration-300 border border-transparent hover:border-primary/10 hover:shadow-lg">
+                <div class="relative h-14 w-14 rounded-full overflow-hidden bg-primary-fixed flex-shrink-0">
+                    <img alt="Professional headshot of a medical doctor in a clinical setting"
+                        class="h-full w-full object-cover"
+                        data-alt="Professional headshot of a smiling medical doctor wearing a white coat and stethoscope in a bright modern office"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDc0ivvppWmi6LPE1ZuaMtauZ5rfjBsavwPKv05SgkUhSbs34BgK4s6_ggu6Kpc-kUkqlNEnYnyEmfopi358NEYIM-vvQNSpG1JFp7mwsPs7akDnQoMf9KfrW5QnbXkvGH8blxYMebM_ukkmtz4optE3z72NC6Q3_dAWGKAIQOaB80oU2BPvNV4fglR_ST_rB1LUoPNEBBRFEH9wL-mtrwlDjV2pzqLEdOIlolodjnDcCE5RH7ToTkgLmNs4fF6ovNjoIh9GyRqbmU" />
+                </div>
+                <div class="flex-grow">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-headline font-bold text-on-surface text-base">DOCTOR</h3>
+                        <span
+                            class="material-symbols-outlined text-primary text-[20px] opacity-100 transition-opacity">chevron_right</span>
+                    </div>
+                    <div class="flex items-center gap-2 mt-0.5">
+                        <span class="material-symbols-outlined text-primary text-[16px]">folder_shared</span>
+                        <p class="text-on-surface-variant text-xs font-semibold tracking-wide">3 RECORDS SHARED</p>
+                    </div>
+                </div>
+                <!-- Selection Indicator -->
+
+            </div>
+        </div>
+        <!-- Additional Doctor Placeholder 1 -->
+
+
+        <!-- Action Footer -->
+        <footer class="p-6 bg-surface-container-low/50 backdrop-blur-md border-t border-white/20">
+            <button
+                class="w-full h-14 flex items-center justify-center gap-3 bg-primary text-on-primary rounded-xl font-headline font-bold text-sm tracking-wide shadow-[0_8px_20px_rgba(0,85,201,0.25)] hover:shadow-none hover:bg-primary-container transition-all active:scale-[0.98] duration-200">
+                <span class="material-symbols-outlined text-[20px]">add</span>
+                <span class="uppercase">CONNECT WITH NEW DOCTOR</span>
+            </button>
+        </footer>
+    </div>
+    <!-- Hidden Bottom Navigation (Contextual Suppression Logic Applied) -->
+    <!-- Suppressed for Modal/Task Focus -->
+</body>
+
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Manage Access - Sanctuary Health</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+        }
+
+        .record-card-glass {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+    </style>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface": "#f8f9fa",
+                        "on-primary-fixed": "#001946",
+                        "on-error-container": "#93000a",
+                        "background": "#f8f9fa",
+                        "on-tertiary-container": "#fcfdfe",
+                        "on-background": "#191c1d",
+                        "surface-container": "#edeeef",
+                        "primary-fixed-dim": "#b1c5ff",
+                        "primary-container": "#0055c9",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-surface": "#2e3132",
+                        "surface-tint": "#0057ce",
+                        "outline-variant": "#c1c6d7",
+                        "on-primary-container": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "inverse-primary": "#b1c5ff",
+                        "surface-bright": "#f8f9fa",
+                        "on-primary": "#ffffff",
+                        "surface-dim": "#d9dadb",
+                        "primary-fixed": "#dae2ff",
+                        "tertiary-fixed-dim": "#c5c7c8",
+                        "surface-variant": "#e1e3e4",
+                        "on-tertiary-fixed": "#191c1d",
+                        "tertiary-fixed": "#e1e3e4",
+                        "tertiary-container": "#737576",
+                        "on-secondary-fixed-variant": "#00513a",
+                        "on-secondary": "#ffffff",
+                        "tertiary": "#5a5c5d",
+                        "secondary-fixed": "#006c4f",
+                        "surface-container-low": "#f3f4f5",
+                        "on-tertiary-fixed-variant": "#454748",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-secondary-fixed": "#ffffff",
+                        "on-error": "#ffffff",
+                        "primary": "#0055c9",
+                        "on-surface-variant": "#44474e",
+                        "secondary-container": "#67fcc6",
+                        "secondary-fixed-dim": "#44dfab",
+                        "outline": "#74777f",
+                        "secondary": "#006c4f",
+                        "on-primary-fixed-variant": "#00419e",
+                        "error": "#ba1a1a",
+                        "on-surface": "#191c1d",
+                        "on-secondary-container": "#007354",
+                        "surface-container-high": "#e7e8e9",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-tertiary": "#ffffff"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body class="bg-surface font-body text-on-surface antialiased">
+    <!-- Main App Container to mimic a real screen flow -->
+    <div class="relative min-h-screen flex flex-col">
+
+
+        <!-- Modal Backdrop -->
+        <div class="relative z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 flex-1">
+            <!-- Manage Access Modal -->
+            <div
+                class="relative w-full max-w-lg h-[85vh] sm:h-auto sm:max-h-[751px] glass-panel rounded-t-[2.5rem] sm:rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden border border-white/60">
+                <!-- Header Section -->
+                <div class="px-6 pt-10 pb-4 flex flex-col items-center text-center relative">
+                    <button class="absolute right-6 top-6 p-2 rounded-full hover:bg-black/5 transition-colors">
+                        <span class="material-symbols-outlined text-on-surface-variant">close</span>
+                    </button>
+                    <div
+                        class="w-16 h-16 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/20 mb-4">
+                        <span class="material-symbols-outlined text-white text-3xl"
+                            style="font-variation-settings: 'FILL' 1;">shield_person</span>
+                    </div>
+                    <h1 class="font-headline font-extrabold text-2xl tracking-tight text-on-surface">MANAGE ACCESS</h1>
+                    <p class="text-on-surface-variant font-medium text-sm mt-1">Controlling visibility for Doctor</p>
+                </div>
+                <!-- Search Bar -->
+                <div class="px-6 py-4">
+                    <div class="relative flex items-center">
+                        <span class="material-symbols-outlined absolute left-4 text-outline">search</span>
+                        <input
+                            class="w-full bg-surface-container-high/50 border-none rounded-full py-4 pl-12 pr-6 text-sm font-semibold tracking-wider placeholder:text-outline focus:ring-2 focus:ring-primary/20 transition-all"
+                            placeholder="SEARCH RECORDS TO SHARE..." type="text" />
+                    </div>
+                </div>
+                <!-- Record List -->
+                <div class="flex-1 overflow-y-auto px-6 py-2 custom-scrollbar">
+                    <div class="space-y-4 pb-4">
+                        <!-- Record Card: Selected -->
+                        <div
+                            class="bg-white border-2 border-primary shadow-xl shadow-primary/10 rounded-2xl p-5 flex items-center justify-between transition-all">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                                    <span class="font-headline font-bold text-primary">BP</span>
+                                </div>
+                                <div>
+                                    <h3 class="font-headline font-bold text-on-surface">GENERAL CONSULTATION</h3>
+                                    <p class="text-on-surface-variant text-sm font-medium">08/09/2025</p>
+                                </div>
+                            </div>
+                            <div
+                                class="w-6 h-6 rounded-full border-2 border-primary bg-primary flex items-center justify-center">
+                                <span class="material-symbols-outlined text-white text-sm"
+                                    style="font-variation-settings: 'wght' 700;">check</span>
+                            </div>
+                        </div>
+                        <!-- Record Card: Unselected -->
+                        <div
+                            class="record-card-glass border border-white/50 rounded-2xl p-5 flex items-center justify-between hover:bg-white/80 transition-all">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center">
+                                    <span class="font-headline font-bold text-secondary">HR</span>
+                                </div>
+                                <div>
+                                    <h3 class="font-headline font-bold text-on-surface">GENERAL CONSULTATION</h3>
+                                    <p class="text-on-surface-variant text-sm font-medium">09/12/2025</p>
+                                </div>
+                            </div>
+                            <div class="w-6 h-6 rounded-full border-2 border-outline-variant"></div>
+                        </div>
+                        <!-- Record Card: Unselected 2 -->
+                        <div
+                            class="record-card-glass border border-white/50 rounded-2xl p-5 flex items-center justify-between hover:bg-white/80 transition-all">
+                            <div class="flex items-center gap-4">
+                                <div
+                                    class="w-12 h-12 bg-tertiary-fixed-dim/40 rounded-full flex items-center justify-center">
+                                    <span class="font-headline font-bold text-on-tertiary-fixed-variant">LB</span>
+                                </div>
+                                <div>
+                                    <h3 class="font-headline font-bold text-on-surface">LAB REPORT - LIPID</h3>
+                                    <p class="text-on-surface-variant text-sm font-medium">15/01/2025</p>
+                                </div>
+                            </div>
+                            <div class="w-6 h-6 rounded-full border-2 border-outline-variant"></div>
+                        </div>
+                        <!-- Record Card: Unselected 3 -->
+                        <div
+                            class="record-card-glass border border-white/50 rounded-2xl p-5 flex items-center justify-between hover:bg-white/80 transition-all">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-error/10 rounded-full flex items-center justify-center">
+                                    <span class="font-headline font-bold text-error">EC</span>
+                                </div>
+                                <div>
+                                    <h3 class="font-headline font-bold text-on-surface">ECG MONITORING</h3>
+                                    <p class="text-on-surface-variant text-sm font-medium">22/02/2025</p>
+                                </div>
+                            </div>
+                            <div class="w-6 h-6 rounded-full border-2 border-outline-variant"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Selection Summary -->
+                <div class="px-6 py-4 flex justify-between items-center border-t border-outline-variant/30">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                        <span class="font-headline font-extrabold text-on-surface text-sm tracking-widest">4
+                            SELECTED</span>
+                    </div>
+                    <button class="text-primary font-bold text-sm hover:underline">Clear All</button>
+                </div>
+                <!-- Actions Footer -->
+                <div class="px-6 pb-8 pt-2 grid grid-cols-2 gap-4">
+                    <button
+                        class="h-14 rounded-full bg-surface-container-high/80 text-on-surface font-bold text-sm tracking-widest active:scale-95 transition-transform uppercase">
+                        BACK
+                    </button>
+                    <button
+                        class="h-14 rounded-full bg-primary text-white font-bold text-sm tracking-widest shadow-lg shadow-primary/30 active:scale-95 transition-transform uppercase">
+                        UPDATE ACCESS
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>

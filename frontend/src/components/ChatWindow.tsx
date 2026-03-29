@@ -157,7 +157,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             <MessageSquare className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h3 className="text-[13px] font-black uppercase tracking-[0.2em] leading-tight mb-0.5 italic">Clinical Node</h3>
+            <h3 className="text-[13px] font-black uppercase tracking-[0.2em] leading-tight mb-0.5 italic">Live Chat</h3>
             <p className="text-[10px] font-bold text-indigo-100 uppercase tracking-widest opacity-80">
               {senderId === 'patient' ? `Clinician: ${chatWith}` : `Patient: ${chatWith}`}
             </p>
@@ -249,9 +249,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               <div className="w-20 h-20 bg-red-50 rounded-[2rem] flex items-center justify-center mx-auto mb-8 transform -rotate-6">
                 <Shield className="w-10 h-10 text-red-500" />
               </div>
-              <h3 className="text-xl font-black text-gray-900 tracking-tight mb-3 uppercase italic">Terminate Hub?</h3>
+              <h3 className="text-xl font-black text-gray-900 tracking-tight mb-3 uppercase italic">End the conversation?</h3>
               <p className="text-gray-500 font-bold text-[10px] leading-relaxed uppercase tracking-widest mb-10 px-4">
-                This will finalize the clinical observation. Conversation history remains verifiable.
+                This will end the conversation. Chat history will remain.
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <button 
@@ -264,7 +264,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   onClick={confirmEndChat}
                   className="py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-xl shadow-red-100"
                 >
-                  Conclude
+                  End
                 </button>
               </div>
             </div>
@@ -279,7 +279,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         {showContextSelector && (
           <div className="mb-6 animate-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-center justify-between mb-4 px-1">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Select Observation Scope</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Select Report</label>
               <button 
                 type="button"
                 onClick={() => setShowContextSelector(false)} 
@@ -340,7 +340,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Describe the clinical observation..."
+              placeholder=""
               className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 text-sm font-bold text-gray-800 placeholder:text-gray-300 focus:ring-8 focus:ring-indigo-50/50 focus:border-indigo-500 focus:bg-white transition-all outline-none shadow-inner"
             />
           </div>

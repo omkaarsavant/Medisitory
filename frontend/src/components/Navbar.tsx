@@ -128,7 +128,15 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
           </div>
 
           {/* Right side actions */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-6">
+            {/* Date Display (moved from Dashboard) */}
+            <div className="hidden md:flex items-center space-x-2 px-4 py-2 bg-gray-50 rounded-xl border border-gray-100 shadow-sm">
+              <CalendarIcon className="w-4 h-4 text-blue-500" />
+              <span className="text-xs font-bold text-gray-700">
+                {new Date().toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+              </span>
+            </div>
+
             {/* Notifications */}
             <div className="relative" ref={dropdownRef}>
               <button 

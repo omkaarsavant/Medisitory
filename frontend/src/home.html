@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>MedVault | Clinical Sanctuary</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-primary-container": "#fefcff",
+                        "on-surface": "#191c1d",
+                        "on-primary-fixed": "#001946",
+                        "on-secondary": "#ffffff",
+                        "secondary": "#006c4f",
+                        "secondary-fixed-dim": "#44dfab",
+                        "primary-container": "#036cfb",
+                        "on-secondary-fixed": "#002116",
+                        "on-primary-fixed-variant": "#00419e",
+                        "secondary-container": "#67fcc6",
+                        "on-surface-variant": "#414754",
+                        "error-container": "#ffdad6",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-on-surface": "#f0f1f2",
+                        "surface-container-highest": "#e1e3e4",
+                        "tertiary": "#5a5c5d",
+                        "on-background": "#191c1d",
+                        "surface-container-high": "#e7e8e9",
+                        "on-error": "#ffffff",
+                        "inverse-surface": "#2e3132",
+                        "on-tertiary": "#ffffff",
+                        "outline": "#717786",
+                        "primary-fixed-dim": "#b1c5ff",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-container": "#fcfdfe",
+                        "tertiary-fixed": "#e1e3e4",
+                        "secondary-fixed": "#67fcc6",
+                        "tertiary-fixed-dim": "#c5c7c8",
+                        "on-tertiary-fixed": "#191c1d",
+                        "tertiary-container": "#737576",
+                        "surface": "#f8f9fa",
+                        "on-secondary-container": "#007354",
+                        "error": "#ba1a1a",
+                        "surface-variant": "#e1e3e4",
+                        "surface-container-low": "#f3f4f5",
+                        "on-tertiary-fixed-variant": "#454748",
+                        "surface-tint": "#0057ce",
+                        "surface-bright": "#f8f9fa",
+                        "surface-container": "#edeeef",
+                        "on-secondary-fixed-variant": "#00513a",
+                        "inverse-primary": "#b1c5ff",
+                        "background": "#f8fafc",
+                        "outline-variant": "#c1c6d7",
+                        "on-error-container": "#93000a",
+                        "surface-dim": "#d9dadb",
+                        "primary": "#0055c9",
+                        "primary-fixed": "#dae2ff"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .neon-glow-primary {
+            box-shadow: 0 0 20px rgba(3, 108, 251, 0.2);
+        }
+
+        .neon-glow-error {
+            box-shadow: 0 0 15px rgba(186, 26, 26, 0.2);
+        }
+
+        .text-neon-blue {
+            text-shadow: 0 0 8px rgba(3, 108, 251, 0.2);
+        }
+
+        body {
+            background: radial-gradient(circle at top right, #f1f5f9, #f8fafc);
+            min-height: 100vh;
+        }
+    </style>
+</head>
+
+<body class="font-body text-slate-700 antialiased pb-32">
+    <!-- TopAppBar -->
+    <header
+        class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div
+                class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center neon-glow-primary overflow-hidden">
+                <img alt="JD" class="w-full h-full object-cover"
+                    data-alt="portrait of a professional young man in a clean environment with soft studio lighting and dark blue background"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuATG4FiDS-jjh7NE4b_y8jPQIqZspwUtwSNv6E9UWe9P-t7QkR3ouJa9YnG5ipTLap4wae7ACX3XP5uDEPxgVOgYVgZFcKAuqLEjwmvKF054anKe3PRdBTtd41podwzrQLrzcgn0gG1cjeXoyK7xB8VKT9gbsP7ZOM16xp3GBDGCxhoBsuT_g4dBjZcAS1mfdVo3Qaf6kN60o2HptPsNFqjmtgmzMfdd04RwfDYUnphLMS7nK9Ao-mYiuh2BHFVOTyavvidHbsHqy4" />
+            </div>
+            <span class="text-2xl font-black text-slate-900 tracking-tighter font-headline">MedVault</span>
+        </div>
+        <div class="relative active:scale-95 duration-200 transition-opacity hover:opacity-80">
+            <span class="material-symbols-outlined text-primary text-2xl" data-icon="notifications">notifications</span>
+            <span class="absolute top-0 right-0 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-white"></span>
+        </div>
+    </header>
+    <main class="pt-24 px-6 space-y-8 max-w-lg mx-auto">
+        <!-- Greeting Section -->
+        <section class="space-y-1">
+            <h1 class="font-headline font-extrabold text-3xl text-slate-900 tracking-tight">Welcome Back</h1>
+            <p class="text-slate-500 font-medium">Your health profile is updated.</p>
+            <p class="text-primary font-bold text-sm uppercase tracking-widest pt-2">March 27, 2026</p>
+        </section>
+        <!-- Bento Grid: Health Score & Metrics -->
+        <div class="grid grid-cols-12 gap-4">
+            <!-- Health Score Card -->
+            <div
+                class="col-span-12 glass-card rounded-lg p-6 flex items-center justify-between overflow-hidden relative shadow-sm">
+                <div class="z-10">
+                    <h3 class="text-slate-500 font-semibold text-sm mb-1">Health Score</h3>
+                    <div class="flex items-baseline gap-1">
+                        <span class="text-5xl font-black font-headline text-slate-900">55</span>
+                        <span class="text-slate-400 font-bold text-lg">/100</span>
+                    </div>
+                </div>
+                <div class="relative w-24 h-24 z-10">
+                    <svg class="w-full h-full transform -rotate-90">
+                        <circle class="text-slate-100" cx="48" cy="48" fill="transparent" r="40" stroke="currentColor"
+                            stroke-width="8"></circle>
+                        <circle class="text-primary" cx="48" cy="48" fill="transparent" r="40" stroke="currentColor"
+                            stroke-dasharray="251.2" stroke-dashoffset="113" stroke-width="8"></circle>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-primary" data-icon="bolt"
+                            style="font-variation-settings: 'FILL' 1;">bolt</span>
+                    </div>
+                </div>
+                <!-- Decorative element -->
+                <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl"></div>
+            </div>
+            <!-- Abnormal Metrics Card -->
+            <div class="col-span-12 glass-card rounded-lg p-6 space-y-4 shadow-sm">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-slate-900 font-bold tracking-tight">Abnormal Metrics</h3>
+                    <span
+                        class="bg-error/10 text-error text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">4
+                        Active</span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <div class="bg-error/5 border border-error/10 px-3 py-1.5 rounded-full flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span>
+                        <span class="text-[11px] font-black text-error tracking-widest uppercase">Pulse</span>
+                    </div>
+                    <div class="bg-error/5 border border-error/10 px-3 py-1.5 rounded-full flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                        <span class="text-[11px] font-black text-error tracking-widest uppercase">HbA1c</span>
+                    </div>
+                    <div
+                        class="bg-amber-500/5 border border-amber-500/10 px-3 py-1.5 rounded-full flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                        <span class="text-[11px] font-black text-amber-600 tracking-widest uppercase">Diastolic</span>
+                    </div>
+                    <div class="bg-error/5 border border-error/10 px-3 py-1.5 rounded-full flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                        <span class="text-[11px] font-black text-error tracking-widest uppercase">Fasting</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Total Records Card -->
+            <div class="col-span-12 glass-card rounded-lg p-6 flex items-center justify-between shadow-sm">
+                <div>
+                    <h3 class="text-slate-500 font-semibold text-sm">Total Records</h3>
+                    <p class="text-3xl font-black font-headline text-slate-900">8 <span
+                            class="text-sm font-medium text-slate-400">Saved</span></p>
+                </div>
+                <button
+                    class="bg-slate-50 hover:bg-slate-100 transition-colors px-4 py-2 rounded-full flex items-center gap-2 group border border-slate-200">
+                    <span class="text-xs font-bold text-primary group-hover:text-primary-variant">Browse History</span>
+                    <span
+                        class="material-symbols-outlined text-sm text-primary group-hover:translate-x-1 transition-transform"
+                        data-icon="arrow_forward">arrow_forward</span>
+                </button>
+            </div>
+        </div>
+        <!-- Recent Activity Section -->
+        <section class="space-y-4">
+            <h3 class="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2 px-2">
+                Recent Activity
+                <span class="h-[1px] flex-grow bg-slate-200"></span>
+            </h3>
+            <div class="space-y-3">
+                <!-- Activity Item 1 -->
+                <div class="glass-card rounded-lg p-4 flex items-center justify-between shadow-sm">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-primary"
+                                data-icon="water_drop">water_drop</span>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-sm">Blood Sugar</h4>
+                            <p class="text-xs text-slate-500">3/25/2026</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 bg-secondary/10 px-2 py-1 rounded-lg">
+                        <span class="material-symbols-outlined text-secondary text-sm font-bold"
+                            data-icon="check">check</span>
+                        <span class="text-[10px] font-black text-secondary uppercase tracking-tighter">Completed</span>
+                    </div>
+                </div>
+                <!-- Activity Item 2 -->
+                <div class="glass-card rounded-lg p-4 flex items-center justify-between shadow-sm">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-primary"
+                                data-icon="monitor_heart">monitor_heart</span>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-sm">Blood Pressure</h4>
+                            <p class="text-xs text-slate-500">3/25/2026</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 bg-secondary/10 px-2 py-1 rounded-lg">
+                        <span class="material-symbols-outlined text-secondary text-sm font-bold"
+                            data-icon="check">check</span>
+                        <span class="text-[10px] font-black text-secondary uppercase tracking-tighter">Completed</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Health Reminders Section -->
+        <section class="space-y-4">
+            <h3 class="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2 px-2">
+                Health Reminders
+                <span class="h-[1px] flex-grow bg-slate-200"></span>
+            </h3>
+            <div class="glass-card rounded-lg p-5 flex items-start gap-4 border-l-4 border-primary shadow-sm">
+                <div class="bg-primary/10 p-2 rounded-lg">
+                    <span class="material-symbols-outlined text-primary"
+                        data-icon="notifications_active">notifications_active</span>
+                </div>
+                <div class="flex-grow">
+                    <div class="flex justify-between items-start">
+                        <h4 class="font-bold text-slate-900 text-md">Dr. Self</h4>
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Appointment</span>
+                    </div>
+                    <div class="mt-3 space-y-2">
+                        <div class="flex items-center gap-3">
+                            <span class="text-[11px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded">MAR
+                                27</span>
+                            <span class="text-xs font-bold text-slate-700">09:00 AM</span>
+                        </div>
+                        <div class="flex items-center gap-3 opacity-50">
+                            <span class="text-[11px] font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded">MAR
+                                28</span>
+                            <span class="text-xs font-bold text-slate-500">09:00 AM</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <!-- FAB -->
+    <button
+        class="fixed bottom-28 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg shadow-primary/30 flex items-center justify-center active:scale-90 transition-transform z-50">
+        <span class="material-symbols-outlined text-3xl font-bold" data-icon="add">add</span>
+    </button>
+    <!-- BottomNavBar -->
+    <nav
+        class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-white/90 backdrop-blur-xl rounded-t-[2rem] z-50 shadow-[0_-8px_24px_rgba(0,0,0,0.05)] border-t border-slate-100">
+        <div
+            class="flex flex-col items-center justify-center text-slate-400 hover:text-primary transition-colors cursor-pointer active:scale-90 duration-200">
+            <span class="material-symbols-outlined" data-icon="description">description</span>
+            <span class="font-label font-medium text-[10px] uppercase tracking-wider mt-1">Records</span>
+        </div>
+        <div
+            class="flex flex-col items-center justify-center text-slate-400 hover:text-primary transition-colors cursor-pointer active:scale-90 duration-200">
+            <span class="material-symbols-outlined" data-icon="medical_services">medical_services</span>
+            <span class="font-label font-medium text-[10px] uppercase tracking-wider mt-1">Doctors</span>
+        </div>
+        <!-- Active Tab: Analytics -->
+        <div
+            class="flex flex-col items-center justify-center bg-primary/10 text-primary rounded-full px-5 py-2 active:scale-90 duration-200 transition-transform">
+            <span class="material-symbols-outlined" data-icon="analytics"
+                style="font-variation-settings: 'FILL' 1;">analytics</span>
+            <span class="font-label font-medium text-[10px] uppercase tracking-wider mt-1">Analytics</span>
+        </div>
+        <div
+            class="flex flex-col items-center justify-center text-slate-400 hover:text-primary transition-colors cursor-pointer active:scale-90 duration-200">
+            <span class="material-symbols-outlined" data-icon="description">description</span>
+            <span class="font-label font-medium text-[10px] uppercase tracking-wider mt-1">Reports</span>
+        </div>
+        <div
+            class="flex flex-col items-center justify-center text-slate-400 hover:text-primary transition-colors cursor-pointer active:scale-90 duration-200">
+            <span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+            <span class="font-label font-medium text-[10px] uppercase tracking-wider mt-1">Calendar</span>
+        </div>
+    </nav>
+</body>
+
+</html>

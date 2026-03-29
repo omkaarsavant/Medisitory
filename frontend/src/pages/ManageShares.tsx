@@ -163,24 +163,7 @@ const ManageShares: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-20 font-sans">
-      <nav className="bg-white border-b border-gray-100 px-6 py-4 sticky top-0 z-30 shadow-sm">
-        <div className="max-w-5xl mx-auto flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-50 rounded-full transition-colors font-black">
-            <ArrowLeft className="w-5 h-5 text-gray-500" />
-          </button>
-          <div className="flex-1">
-            <h1 className="text-xl font-black text-gray-900 uppercase tracking-widest">My Doctors</h1>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Medical Consultations & Chat</p>
-          </div>
-          <button
-            onClick={() => setIsAddDoctorOpen(true)}
-            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black uppercase tracking-widest text-[11px] transition-all shadow-lg shadow-indigo-200 active:scale-95 flex items-center gap-2"
-          >
-            <UserPlus className="w-4 h-4" />
-            Add Doctor
-          </button>
-        </div>
-      </nav>
+
 
       <main className="max-w-5xl mx-auto p-6 lg:p-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
@@ -272,7 +255,7 @@ const ManageShares: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-8 border-t border-gray-50">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-gray-50">
                   <div className="flex flex-col gap-2">
                     <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Authorized Since</span>
                     <div className="flex items-center gap-3 bg-gray-50/50 p-3 rounded-xl border border-gray-100/50">
@@ -281,41 +264,41 @@ const ManageShares: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex flex-col gap-2">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Session Scope</span>
-                    <div className="flex items-center gap-3 bg-gray-50/50 p-3 rounded-xl border border-gray-100/50">
-                      <FileText className="w-4 h-4 text-indigo-400" />
-                      <span className="font-black text-gray-900 text-sm">{share.recordIds.length} Medical Reports Shared</span>
+                    <div className="flex items-center justify-between pl-1">
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Reports Shared</span>
+                      <Badge color="blue" className="px-2 py-0 text-[9px] font-black uppercase">{share.recordIds.length} Reports</Badge>
                     </div>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Encryption Mode</span>
-                    <div className="flex items-center gap-3 bg-indigo-50/30 p-3 rounded-xl border border-indigo-100/20">
-                      <Shield className="w-4 h-4 text-indigo-400" />
-                      <span className="font-black text-indigo-600 text-[10px] uppercase tracking-widest">End-to-End Secure</span>
+                    <div className="bg-gray-50/50 p-4 rounded-xl border border-gray-100/50">
+                      <div className="flex flex-wrap gap-2">
+                        {share.recordIds.map(id => {
+                          const record = records[id]
+                          return (
+                            <div key={id} className="px-2.5 py-1 bg-white rounded-lg border border-gray-100 flex items-center gap-2 shadow-sm">
+                              <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                              <span className="text-[9px] font-black text-gray-800 uppercase tracking-tight">
+                                {record ? record.category.replace(/_/g, ' ') : 'Hub Synchronizing...'}
+                              </span>
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
-                  </div>
-                </div>
-
-                <div className="mt-10 bg-gray-50/30 p-6 rounded-3xl border border-gray-100/50 group-hover:bg-white transition-colors duration-500">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 pl-1">Shared Health Documentation</p>
-                  <div className="flex flex-wrap gap-3">
-                    {share.recordIds.map(id => {
-                      const record = records[id]
-                      return (
-                        <div key={id} className="px-5 py-2.5 bg-white rounded-xl border border-gray-100 flex items-center gap-3 shadow-sm group-hover:border-indigo-100 group-hover:shadow-lg group-hover:shadow-indigo-50 transition-all duration-300">
-                          <div className="w-2 h-2 rounded-full bg-indigo-500" />
-                          <span className="text-xs font-black text-gray-800 uppercase tracking-tight truncate max-w-[200px]">
-                            {record ? record.category.replace(/_/g, ' ') : 'Hub Synchronizing...'}
-                          </span>
-                        </div>
-                      )
-                    })}
                   </div>
                 </div>
               </div>
             ))}
           </div>
         )}
+
+        <div className="mt-12 flex justify-center">
+          <button
+            onClick={() => setIsAddDoctorOpen(true)}
+            className="px-12 py-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[2rem] font-black uppercase tracking-[0.2em] text-xs transition-all shadow-2xl shadow-indigo-100 active:scale-95 flex items-center gap-4 group"
+          >
+            <UserPlus className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+            Add Doctor
+          </button>
+        </div>
       </main>
 
       {/* Add Doctor Modal */}
@@ -427,8 +410,7 @@ const ManageShares: React.FC = () => {
           <Card className="w-full max-w-2xl bg-white rounded-[3rem] p-0 shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh] border-none">
             <div className="p-10 border-b border-gray-100 flex justify-between items-center bg-gray-900 text-white relative">
               <div className="relative z-10">
-                <h2 className="text-3xl font-black tracking-tight uppercase italic leading-none mb-2">Scope Control</h2>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em]">Session: {editingShare.shareToken}</p>
+                <h2 className="text-3xl font-black tracking-tight uppercase italic leading-none">Manage Record</h2>
               </div>
               <button 
                 onClick={() => setEditingShare(null)} 
@@ -490,9 +472,8 @@ const ManageShares: React.FC = () => {
 
             <div className="p-10 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-6">
               <div className="text-center sm:text-left">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-2">Scope Identification</p>
                 <p className="font-black text-gray-900 text-2xl tracking-tighter italic">
-                  <span className="text-indigo-600">{tempSelectedIds.length}</span> / {Object.keys(records).length} Reports Hub
+                  <span className="text-indigo-600">{tempSelectedIds.length}</span> / {Object.keys(records).length} Reports Added
                 </p>
               </div>
               <div className="flex gap-4 w-full sm:w-auto">
@@ -508,7 +489,7 @@ const ManageShares: React.FC = () => {
                   disabled={isUpdating}
                   className="rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest text-[11px] px-12 h-14 shadow-xl shadow-indigo-100 border-none flex-1 sm:flex-none transition-all"
                 >
-                  {isUpdating ? 'Synchronizing...' : 'Update Authority'}
+                  {isUpdating ? 'Synchronizing...' : 'Update Access'}
                 </Button>
               </div>
             </div>
