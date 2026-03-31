@@ -1,4 +1,7 @@
 /* === frontend/src/index.css === */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
 
 @tailwind base;
 @tailwind components;
@@ -121,4 +124,26 @@ a:focus-visible {
   body {
     font-size: 12px;
   }
+}
+
+/* Custom font utilities */
+.font-manrope {
+  font-family: 'Manrope', sans-serif;
+}
+
+.font-outfit {
+  font-family: 'Outfit', sans-serif;
+}
+
+.font-headline {
+  font-family: 'Manrope', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Glassmorphism utility */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }

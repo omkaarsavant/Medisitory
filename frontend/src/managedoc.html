@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>MedVault: Doctor Detail Clinical Flow</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Material Symbols -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Design System Implementation -->
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "tertiary": "#5a5c5d",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#44dfab",
+                        "secondary": "#006c4f",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed": "#001946",
+                        "error-container": "#ffdad6",
+                        "surface": "#f8f9fa",
+                        "surface-container-high": "#e7e8e9",
+                        "surface-variant": "#e1e3e4",
+                        "on-background": "#191c1d",
+                        "on-secondary-fixed": "#002116",
+                        "on-primary-container": "#fefcff",
+                        "inverse-on-surface": "#f0f1f2",
+                        "outline-variant": "#c1c6d7",
+                        "on-surface-variant": "#414754",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-container": "#fcfdfe",
+                        "inverse-primary": "#b1c5ff",
+                        "surface-dim": "#d9dadb",
+                        "secondary-fixed": "#67fcc6",
+                        "on-tertiary-fixed-variant": "#454748",
+                        "surface-container": "#edeeef",
+                        "on-secondary-container": "#007354",
+                        "surface-tint": "#0057ce",
+                        "on-secondary-fixed-variant": "#00513a",
+                        "primary-container": "#036cfb",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "primary-fixed-dim": "#b1c5ff",
+                        "inverse-surface": "#2e3132",
+                        "primary": "#0055c9",
+                        "background": "#f8f9fa",
+                        "tertiary-container": "#737576",
+                        "surface-bright": "#f8f9fa",
+                        "tertiary-fixed": "#e1e3e4",
+                        "on-surface": "#191c1d",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed-dim": "#c5c7c8",
+                        "on-tertiary-fixed": "#191c1d",
+                        "primary-fixed": "#dae2ff",
+                        "outline": "#717786",
+                        "on-primary-fixed-variant": "#00419e",
+                        "surface-container-low": "#f3f4f5",
+                        "surface-container-highest": "#e1e3e4",
+                        "error": "#ba1a1a",
+                        "secondary-container": "#67fcc6"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body class="bg-surface font-body text-on-surface antialiased min-h-screen pb-32">
+    <!-- TopAppBar -->
+    <header
+        class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm shadow-blue-900/5 flex justify-between items-center px-6 h-16 w-full">
+        <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-blue-700 dark:text-blue-400 text-2xl"
+                data-icon="medical_services">medical_services</span>
+            <h1 class="font-manrope font-extrabold text-xl tracking-tighter text-blue-700 dark:text-blue-400">MedVault
+            </h1>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="text-on-surface-variant font-semibold text-sm">JD</span>
+            <div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/10">
+                <img class="w-full h-full object-cover"
+                    data-alt="Portrait of a young male patient with a friendly expression in a clean studio setting"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjC1Gjly2Yk_bbtlE6dZImRidsnf0-h701n0eLBRKsrzkvuevpiBE7-LqBbgnV1h3sXxAiNjDiKw2038BoVHmboEUM2setL1-w_CXru8hUJHBy2Ru6YzuBXSWfNQRaWY5RpS8fZ2QNLGTEY7QDcw8zC3hnrptz7lXln9sJ5nOUV9WbcFl8LAmjwHTV9_IHOOE87q_TF23vqtAUxX55phwkqxPLaOlpNnJg9wLg-kdxe5JrnGZKiZq1g7j-nk3W7fYPWBVMwi1f_bg" />
+            </div>
+        </div>
+    </header>
+    <main class="mt-20 px-4 max-w-lg mx-auto space-y-6">
+        <!-- Doctor Profile Card -->
+        <section
+            class="bg-surface-container-lowest rounded-lg p-6 shadow-[0_20px_40px_rgba(25,28,29,0.04)] relative overflow-hidden">
+            <div class="flex items-start gap-4">
+                <div class="relative">
+                    <div class="w-20 h-20 rounded-lg overflow-hidden ring-4 ring-primary/5">
+                        <img class="w-full h-full object-cover"
+                            data-alt="Professional portrait of a male doctor in white coat with a stethoscope around his neck, clinical blue background"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmnIW0pqawGoLdBwnu4991DlcqDBZ1Ps47bkE0RoYJJ6k7qw5jr1kVyzaLkW1lYG7o4FOH5wSpCmiIirfYBW__PS0JItAvuJ5n2jTSfBNVtHz0pSQnGOPwWNKL082-B33A0gx2D2EWJ7ZjdzOiIIKjFabU3JZ4CnBZi0dY-aP19jxReCcxQS7hDo0tG3IYPmukzd0_TNIvPnVJaCe6vfAJ-oSjOo-s-AzSl4JBuV7nqHBNTqhvmnz_GmjH6CTvtp8CKnmbxzGL5PA" />
+                    </div>
+                    <div
+                        class="absolute -bottom-2 -right-2 bg-primary text-white p-1 rounded-full border-4 border-white">
+                        <span class="material-symbols-outlined text-[16px]" data-icon="verified"
+                            style="font-variation-settings: 'FILL' 1;">verified</span>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h2 class="font-headline font-bold text-xl text-on-surface">Dr. Adrian Sterling</h2>
+                            <p class="text-on-surface-variant text-sm font-medium">Senior Endocrinologist</p>
+                            <p class="text-[10px] text-outline font-bold tracking-widest uppercase mt-0.5">MV-88291-JV
+                            </p>
+                        </div>
+                        <span
+                            class="bg-secondary-container text-on-secondary-container text-[10px] font-bold px-2 py-1 rounded-full tracking-widest uppercase">Active</span>
+                    </div>
+                    <div class="mt-3 flex items-center gap-4">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] text-outline font-bold uppercase tracking-wider">Experience</span>
+                            <span class="text-sm font-bold text-primary">14 Years</span>
+                        </div>
+                        <div class="w-px h-6 bg-surface-container"></div>
+                        <div class="flex flex-col">
+                            <span class="text-[10px] text-outline font-bold uppercase tracking-wider">Rating</span>
+                            <span class="text-sm font-bold text-primary">4.9/5.0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Clinical Action Bar -->
+        <section class="grid grid-cols-3 gap-3">
+            <button
+                class="flex flex-col items-center justify-center bg-surface-container-lowest py-4 rounded-lg hover:bg-blue-50 transition-colors active:scale-95 duration-200">
+                <span class="material-symbols-outlined text-primary mb-1" data-icon="chat_bubble">chat_bubble</span>
+                <span class="font-label text-xs font-semibold text-on-surface-variant">Chat</span>
+            </button>
+            <button
+                class="flex flex-col items-center justify-center bg-surface-container-lowest py-4 rounded-lg hover:bg-blue-50 transition-colors active:scale-95 duration-200">
+                <span class="material-symbols-outlined text-primary mb-1"
+                    data-icon="settings_suggest">settings_suggest</span>
+                <span class="font-label text-xs font-semibold text-on-surface-variant">Manage</span>
+            </button>
+            <button
+                class="flex flex-col items-center justify-center bg-surface-container-lowest py-4 rounded-lg hover:bg-error-container/20 transition-colors active:scale-95 duration-200">
+                <span class="material-symbols-outlined text-error mb-1" data-icon="cancel">cancel</span>
+                <span class="font-label text-xs font-semibold text-error">Revoke</span>
+            </button>
+        </section>
+        <!-- Status & History Section -->
+        <section class="space-y-4">
+            <div class="flex items-center justify-between px-2">
+                <h3 class="font-headline font-bold text-on-surface">Status &amp; History</h3>
+                <span class="text-xs text-outline font-medium">Last synced 2h ago</span>
+            </div>
+            <div class="bg-surface-container rounded-lg p-5 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center">
+                            <span class="material-symbols-outlined text-secondary"
+                                data-icon="history_edu">history_edu</span>
+                        </div>
+                        <div>
+                            <p class="text-xs text-on-surface-variant font-medium uppercase tracking-tighter">
+                                Authorization Date</p>
+                            <p class="text-sm font-bold">Oct 14, 2023</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="h-px bg-outline-variant/20"></div>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <p class="text-xs font-bold text-outline uppercase tracking-widest">Shared Clinical Data</p>
+                        <span class="bg-primary/10 text-primary text-[10px] font-extrabold px-2 py-0.5 rounded-full">12
+                            REPORTS</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <span
+                            class="px-3 py-1.5 bg-white text-on-surface-variant rounded-full text-[10px] font-bold shadow-sm flex items-center gap-1.5 border border-white">
+                            <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> BLOOD SUGAR
+                        </span>
+                        <span
+                            class="px-3 py-1.5 bg-white text-on-surface-variant rounded-full text-[10px] font-bold shadow-sm flex items-center gap-1.5 border border-white">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> HEART RATE
+                        </span>
+                        <span
+                            class="px-3 py-1.5 bg-white text-on-surface-variant rounded-full text-[10px] font-bold shadow-sm flex items-center gap-1.5 border border-white">
+                            <span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span> LAB REPORTS
+                        </span>
+                        <span
+                            class="px-3 py-1.5 bg-white text-on-surface-variant rounded-full text-[10px] font-bold shadow-sm flex items-center gap-1.5 border border-white">
+                            <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span> MEDICATION
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Activity Log (Timeline Style) -->
+        <section class="space-y-4">
+            <h3 class="font-headline font-bold text-on-surface px-2">Recent Activity</h3>
+            <div class="bg-surface-container-lowest rounded-lg p-6 shadow-sm space-y-6 relative overflow-hidden">
+                <!-- Activity Item 1 -->
+                <div class="relative flex gap-4">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center z-10">
+                            <span class="material-symbols-outlined text-primary text-lg"
+                                data-icon="visibility">visibility</span>
+                        </div>
+                        <div class="absolute top-8 bottom-[-24px] w-0.5 bg-surface-container"></div>
+                    </div>
+                    <div class="flex-1 pb-2">
+                        <p class="text-sm font-semibold text-on-surface">Viewed "Lab Results: CBC"</p>
+                        <p class="text-[10px] font-bold text-outline uppercase tracking-wider mt-1">JAN 24, 2024 • 09:12
+                            AM</p>
+                    </div>
+                </div>
+                <!-- Activity Item 2 -->
+                <div class="relative flex gap-4">
+                    <div class="flex flex-col items-center">
+                        <div
+                            class="w-8 h-8 rounded-full bg-secondary-container/50 flex items-center justify-center z-10">
+                            <span class="material-symbols-outlined text-secondary text-lg"
+                                data-icon="download">download</span>
+                        </div>
+                        <div class="absolute top-8 bottom-[-24px] w-0.5 bg-surface-container"></div>
+                    </div>
+                    <div class="flex-1 pb-2">
+                        <p class="text-sm font-semibold text-on-surface">Downloaded "MRI Scans.zip"</p>
+                        <p class="text-[10px] font-bold text-outline uppercase tracking-wider mt-1">JAN 22, 2024 • 03:45
+                            PM</p>
+                    </div>
+                </div>
+                <!-- Activity Item 3 -->
+                <div class="relative flex gap-4">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center z-10">
+                            <span class="material-symbols-outlined text-primary text-lg"
+                                data-icon="visibility">visibility</span>
+                        </div>
+                        <div class="absolute top-8 bottom-[-24px] w-0.5 bg-surface-container"></div>
+                    </div>
+                    <div class="flex-1 pb-2">
+                        <p class="text-sm font-semibold text-on-surface">Viewed "Glucose History Chart"</p>
+                        <p class="text-[10px] font-bold text-outline uppercase tracking-wider mt-1">JAN 21, 2024 • 11:20
+                            AM</p>
+                    </div>
+                </div>
+                <!-- Activity Item 4 -->
+                <div class="relative flex gap-4">
+                    <div class="flex flex-col items-center">
+                        <div
+                            class="w-8 h-8 rounded-full bg-secondary-container/50 flex items-center justify-center z-10">
+                            <span class="material-symbols-outlined text-secondary text-lg"
+                                data-icon="download">download</span>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-semibold text-on-surface">Downloaded "Annual Physical Summary.pdf"</p>
+                        <p class="text-[10px] font-bold text-outline uppercase tracking-wider mt-1">JAN 18, 2024 • 01:12
+                            PM</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    <!-- FAB -->
+    <button
+        class="fixed right-6 bottom-28 w-14 h-14 bg-primary text-white rounded-2xl shadow-xl flex items-center justify-center active:scale-95 transition-transform z-50">
+        <span class="material-symbols-outlined text-2xl" data-icon="add">add</span>
+    </button>
+    <!-- BottomNavBar -->
+    <nav
+        class="fixed bottom-0 left-0 w-full h-24 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-t-[2rem] z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.04)] flex justify-around items-center px-4 pb-4">
+        <div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2">
+            <span class="material-symbols-outlined text-2xl" data-icon="description">description</span>
+            <span class="font-inter text-[11px] font-semibold uppercase tracking-wider mt-1">Records</span>
+        </div>
+        <div
+            class="flex flex-col items-center justify-center bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 rounded-full px-5 py-2 scale-105 transition-all">
+            <span class="material-symbols-outlined text-2xl" data-icon="medical_information"
+                style="font-variation-settings: 'FILL' 1;">medical_information</span>
+            <span class="font-inter text-[11px] font-semibold uppercase tracking-wider mt-1">Doctors</span>
+        </div>
+        <div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2">
+            <span class="material-symbols-outlined text-2xl" data-icon="insights">insights</span>
+            <span class="font-inter text-[11px] font-semibold uppercase tracking-wider mt-1">Analytics</span>
+        </div>
+        <div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2">
+            <span class="material-symbols-outlined text-2xl" data-icon="Description">description</span>
+            <span class="font-inter text-[11px] font-semibold uppercase tracking-wider mt-1">Reports</span>
+        </div>
+        <div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2">
+            <span class="material-symbols-outlined text-2xl" data-icon="calendar_today">calendar_today</span>
+            <span class="font-inter text-[11px] font-semibold uppercase tracking-wider mt-1">Calendar</span>
+        </div>
+    </nav>
+</body>
+
+</html>

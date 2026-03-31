@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+
+    <!-- Material Symbols -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Google Fonts: Manrope & Inter -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "error-container": "#ffdad6",
+                        "surface-variant": "#e1e3e4",
+                        "surface-tint": "#0057ce",
+                        "outline": "#717786",
+                        "on-primary-fixed": "#001946",
+                        "on-primary-fixed-variant": "#00419e",
+                        "on-primary-container": "#fefcff",
+                        "on-background": "#191c1d",
+                        "surface-container-low": "#f3f4f5",
+                        "on-tertiary-fixed-variant": "#454748",
+                        "error": "#ba1a1a",
+                        "on-error-container": "#93000a",
+                        "secondary": "#006c4f",
+                        "primary-fixed-dim": "#b1c5ff",
+                        "on-secondary-fixed": "#002116",
+                        "on-secondary-container": "#007354",
+                        "tertiary-fixed": "#e1e3e4",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-error": "#ffffff",
+                        "primary": "#0055c9",
+                        "background": "#f8f9fa",
+                        "surface-bright": "#f8f9fa",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#d9dadb",
+                        "on-surface": "#191c1d",
+                        "tertiary-fixed-dim": "#c5c7c8",
+                        "inverse-primary": "#b1c5ff",
+                        "surface": "#f8f9fa",
+                        "primary-container": "#036cfb",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-surface-variant": "#414754",
+                        "tertiary-container": "#737576",
+                        "secondary-container": "#67fcc6",
+                        "surface-container": "#edeeef",
+                        "on-secondary-fixed-variant": "#00513a",
+                        "on-tertiary-fixed": "#191c1d",
+                        "tertiary": "#5a5c5d",
+                        "on-tertiary-container": "#fcfdfe",
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed": "#67fcc6",
+                        "secondary-fixed-dim": "#44dfab",
+                        "surface-container-high": "#e7e8e9",
+                        "outline-variant": "#c1c6d7",
+                        "primary-fixed": "#dae2ff",
+                        "inverse-surface": "#2e3132"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background text-on-background font-body max-w-[390px] mx-auto min-h-screen pb-24 relative selection:bg-primary-fixed">
+    <!-- Top App Bar -->
+
+    <main class="pt-24 px-5 space-y-6">
+        <!-- Header & Action Row -->
+        <div class="flex flex-col gap-4">
+            <div class="flex justify-between items-end">
+                <div>
+                    <h2 class="font-headline font-bold text-3xl text-on-surface tracking-tight">Health Analytics</h2>
+                    <p class="text-on-surface-variant body-sm">Personal health insights &amp; trends</p>
+                </div>
+                <button
+                    class="bg-surface-container-lowest text-primary px-4 py-2 rounded-full font-semibold text-sm flex items-center gap-2 shadow-sm border border-outline-variant/10 active:scale-95 transition-transform">
+                    <span class="material-symbols-outlined text-lg">picture_as_pdf</span>
+                    Export
+                </button>
+            </div>
+            <!-- Time Range Selectors -->
+            <div class="flex bg-surface-container rounded-full p-1 gap-1">
+                <button
+                    class="flex-1 py-2 text-xs font-bold font-headline rounded-full transition-all bg-white shadow-sm text-primary">30
+                    Days</button>
+                <button
+                    class="flex-1 py-2 text-xs font-bold font-headline rounded-full transition-all text-on-surface-variant hover:bg-white/50">90
+                    Days</button>
+                <button
+                    class="flex-1 py-2 text-xs font-bold font-headline rounded-full transition-all text-on-surface-variant hover:bg-white/50">180
+                    Days</button>
+                <button
+                    class="flex-1 py-2 text-xs font-bold font-headline rounded-full transition-all text-on-surface-variant hover:bg-white/50">1
+                    Year</button>
+            </div>
+        </div>
+        <!-- Category Tabs -->
+        <div class="flex gap-4 overflow-x-auto no-scrollbar py-2">
+            <button
+                class="flex-none px-6 py-2.5 rounded-full bg-primary text-on-primary font-bold text-sm shadow-lg shadow-primary/20">Sugar</button>
+            <button
+                class="flex-none px-6 py-2.5 rounded-full bg-surface-container-lowest text-on-surface-variant font-bold text-sm border border-outline-variant/10">Blood
+                Pressure</button>
+            <button
+                class="flex-none px-6 py-2.5 rounded-full bg-surface-container-lowest text-on-surface-variant font-bold text-sm border border-outline-variant/10">Others</button>
+        </div>
+        <!-- Metric Grid -->
+        <div class="grid grid-cols-2 gap-4">
+            <!-- Fasting Avg -->
+            <div class="glass-card p-4 rounded-lg shadow-[0_10px_30px_rgba(25,28,29,0.04)]">
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Fasting Avg</p>
+                <div class="flex items-baseline gap-1">
+                    <span class="font-headline font-extrabold text-2xl text-on-surface">111</span>
+                    <span class="text-xs text-on-surface-variant font-medium">mg/dL</span>
+                </div>
+                <div class="mt-2 flex items-center gap-1 text-error font-bold text-xs">
+                    <span class="material-symbols-outlined text-xs">trending_up</span>
+                    9.8%
+                </div>
+            </div>
+            <!-- Post Meal Avg -->
+            <div class="glass-card p-4 rounded-lg shadow-[0_10px_30px_rgba(25,28,29,0.04)]">
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Post Meal Avg
+                </p>
+                <div class="flex items-baseline gap-1">
+                    <span class="font-headline font-extrabold text-2xl text-on-surface">111</span>
+                    <span class="text-xs text-on-surface-variant font-medium">mg/dL</span>
+                </div>
+                <div class="mt-2 flex items-center gap-1 text-on-surface-variant font-bold text-xs">
+                    <span class="material-symbols-outlined text-xs">horizontal_rule</span>
+                    0%
+                </div>
+            </div>
+            <!-- Random Avg -->
+            <div class="glass-card p-4 rounded-lg shadow-[0_10px_30px_rgba(25,28,29,0.04)]">
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Random Avg</p>
+                <div class="flex items-baseline gap-1">
+                    <span class="font-headline font-extrabold text-2xl text-on-surface">111</span>
+                    <span class="text-xs text-on-surface-variant font-medium">mg/dL</span>
+                </div>
+                <div class="mt-2 flex items-center gap-1 text-error font-bold text-xs">
+                    <span class="material-symbols-outlined text-xs">trending_up</span>
+                    9.8%
+                </div>
+            </div>
+            <!-- HbA1c Avg -->
+            <div class="glass-card p-4 rounded-lg shadow-[0_10px_30px_rgba(25,28,29,0.04)]">
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">HbA1c Avg</p>
+                <div class="flex items-baseline gap-1">
+                    <span class="font-headline font-extrabold text-2xl text-on-surface">20.9</span>
+                    <span class="text-xs text-on-surface-variant font-medium">%</span>
+                </div>
+                <div class="mt-2 flex items-center gap-1 text-secondary font-bold text-xs">
+                    <span class="material-symbols-outlined text-xs">trending_down</span>
+                    4.5%
+                </div>
+            </div>
+        </div>
+        <!-- Main Chart: Glucose Trends -->
+        <section class="glass-card p-6 rounded-lg shadow-[0_20px_40px_rgba(25,28,29,0.06)]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-headline font-bold text-lg text-on-surface">Glucose Trends Over Time</h3>
+                <span class="material-symbols-outlined text-on-surface-variant">more_vert</span>
+            </div>
+            <!-- Chart Placeholder -->
+            <div class="relative h-48 w-full flex items-end justify-between">
+                <!-- SVG Line Chart Mock -->
+                <svg class="absolute inset-0 w-full h-full" viewbox="0 0 300 150">
+                    <defs>
+                        <lineargradient id="grad" x1="0%" x2="0%" y1="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:rgba(0, 85, 201, 0.2); stop-opacity:1"></stop>
+                            <stop offset="100%" style="stop-color:rgba(0, 85, 201, 0); stop-opacity:1"></stop>
+                        </lineargradient>
+                    </defs>
+                    <path d="M0,120 Q50,110 80,130 T150,90 T220,110 T300,70 L300,150 L0,150 Z" fill="url(#grad)"></path>
+                    <path d="M0,120 Q50,110 80,130 T150,90 T220,110 T300,70" fill="none" stroke="#0055c9"
+                        stroke-linecap="round" stroke-width="3"></path>
+                    <!-- Points -->
+                    <circle cx="80" cy="130" fill="#0055c9" r="4"></circle>
+                    <circle cx="150" cy="90" fill="#0055c9" r="4"></circle>
+                    <circle cx="220" cy="110" fill="#0055c9" r="4"></circle>
+                </svg>
+                <!-- Axis Labels -->
+                <div class="flex justify-between w-full mt-auto pt-4 border-t border-outline-variant/20">
+                    <span class="text-[10px] font-semibold text-on-surface-variant">WEEK 1</span>
+                    <span class="text-[10px] font-semibold text-on-surface-variant">WEEK 2</span>
+                    <span class="text-[10px] font-semibold text-on-surface-variant">WEEK 3</span>
+                    <span class="text-[10px] font-semibold text-on-surface-variant">WEEK 4</span>
+                </div>
+            </div>
+        </section>
+        <!-- Secondary Charts Row -->
+        <div class="grid grid-cols-1 gap-6">
+            <!-- Status Breakdown (Donut) -->
+            <div class="glass-card p-6 rounded-lg shadow-sm">
+                <h3 class="font-headline font-bold text-md text-on-surface mb-6 text-center">Status Breakdown</h3>
+                <div class="flex items-center justify-around">
+                    <div class="relative w-32 h-32">
+                        <svg class="w-full h-full transform -rotate-90" viewbox="0 0 36 36">
+                            <circle cx="18" cy="18" fill="transparent" r="15.9" stroke="#edeeef" stroke-width="4">
+                            </circle>
+                            <circle cx="18" cy="18" fill="transparent" r="15.9" stroke="#006c4f"
+                                stroke-dasharray="75 100" stroke-width="4"></circle>
+                            <circle cx="18" cy="18" fill="transparent" r="15.9" stroke="#0055c9"
+                                stroke-dasharray="25 100" stroke-dashoffset="-75" stroke-width="4"></circle>
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span class="font-headline font-extrabold text-xl text-on-surface">100%</span>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2.5 h-2.5 rounded-full bg-secondary"></div>
+                            <span class="text-xs font-semibold text-on-surface-variant">Normal (75%)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-2.5 h-2.5 rounded-full bg-primary"></div>
+                            <span class="text-xs font-semibold text-on-surface-variant">Elevated (25%)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Post-Meal Spike (Bar Chart) -->
+            <div class="glass-card p-6 rounded-lg shadow-sm">
+                <h3 class="font-headline font-bold text-md text-on-surface mb-6">Post-Meal Spike Analysis</h3>
+                <div class="flex items-end justify-between h-32 gap-3 px-2">
+                    <div class="flex flex-col items-center gap-2 w-full">
+                        <div
+                            class="w-full bg-secondary/20 rounded-t-sm relative h-16 group transition-all hover:bg-secondary/40">
+                            <div class="absolute bottom-0 w-full bg-secondary rounded-t-sm h-[60%]"></div>
+                        </div>
+                        <span class="text-[10px] font-bold text-on-surface-variant">MON</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-2 w-full">
+                        <div class="w-full bg-secondary/20 rounded-t-sm relative h-24 group">
+                            <div class="absolute bottom-0 w-full bg-secondary rounded-t-sm h-[85%]"></div>
+                        </div>
+                        <span class="text-[10px] font-bold text-on-surface-variant">TUE</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-2 w-full">
+                        <div class="w-full bg-secondary/20 rounded-t-sm relative h-20 group">
+                            <div class="absolute bottom-0 w-full bg-secondary rounded-t-sm h-[45%]"></div>
+                        </div>
+                        <span class="text-[10px] font-bold text-on-surface-variant">WED</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-2 w-full">
+                        <div class="w-full bg-secondary/20 rounded-t-sm relative h-28 group">
+                            <div class="absolute bottom-0 w-full bg-secondary rounded-t-sm h-[95%]"></div>
+                        </div>
+                        <span class="text-[10px] font-bold text-on-surface-variant">THU</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-2 w-full">
+                        <div class="w-full bg-secondary/20 rounded-t-sm relative h-14 group">
+                            <div class="absolute bottom-0 w-full bg-secondary rounded-t-sm h-[30%]"></div>
+                        </div>
+                        <span class="text-[10px] font-bold text-on-surface-variant">FRI</span>
+                    </div>
+                </div>
+            </div>
+            <!-- HbA1c Variance (Step Line) -->
+            <div class="glass-card p-6 rounded-lg shadow-sm mb-12">
+                <h3 class="font-headline font-bold text-md text-on-surface mb-6">HbA1c Variance (%)</h3>
+                <div class="relative h-24 flex items-center">
+                    <svg class="w-full h-full" viewbox="0 0 300 100">
+                        <path d="M0,80 L60,80 L60,40 L120,40 L120,60 L180,60 L180,20 L240,20 L240,50 L300,50"
+                            fill="none" stroke="#006c4f" stroke-width="3"></path>
+                    </svg>
+                    <div class="absolute inset-0 flex justify-between pt-20">
+                        <span class="text-[9px] font-bold text-slate-400">Jan</span>
+                        <span class="text-[9px] font-bold text-slate-400">Feb</span>
+                        <span class="text-[9px] font-bold text-slate-400">Mar</span>
+                        <span class="text-[9px] font-bold text-slate-400">Apr</span>
+                        <span class="text-[9px] font-bold text-slate-400">May</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+</body>
+
+</html>

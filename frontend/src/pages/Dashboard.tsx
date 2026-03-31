@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { 
   Activity, AlertCircle, FileText, Sparkles, Bell, ArrowRight, Shield, 
   Plus, Check, HeartPulse, Droplets, Bolt, Search, ShoppingBag, 
-  HeartPulse as HeartPulseIcon, Calendar, TrendingUp, CheckCircle2, Menu, X 
+  HeartPulse as HeartPulseIcon, Calendar, TrendingUp, CheckCircle2, Menu, X, Home, Brain 
 } from 'lucide-react'
 import { useRecordStore } from '../store/recordStore'
 import { getDashboardSummary, DashboardSummary } from '../services/api'
@@ -78,15 +78,22 @@ const Dashboard: React.FC = () => {
     if (!loading) updateSummary()
   }, [records])
 
-  if (loading) return <div className="flex justify-center items-center h-64"><LoadingSpinner /></div>
-  if (error) return <div className="p-8"><ErrorMessage message={error} onRetry={() => window.location.reload()} /></div>
-
+  // Constrain health score
   const healthScore = summary?.healthScore || 0
 
   return (
     <>
       <style>{`
         /* Global CSS for Mobile Redesign */
+        .shimmer {
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+          background-size: 200% 100%;
+          animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
         .glass-card {
           background: rgba(255, 255, 255, 0.7);
           backdrop-filter: blur(24px);
@@ -111,6 +118,12 @@ const Dashboard: React.FC = () => {
 
       {/* ================= DESKTOP VIEW ================= */}
       <div className="hidden md:block space-y-8 animate-in fade-in duration-500">
+        {loading ? (
+          <div className="flex justify-center items-center h-64"><LoadingSpinner /></div>
+        ) : error ? (
+          <div className="p-8"><ErrorMessage message={error} onRetry={() => window.location.reload()} /></div>
+        ) : (
+          <>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
@@ -243,10 +256,12 @@ const Dashboard: React.FC = () => {
             </div>
           </Card>
         </div>
+          </>
+        )}
       </div>
 
       {/* ================= MOBILE VIEW (EXACT AS home.html) ================= */}
-            <div className="md:hidden mobile-body pb-32">
+      <div className="md:hidden mobile-body pb-32">
         {/* TopAppBar */}
         <header className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] px-6 py-4 flex justify-between items-center">
             <div className="flex items-center gap-3">
@@ -255,13 +270,20 @@ const Dashboard: React.FC = () => {
                 </div>
                 <span className="text-2xl font-black text-slate-900 tracking-tighter" style={{ fontFamily: 'Manrope' }}>MedVault</span>
             </div>
-            <div className="relative active:scale-95 duration-200 transition-opacity hover:opacity-80 cursor-pointer"
-                 onClick={() => setShowNotifications(true)}
-            >
-                <Bell className="text-[#0055c9] w-6 h-6" />
-                {(summary?.abnormalCount || 0) > 0 && (
-                  <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-[#ba1a1a] rounded-full ring-2 ring-white"></span>
-                )}
+            <div className="flex items-center gap-4">
+                <div className="relative active:scale-95 duration-200 transition-opacity hover:opacity-80 cursor-pointer"
+                     onClick={() => navigate('/know-your-report')}
+                >
+                    <Brain className="text-[#0055c9] w-6 h-6" />
+                </div>
+                <div className="relative active:scale-95 duration-200 transition-opacity hover:opacity-80 cursor-pointer"
+                     onClick={() => setShowNotifications(true)}
+                >
+                    <Bell className="text-[#0055c9] w-6 h-6" />
+                    {(summary?.abnormalCount || 0) > 0 && (
+                      <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-[#ba1a1a] rounded-full ring-2 ring-white"></span>
+                    )}
+                </div>
             </div>
         </header>
 
@@ -333,6 +355,59 @@ const Dashboard: React.FC = () => {
         )}
 
         <main className="pt-24 px-6 space-y-8 max-w-lg mx-auto">
+            {loading ? (
+              <>
+                {/* Mobile Skeleton Loading State */}
+                <section className="space-y-4 animate-pulse">
+                    <div className="h-10 w-48 bg-slate-200 rounded-lg"></div>
+                    <div className="h-4 w-32 bg-slate-100 rounded-lg"></div>
+                    <div className="h-4 w-40 bg-slate-100/50 rounded-lg"></div>
+                </section>
+
+                <div className="grid grid-cols-12 gap-4">
+                    {/* Health Score Skeleton */}
+                    <div className="col-span-12 glass-card rounded-[2rem] p-6 h-32 relative overflow-hidden">
+                        <div className="absolute inset-0 shimmer"></div>
+                    </div>
+                    {/* Abnormal Metrics Skeleton */}
+                    <div className="col-span-12 glass-card rounded-[2rem] p-6 h-40 relative overflow-hidden">
+                        <div className="absolute inset-0 shimmer"></div>
+                    </div>
+                     {/* Total Records Skeleton */}
+                    <div className="col-span-12 glass-card rounded-[2rem] p-6 h-24 relative overflow-hidden">
+                        <div className="absolute inset-0 shimmer"></div>
+                    </div>
+                    {/* Recent Uploads Skeleton */}
+                    <div className="col-span-12 space-y-4">
+                        <div className="h-6 w-32 bg-slate-200 rounded-lg"></div>
+                        <div className="space-y-3">
+                            {[1, 2, 3].map(i => (
+                                <div key={i} className="glass-card rounded-2xl p-4 h-20 relative overflow-hidden">
+                                     <div className="absolute inset-0 shimmer"></div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+              </>
+            ) : error ? (
+                <div className="py-20 px-6 text-center space-y-6">
+                    <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto text-red-500">
+                        <AlertCircle className="w-10 h-10" />
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-black text-slate-900 tracking-tight">Oops! Something went wrong</h3>
+                        <p className="text-slate-500 font-medium mt-2">We couldn't load your health dashboard. Please check your connection and try again.</p>
+                    </div>
+                    <button 
+                        onClick={() => window.location.reload()}
+                        className="px-8 py-3 bg-[#0055c9] text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-[#0055c9]/20 active:scale-95 transition-all"
+                    >
+                        Try Again
+                    </button>
+                </div>
+            ) : (
+              <>
             {/* Greeting Section */}
             <section className="space-y-1">
                 <h1 className="font-headline font-extrabold text-3xl text-slate-900 tracking-tight" style={{ fontFamily: 'Manrope' }}>Welcome Back</h1>
@@ -357,9 +432,9 @@ const Dashboard: React.FC = () => {
                         <svg className="w-full h-full transform -rotate-90">
                             <circle className="text-slate-100" cx="48" cy="48" fill="transparent" r="40" stroke="currentColor" strokeWidth="8"></circle>
                             <circle 
-                              className="text-[#0055c9]" cx="48" cy="48" fill="transparent" r="40" stroke="currentColor" strokeWidth="8"
-                              strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * healthScore) / 100}
-                            />
+                               className="text-[#0055c9]" cx="48" cy="48" fill="transparent" r="40" stroke="currentColor" strokeWidth="8"
+                               strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * healthScore) / 100}
+                             />
                         </svg>
                         <div className="absolute inset-0 flex items-center justify-center">
                             <Bolt className="text-[#0055c9] w-5 h-5 fill-[#0055c9]" />
@@ -460,12 +535,10 @@ const Dashboard: React.FC = () => {
                     </div>
                 </div>
             </section>
+              </>
+            )}
         </main>
 
-        {/* FAB */}
-        <button onClick={() => navigate('/upload')} className="fixed bottom-28 right-6 w-14 h-14 bg-[#0055c9] text-white rounded-full shadow-lg shadow-[#0055c9]/30 flex items-center justify-center active:scale-90 transition-transform z-50">
-            <Plus className="w-8 h-8 font-bold" />
-        </button>
 
         {/* BottomNavBar */}
         <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-white/90 backdrop-blur-xl rounded-t-[2.5rem] z-50 shadow-[0_-8px_24px_rgba(0,0,0,0.05)] border-t border-slate-100">
@@ -477,13 +550,13 @@ const Dashboard: React.FC = () => {
                 <Shield className="w-6 h-6" />
                 <span className="font-medium text-[10px] uppercase tracking-wider mt-1">Doctors</span>
             </div>
+            <div onClick={() => navigate('/')} className="flex flex-col items-center justify-center bg-[#0055c9]/10 text-[#0055c9] rounded-full px-5 py-2 active:scale-90 duration-200 cursor-pointer">
+                <Home className="w-6 h-6" />
+                <span className="font-medium text-[10px] uppercase tracking-wider mt-1">Home</span>
+            </div>
             <div onClick={() => navigate('/analytics')} className="flex flex-col items-center justify-center text-slate-400 hover:text-[#0055c9] transition-colors cursor-pointer active:scale-90 duration-200">
                 <Activity className="w-6 h-6" />
                 <span className="font-medium text-[10px] uppercase tracking-wider mt-1">Analytics</span>
-            </div>
-            <div onClick={() => navigate('/records')} className="flex flex-col items-center justify-center text-slate-400 hover:text-[#0055c9] transition-colors cursor-pointer active:scale-90 duration-200">
-                <FileText className="w-6 h-6" />
-                <span className="font-medium text-[10px] uppercase tracking-wider mt-1">Reports</span>
             </div>
             <div onClick={() => navigate('/calendar')} className="flex flex-col items-center justify-center text-slate-400 hover:text-[#0055c9] transition-colors cursor-pointer active:scale-90 duration-200">
                 <Calendar className="w-6 h-6" />

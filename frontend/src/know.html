@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>MedVault - Know Your Report</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Material Symbols -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-surface-variant": "#414754",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed": "#002116",
+                        "on-background": "#191c1d",
+                        "on-error": "#ffffff",
+                        "surface": "#f8f9fa",
+                        "on-tertiary-fixed-variant": "#454748",
+                        "tertiary-container": "#737576",
+                        "surface-variant": "#e1e3e4",
+                        "surface-dim": "#d9dadb",
+                        "outline": "#717786",
+                        "surface-container-high": "#e7e8e9",
+                        "surface-container-low": "#f3f4f5",
+                        "surface-tint": "#0057ce",
+                        "secondary-container": "#67fcc6",
+                        "on-primary-fixed-variant": "#00419e",
+                        "tertiary-fixed": "#e1e3e4",
+                        "on-primary-fixed": "#001946",
+                        "primary-fixed-dim": "#b1c5ff",
+                        "on-tertiary-fixed": "#191c1d",
+                        "secondary-fixed-dim": "#44dfab",
+                        "secondary-fixed": "#67fcc6",
+                        "on-tertiary": "#ffffff",
+                        "inverse-on-surface": "#f0f1f2",
+                        "error": "#ba1a1a",
+                        "secondary": "#006c4f",
+                        "primary-container": "#036cfb",
+                        "on-secondary-container": "#007354",
+                        "outline-variant": "#c1c6d7",
+                        "on-tertiary-container": "#fcfdfe",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed-dim": "#c5c7c8",
+                        "primary-fixed": "#dae2ff",
+                        "surface-container-highest": "#e1e3e4",
+                        "surface-bright": "#f8f9fa",
+                        "primary": "#0055c9",
+                        "inverse-surface": "#2e3132",
+                        "on-error-container": "#93000a",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-primary": "#b1c5ff",
+                        "on-primary-container": "#fefcff",
+                        "tertiary": "#5a5c5d",
+                        "surface-container": "#edeeef",
+                        "on-surface": "#191c1d",
+                        "on-secondary-fixed-variant": "#00513a",
+                        "on-primary": "#ffffff",
+                        "background": "#f8f9fa"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .custom-glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body class="bg-background font-body text-on-surface antialiased min-h-screen">
+    <!-- TopAppBar -->
+
+    <main class="pt-24 pb-32 px-6 max-w-lg mx-auto">
+        <!-- Main Header -->
+        <section class="mb-8">
+            <h2 class="font-headline font-extrabold text-3xl text-on-surface tracking-tight leading-tight">Know Your
+                Report</h2>
+            <p class="text-on-surface-variant font-body text-md mt-2 leading-relaxed">Smarter, deeper analysis of your
+                medical documents.</p>
+        </section>
+        <!-- Central Upload Area -->
+        <div
+            class="surface-container-lowest border border-outline-variant/30 rounded-lg p-8 flex flex-col items-center text-center shadow-[0_10px_30px_rgba(25,28,29,0.02)] mb-10">
+            <div class="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mb-6">
+                <span class="material-symbols-outlined text-primary text-4xl" data-icon="cloud_upload"
+                    style="font-variation-settings: 'FILL' 1;">cloud_upload</span>
+            </div>
+            <h3 class="font-headline font-bold text-xl text-on-surface mb-2">Analyze any medical report</h3>
+            <p class="text-on-surface-variant text-sm px-4 leading-relaxed mb-8">
+                Upload blood tests, ultrasounds, X-rays or any health document to get a detailed layout of your results.
+            </p>
+            <button
+                class="bg-primary hover:bg-primary-container text-on-primary font-label font-semibold h-14 px-10 rounded-full flex items-center gap-3 transition-all active:scale-95 shadow-lg shadow-primary/20">
+                <span class="material-symbols-outlined" data-icon="add">add</span>
+                Select Report File
+            </button>
+        </div>
+        <!-- Section Title for Action Cards -->
+        <div class="flex items-center justify-between mb-4 px-2">
+            <h4 class="font-headline font-bold text-sm uppercase tracking-widest text-on-surface-variant/70">Analysis
+                Features</h4>
+        </div>
+        <!-- Action Cards Grid -->
+        <div class="grid grid-cols-2 gap-4">
+            <!-- Deep Scan -->
+            <div
+                class="surface-container-low rounded-lg p-5 flex flex-col gap-3 hover:bg-surface-container transition-colors cursor-pointer group">
+                <div
+                    class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                    <span class="material-symbols-outlined text-primary" data-icon="biotech">biotech</span>
+                </div>
+                <div>
+                    <p class="font-label font-bold text-on-surface text-sm">Deep Scan</p>
+                    <p class="text-[11px] text-on-surface-variant leading-tight mt-1">AI-powered granular data
+                        extraction</p>
+                </div>
+            </div>
+            <!-- Simple View -->
+            <div
+                class="surface-container-low rounded-lg p-5 flex flex-col gap-3 hover:bg-surface-container transition-colors cursor-pointer group">
+                <div
+                    class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                    <span class="material-symbols-outlined text-secondary" data-icon="visibility">visibility</span>
+                </div>
+                <div>
+                    <p class="font-label font-bold text-on-surface text-sm">Simple View</p>
+                    <p class="text-[11px] text-on-surface-variant leading-tight mt-1">Layman terms for complex data</p>
+                </div>
+            </div>
+            <!-- Metrics -->
+            <div
+                class="surface-container-low rounded-lg p-5 flex flex-col gap-3 hover:bg-surface-container transition-colors cursor-pointer group">
+                <div
+                    class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                    <span class="material-symbols-outlined text-blue-600" data-icon="insights">insights</span>
+                </div>
+                <div>
+                    <p class="font-label font-bold text-on-surface text-sm">Metrics</p>
+                    <p class="text-[11px] text-on-surface-variant leading-tight mt-1">Trend analysis &amp; vital
+                        tracking</p>
+                </div>
+            </div>
+            <!-- Lifestyle -->
+            <div
+                class="surface-container-low rounded-lg p-5 flex flex-col gap-3 hover:bg-surface-container transition-colors cursor-pointer group">
+                <div
+                    class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                    <span class="material-symbols-outlined text-orange-500" data-icon="spa">spa</span>
+                </div>
+                <div>
+                    <p class="font-label font-bold text-on-surface text-sm">Lifestyle</p>
+                    <p class="text-[11px] text-on-surface-variant leading-tight mt-1">Actionable health improvements</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+</body>
+
+</html>

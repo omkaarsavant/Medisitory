@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import { 
   getDoctorUniqueId, getDoctorRequests, respondToRequest, 
-  getSharedRecords, DoctorRequestData 
+  getSharedRecords, DoctorRequestData, revokeAccess
 } from '../../services/doctorAccessService'
 import QRCode from 'react-qr-code'
 
@@ -107,10 +107,15 @@ const DoctorDashboard: React.FC = () => {
     }
   }
 
-  const handleRemove = (e: React.MouseEvent, token: string) => {
+  const handleRemove = async (e: React.MouseEvent, token: string) => {
     e.stopPropagation()
-    if (window.confirm('Remove this patient access?')) {
-      removePatient(token)
+    if (window.confirm('Remove this patient access? This will also revoke your access to their records.')) {
+      try {
+        await revokeAccess(token)
+        removePatient(token)
+      } catch (err) {
+        alert('Failed to revoke access')
+      }
     }
   }
 

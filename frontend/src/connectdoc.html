@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Connect Doctor | MedVault</title>
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Icons -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "secondary-fixed-dim": "#44dfab",
+                        "on-surface": "#191c1d",
+                        "background": "#f8f9fa",
+                        "on-primary-container": "#fefcff",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed": "#191c1d",
+                        "surface-bright": "#f8f9fa",
+                        "secondary-container": "#67fcc6",
+                        "secondary": "#006c4f",
+                        "on-tertiary-container": "#fcfdfe",
+                        "tertiary-fixed-dim": "#c5c7c8",
+                        "outline": "#717786",
+                        "surface-container-highest": "#e1e3e4",
+                        "primary-container": "#036cfb",
+                        "on-error-container": "#93000a",
+                        "tertiary": "#5a5c5d",
+                        "surface-variant": "#e1e3e4",
+                        "on-primary-fixed": "#001946",
+                        "on-error": "#ffffff",
+                        "secondary-fixed": "#67fcc6",
+                        "primary": "#0055c9",
+                        "primary-fixed-dim": "#b1c5ff",
+                        "on-tertiary-fixed-variant": "#454748",
+                        "surface-container-low": "#f3f4f5",
+                        "surface-container": "#edeeef",
+                        "on-background": "#191c1d",
+                        "inverse-primary": "#b1c5ff",
+                        "primary-fixed": "#dae2ff",
+                        "tertiary-container": "#737576",
+                        "surface-container-lowest": "#ffffff",
+                        "surface": "#f8f9fa",
+                        "on-primary": "#ffffff",
+                        "on-primary-fixed-variant": "#00419e",
+                        "on-surface-variant": "#414754",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed": "#e1e3e4",
+                        "error-container": "#ffdad6",
+                        "surface-container-high": "#e7e8e9",
+                        "on-secondary-fixed-variant": "#00513a",
+                        "on-secondary-fixed": "#002116",
+                        "inverse-surface": "#2e3132",
+                        "surface-dim": "#d9dadb",
+                        "outline-variant": "#c1c6d7",
+                        "on-tertiary": "#ffffff",
+                        "surface-tint": "#0057ce",
+                        "on-secondary-container": "#007354"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body class="bg-background font-body text-on-surface min-h-screen">
+
+    <!-- Modal Overlay -->
+    <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-on-surface/20 backdrop-blur-sm">
+        <!-- Connect Doctor Modal: The Minimalist Pro -->
+        <div
+            class="bg-surface-container-lowest w-full max-w-sm rounded-lg shadow-[0_20px_40px_rgba(25,28,29,0.12)] overflow-hidden border border-outline-variant/10">
+            <!-- Modal Header -->
+            <div class="px-6 pt-6 pb-4 flex justify-between items-center">
+                <h2 class="font-headline font-bold text-xl text-on-surface tracking-tight">Connect Doctor</h2>
+                <button
+                    class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors">
+                    <span class="material-symbols-outlined text-on-surface-variant text-xl">close</span>
+                </button>
+            </div>
+            <!-- Modal Body -->
+            <div class="px-6 pb-8">
+                <p class="text-on-surface-variant text-sm leading-relaxed mb-8">
+                    Enter the doctor's unique ID to send a connection request
+                </p>
+                <!-- Form Fields -->
+                <div class="space-y-6">
+                    <!-- Doctor ID Input -->
+                    <div class="space-y-2">
+                        <label
+                            class="block text-[10px] font-bold tracking-[0.1em] text-on-surface-variant uppercase font-label">
+                            DOCTOR'S UNIQUE ID
+                        </label>
+                        <div class="flex gap-2">
+                            <div class="relative flex-1 group">
+                                <input
+                                    class="w-full bg-surface-container-low border-0 border-b-[3px] border-transparent focus:border-primary focus:ring-0 rounded-t-md px-4 py-3.5 text-sm font-medium transition-all placeholder:text-outline/60"
+                                    placeholder="e.g. DOC-A3X9K2" type="text" />
+                            </div>
+                            <button
+                                class="bg-surface-container-high px-4 py-3.5 rounded-md flex items-center gap-2 text-primary font-bold text-xs hover:bg-surface-container-highest transition-colors active:scale-95">
+                                <span class="material-symbols-outlined text-lg">qr_code_scanner</span>
+                                <span>SCAN QR</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="mt-10 flex gap-3">
+                        <button
+                            class="flex-1 py-4 px-6 rounded-full text-on-surface-variant font-bold text-sm hover:bg-surface-container transition-colors active:scale-95">
+                            Cancel
+                        </button>
+                        <button
+                            class="flex-1 py-4 px-6 rounded-full bg-primary text-on-primary font-bold text-sm shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95">
+                            Send Request
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+</body>
+
+</html>

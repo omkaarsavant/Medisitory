@@ -30,6 +30,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const [hasUnread, setHasUnread] = useState(false)
   const [showEndConfirm, setShowEndConfirm] = useState(false)
   
+  // Draggable Floating Button State
+  const [position, setPosition] = useState({ x: 0, y: 0 })
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
+  const dragThreshold = 5 // px
+  
   const { activeChatToken, senderId: chatStoreSenderId, senderName: chatStoreSenderName, chatWith, closeChat, isOpen, clearUnreadTotal } = useChatStore()
   const { clearUnread } = useDoctorStore()
 
@@ -128,14 +134,55 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     return record ? record.category.replace(/_/g, ' ') : 'Report'
   }
 
+  // Drag Handlers for Floating Bubble
+  const onDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
+    setDragStart({ x: clientX - position.x, y: clientY - position.y })
+    setIsDragging(false) // Reset on start
+  }
+
+  const onDragMove = (e: React.MouseEvent | React.TouchEvent) => {
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
+    
+    const newX = clientX - dragStart.x
+    const newY = clientY - dragStart.y
+    
+    // Check if we've moved enough to be considered a "drag"
+    if (Math.abs(newX - position.x) > dragThreshold || Math.abs(newY - position.y) > dragThreshold) {
+      if (!isDragging) setIsDragging(true)
+      setPosition({ x: newX, y: newY })
+    }
+  }
+
+  const onDragEnd = () => {
+    // If we were dragging, prevent any other clicks but reset the state
+    setTimeout(() => setIsDragging(false), 50)
+  }
+
+  const handleBubbleClick = () => {
+    if (isDragging) return // Don't open if we were just dragging
+    setIsMinimized(false)
+    setHasUnread(false)
+  }
+
   if (isMinimized) {
     return (
       <button 
-        onClick={() => {
-          setIsMinimized(false)
-          setHasUnread(false)
+        onMouseDown={onDragStart}
+        onMouseMove={(e) => dragStart.x && onDragMove(e)}
+        onMouseUp={onDragEnd}
+        onMouseLeave={onDragEnd}
+        onTouchStart={onDragStart}
+        onTouchMove={onDragMove}
+        onTouchEnd={onDragEnd}
+        onClick={handleBubbleClick}
+        style={{ 
+          transform: `translate(${position.x}px, ${position.y}px)`,
+          transition: isDragging ? 'none' : 'transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28)'
         }}
-        className="fixed bottom-6 right-6 z-50 w-16 h-16 bg-indigo-600 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all animate-in zoom-in group"
+        className="fixed bottom-6 right-6 z-50 w-16 h-16 bg-indigo-600 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all animate-in zoom-in group cursor-grab active:cursor-grabbing touch-none"
       >
         <MessageSquare className="w-8 h-8 text-white group-hover:rotate-12 transition-transform" />
         {hasUnread && (
@@ -148,7 +195,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   return (
     <div 
       ref={windowRef}
-      className="fixed bottom-6 right-6 z-50 w-full max-w-[420px] bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 flex flex-col overflow-hidden animate-in slide-in-from-bottom-8 duration-500"
+      className="fixed inset-0 sm:inset-auto sm:bottom-6 sm:right-6 z-[100] w-full sm:max-w-[420px] h-full sm:h-auto sm:max-h-[85vh] bg-white sm:rounded-[2.5rem] shadow-2xl sm:border sm:border-gray-100 flex flex-col overflow-hidden animate-in slide-in-from-bottom-8 duration-500"
     >
       {/* Premium Header */}
       <div className="bg-indigo-600 p-6 text-white flex justify-between items-center shadow-lg relative overflow-hidden">
@@ -187,7 +234,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       </div>
 
       {/* Message Stream */}
-      <div className="flex-1 h-[400px] max-h-[400px] overflow-y-auto p-6 space-y-8 bg-gray-50/50 custom-scrollbar scroll-smooth">
+      <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-gray-50/50 custom-scrollbar scroll-smooth">
         {messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-center p-10 opacity-30">
             <div className="w-20 h-20 bg-gray-200 rounded-[2rem] flex items-center justify-center mb-6 shadow-inner">

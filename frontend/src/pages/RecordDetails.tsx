@@ -18,12 +18,31 @@ import {
   Clock,
   Activity,
   Eye,
-  ExternalLink
+  ExternalLink,
+  Bell,
+  Home,
+  Brain,
+  X,
+  Shield, 
+  Sparkles, 
+  UserPlus, 
+  CheckSquare, 
+  Square, 
+  Save, 
+  Loader2, 
+  Stethoscope, 
+  Check, 
+  Users, 
+  ArrowRight, 
+  ChevronRight, 
+  Plus
 } from 'lucide-react'
 import { Card, Badge, Button, LoadingSpinner, ErrorMessage } from '../components'
 import { getRecord, MedicalRecord, deleteRecord } from '../services/api'
 import { clearNoteNotification, getActiveShares, updateShareRecords, DoctorAccess } from '../services/doctorAccessService'
-import { Shield, Sparkles, UserPlus, CheckSquare, Square, Save, Loader2, X } from 'lucide-react'
+import { useRecordStore } from '../store/recordStore'
+import { useAppointmentStore } from '../store/appointmentStore'
+import { IAppointment } from '../services/appointmentService'
 
 const RecordDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -39,6 +58,15 @@ const RecordDetails: React.FC = () => {
   const [fetchingShares, setFetchingShares] = useState(false)
   const [togglingId, setTogglingId] = useState<string | null>(null)
 
+  // Alignment State (Shared flow & Notifications)
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [selectedShareIds, setSelectedShareIds] = useState<string[]>([])
+  const [isSelectDoctorModalOpen, setIsSelectDoctorModalOpen] = useState(false)
+
+  // Stores
+  const { allRecords, fetchAllRecords, records: storeRecords } = useRecordStore()
+  const { appointments, fetchAppointments } = useAppointmentStore()
+
   const fetchShares = async () => {
     try {
       setFetchingShares(true)
@@ -48,6 +76,7 @@ const RecordDetails: React.FC = () => {
       setFetchingShares(false)
     }
   }
+
 
   const toggleShare = async (share: DoctorAccess) => {
     if (!record) return
@@ -73,7 +102,14 @@ const RecordDetails: React.FC = () => {
   }
 
   const handleShareClick = () => {
-    setIsShareModalOpen(true)
+    if (record && (record._id || record.id)) {
+      setSelectedShareIds([record._id || record.id || ''])
+    }
+    handleGenerateShareLink()
+  }
+
+  const handleGenerateShareLink = () => {
+    setIsSelectDoctorModalOpen(true)
     fetchShares()
   }
 
@@ -127,15 +163,15 @@ const RecordDetails: React.FC = () => {
       y += 4
 
       // ── Extracted Values ──
-      const displayFields = record.manualData || record.extractedData || {}
-      const fields = (record as any).displayData || {}
-      const allFields = Object.keys(fields).length ? fields : displayFields
-      if (Object.keys(allFields).length > 0) {
+      const displayFieldsArr = record.manualData || record.extractedData || {}
+      const fieldsArr = (record as any).displayData || {}
+      const allFieldsArr = Object.keys(fieldsArr).length ? fieldsArr : displayFieldsArr
+      if (Object.keys(allFieldsArr).length > 0) {
         doc.setFont('helvetica', 'bold'); doc.setFontSize(11)
         doc.text('Extracted Values', margin, y); y += 6
         doc.line(margin, y, pageW - margin, y); y += 5
         doc.setFontSize(10)
-        Object.entries(allFields).forEach(([key, val]) => {
+        Object.entries(allFieldsArr).forEach(([key, val]) => {
           if (y > 265) { doc.addPage(); y = margin }
           doc.setFont('helvetica', 'bold'); doc.text(key.replace(/_/g, ' ') + ':', margin, y)
           doc.setFont('helvetica', 'normal'); doc.text(String(val), margin + 60, y)
@@ -250,7 +286,9 @@ const RecordDetails: React.FC = () => {
     }
 
     fetchRecordData()
-  }, [id])
+    fetchAllRecords()
+    fetchAppointments()
+  }, [id, fetchAllRecords, fetchAppointments])
 
   const getStatusColor = (status?: string): 'green' | 'gray' | 'yellow' | 'red' => {
     if (!status) return 'red'
@@ -284,8 +322,10 @@ const RecordDetails: React.FC = () => {
   const fields = (record as any).displayData || {}
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-12">
-      <div className="container mx-auto px-6 py-8 space-y-6">
+    <div className="min-h-screen bg-gray-50">
+      {/* ================= DESKTOP VIEW ================= */}
+      <div className="hidden md:block pb-12">
+        <div className="container mx-auto px-6 py-8 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -623,103 +663,161 @@ const RecordDetails: React.FC = () => {
           </div>
         </Card>
 
-        {/* Share Report Modal */}
-        {isShareModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
-            <Card className="w-full max-w-lg bg-white rounded-[3rem] p-0 shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden animate-in zoom-in-95 duration-300 border-none">
-              <div className="p-10 bg-gray-900 text-white relative">
-                <div className="relative z-10">
-                  <h2 className="text-3xl font-black tracking-tight uppercase italic leading-none mb-2">Scope Control</h2>
-                  <p className="text-indigo-300 font-medium text-sm">Manage clinician access to this report</p>
-                </div>
-                <button 
-                  onClick={() => setIsShareModalOpen(false)} 
-                  className="absolute top-8 right-8 p-3 hover:bg-white/10 rounded-full transition-colors text-white z-10"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-                <Shield className="absolute right-[-20px] bottom-[-20px] w-40 h-40 text-white/5" />
-              </div>
+        </div>
+      </div>
 
-              <div className="p-10 space-y-6">
-                {fetchingShares ? (
-                  <div className="py-12 text-center">
-                    <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mx-auto mb-4" />
-                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Fetching authorizations...</p>
-                  </div>
-                ) : shares.length === 0 ? (
-                  <div className="py-8 text-center space-y-6">
-                    <div className="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
-                      <UserPlus className="w-10 h-10 text-gray-200" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-black text-gray-900 uppercase tracking-widest mb-2">No Clinician Link</h3>
-                      <p className="text-gray-500 font-medium text-sm leading-relaxed px-4">
-                        You haven't connected with any doctors yet. Add a doctor to your network to share reports.
-                      </p>
-                    </div>
-                    <Button 
-                      onClick={() => navigate('/doctors')}
-                      variant="primary"
-                      className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-indigo-100"
+      {/* ================= MOBILE VIEW (recorde.html mapped) ================= */}
+      <div className="md:hidden pb-32">
+        {/* Top Navigation Bar */}
+        <header className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md shadow-[0_20px_40px_rgba(25,28,29,0.06)]">
+            <div className="flex items-center justify-between px-6 h-16 w-full">
+                <div className="flex items-center gap-4">
+                    <button 
+                      onClick={() => navigate('/records')}
+                      className="active:scale-95 duration-200 hover:bg-slate-100/50 p-2 rounded-full"
                     >
-                      Add Doctor First
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1 mb-2">Authorized Clinicians</p>
-                    {shares.map((share) => {
-                      const isShared = share.recordIds.includes(record._id || record.id || '')
-                      const isToggling = togglingId === share.shareToken
-                      
-                      return (
-                        <div 
-                          key={share.shareToken}
-                          onClick={() => !isToggling && toggleShare(share)}
-                          className={`flex items-center justify-between p-5 rounded-2xl border-2 transition-all cursor-pointer ${
-                            isShared 
-                              ? 'bg-indigo-50 border-indigo-500 shadow-lg shadow-indigo-100/50' 
-                              : 'bg-white border-gray-100 hover:border-gray-200'
-                          }`}
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className={`p-2.5 rounded-xl transition-all ${isShared ? 'bg-indigo-600 text-white' : 'bg-gray-50 text-gray-300'}`}>
-                              {isToggling ? (
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                              ) : isShared ? (
-                                <CheckSquare className="w-5 h-5" />
-                              ) : (
-                                <Square className="w-5 h-5" />
-                              )}
-                            </div>
-                            <div>
-                              <p className="font-black text-gray-900 uppercase tracking-tight italic">{share.doctorName || 'Doctor'}</p>
-                              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">ID: {share.shareToken.substring(0, 8)}...</p>
-                            </div>
-                          </div>
-                          {isShared && (
-                            <div className="w-2.5 h-2.5 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-
-                <div className="pt-4 flex gap-4">
-                  <Button 
-                    variant="outline"
-                    onClick={() => setIsShareModalOpen(false)}
-                    className="rounded-2xl border-gray-200 text-gray-400 font-black uppercase tracking-widest text-[11px] h-14 flex-1 hover:bg-white"
-                  >
-                    Close
-                  </Button>
+                        <ArrowLeft className="text-blue-600 w-6 h-6" />
+                    </button>
+                    <h1 className="font-bold text-lg text-slate-900 truncate max-w-[200px]" style={{ fontFamily: 'Manrope' }}>
+                      {(() => {
+                        const cat = (record.category || 'custom').toLowerCase();
+                        const mapping: Record<string, string> = { 'blood_sugar': 'Blood Sugar', 'bp': 'Blood Pressure', 'thyroid': 'Thyroid', 'cholesterol': 'Cholesterol', 'opd': 'OPD', 'imaging': 'Imaging', 'lab': 'Lab' };
+                        return mapping[cat] || cat.replace(/_/g, ' ');
+                      })()}
+                    </h1>
                 </div>
-              </div>
-            </Card>
+                    <div className="flex items-center gap-4">
+                        <div className="relative active:scale-95 duration-200 transition-opacity hover:opacity-80 cursor-pointer p-2 rounded-full"
+                             onClick={() => navigate('/know-your-report')}
+                        >
+                            <Brain className="text-[#0055c9] w-6 h-6" />
+                        </div>
+                        <div 
+                          className="relative active:scale-95 duration-200 transition-opacity hover:opacity-80 cursor-pointer p-2 rounded-full"
+                          onClick={() => setShowNotifications(true)}
+                        >
+                            <Bell className="text-[#0055c9] w-6 h-6" />
+                            {(storeRecords.some(r => r.hasNewDoctorNote) || appointments.some(a => new Date(a.date) >= new Date(new Date().setHours(0,0,0,0)))) && (
+                              <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-[#ba1a1a] rounded-full ring-2 ring-white"></span>
+                            )}
+                        </div>
+                    </div>
+            </div>
+        </header>
+
+        {/* Mobile Notification Overlay */}
+        {showNotifications && (
+          <div className="fixed inset-0 z-[200] bg-white animate-in slide-in-from-bottom duration-300">
+            <div className="p-6 flex justify-between items-center border-b border-slate-100">
+              <h2 className="text-xl font-black text-slate-900 tracking-tight">Notifications</h2>
+              <button onClick={() => setShowNotifications(false)} className="p-2 bg-slate-50 rounded-full">
+                <X className="w-6 h-6 text-slate-400" />
+              </button>
+            </div>
+            <div className="p-6 space-y-6 overflow-y-auto max-h-[80vh] custom-scrollbar">
+              {appointments.filter(a => new Date(a.date) >= new Date(new Date().setHours(0,0,0,0))).length === 0 && storeRecords.filter(r => r.hasNewDoctorNote).length === 0 && (
+                <div className="text-center py-20">
+                  <Bell className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+                  <p className="text-slate-400 font-medium italic">No new notifications</p>
+                </div>
+              )}
+              
+              {/* Appointments in Overlay */}
+              {appointments.filter(a => new Date(a.date) >= new Date(new Date().setHours(0,0,0,0))).length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Upcoming Appointments</h3>
+                  {appointments.filter(a => new Date(a.date) >= new Date(new Date().setHours(0,0,0,0))).map(appt => (
+                    <div key={appt._id} onClick={() => navigate('/calendar')} className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100 flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-blue-600 shadow-sm">
+                          <Calendar className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-slate-900">Dr. {appt.doctorName}</p>
+                          <p className="text-[10px] font-bold text-slate-500 uppercase">{new Date(appt.date).toLocaleDateString()} • {appt.time}</p>
+                        </div>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-blue-300" />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Records with Notes in Overlay */}
+              {storeRecords.filter(r => r.hasNewDoctorNote).length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600">New Reports Shared</h3>
+                  {storeRecords.filter(r => r.hasNewDoctorNote).map(record => (
+                    <div key={record._id || record.id} onClick={() => navigate(`/records/${record._id || record.id}`)} className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100 flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-indigo-600 shadow-sm">
+                          <Shield className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-slate-900 capitalize">{record.category.replace(/_/g, ' ')}</p>
+                          <p className="text-[10px] font-bold text-slate-500 uppercase">View Physician Observations</p>
+                        </div>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-indigo-300" />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="absolute bottom-10 left-0 w-full px-6">
+               <button onClick={() => setShowNotifications(false)} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl">
+                 Close
+               </button>
+            </div>
           </div>
         )}
+
+        <main className="mt-20 px-4 space-y-6">
+            {/* Header Section */}
+            <section className="space-y-4">
+                <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                        <h2 className="font-extrabold text-3xl tracking-tight text-[#191c1d]" style={{ fontFamily: 'Manrope' }}>
+                          {(() => {
+                            const cat = (record.category || 'custom').toLowerCase();
+                            const mapping: Record<string, string> = { 'blood_sugar': 'Blood Sugar', 'bp': 'Blood Pressure', 'thyroid': 'Thyroid', 'cholesterol': 'Cholesterol', 'opd': 'OPD', 'imaging': 'Imaging', 'lab': 'Lab' };
+                            return mapping[cat] || cat.replace(/_/g, ' ');
+                          })()}
+                        </h2>
+                        <p className="text-[#414754] text-sm flex items-center gap-1 font-medium">
+                            <Calendar className="w-3 h-3" />
+                            Uploaded: {new Date(record.uploadDate || record.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                        <span className="px-4 py-1 bg-[#67fcc6] text-[#007354] text-xs font-bold rounded-full flex items-center gap-1 shadow-sm uppercase tracking-wider">
+                            <CheckSquare className="w-3 h-3" />
+                            {record.status || 'Active'}
+                        </span>
+                    </div>
+                </div>
+
+
+                {/* Action Quick Bar */}
+                <div className="grid grid-cols-4 gap-2">
+                    <button
+                        onClick={handleShareClick}
+                        className="flex flex-col items-center justify-center p-3 bg-white rounded-xl shadow-[0_20px_40px_rgba(25,28,29,0.06)] active:scale-95 transition-all outline-none border border-white"
+                    >
+                        <Share2 className="text-[#0055c9] w-5 h-5 mb-1" />
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#414754]">Share</span>
+                    </button>
+                    <button
+                        onClick={handleDownloadPDF}
+                        disabled={downloading}
+                        className="flex flex-col items-center justify-center p-3 bg-white rounded-xl shadow-[0_20px_40px_rgba(25,28,29,0.06)] active:scale-95 transition-all outline-none border border-white"
+                    >
+                        {downloading ? <Loader2 className="w-5 h-5 mb-1 animate-spin text-[#0055c9]" /> : <FileText className="text-[#0055c9] w-5 h-5 mb-1" />}
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#414754]">{downloading ? 'WAIT' : 'PDF'}</span>
+                    </button>
+                </div>
+            </section>
+        </main>
       </div>
     </div>
   )

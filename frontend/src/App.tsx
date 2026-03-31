@@ -11,6 +11,7 @@ import Analytics from './pages/Analytics'
 import KnowYourReport from './pages/KnowYourReport'
 import Calendar from './pages/Calendar'
 import ManageShares from './pages/ManageShares'
+import DoctorDetail from './pages/DoctorDetail'
 import NotFound from './pages/NotFound'
 import DoctorLayout from './pages/doctor/DoctorLayout'
 import DoctorDashboard from './pages/doctor/DoctorDashboard'
@@ -38,6 +39,7 @@ const App: React.FC = () => {
           <Route path='know-your-report' element={<KnowYourReport />} />
           <Route path='calendar' element={<Calendar />} />
           <Route path='manage-shares' element={<ManageShares />} />
+          <Route path='manage-shares/:token' element={<DoctorDetail />} />
           <Route path='*' element={<NotFound />} />
         </Route>
       </Routes>

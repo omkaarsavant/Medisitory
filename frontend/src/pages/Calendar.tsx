@@ -5,8 +5,10 @@ import { Card, Button, Badge, LoadingSpinner, ErrorMessage } from '../components
 import { 
   Calendar as CalendarIcon, Clock, MapPin, User, Plus, Edit2, Trash2, 
   List, ClipboardList, Share2, ChevronLeft, ChevronRight, CreditCard, Download,
-  CheckCircle, IndianRupee, Receipt, AlertCircle, ArrowRight
+  CheckCircle, IndianRupee, Receipt, AlertCircle, ArrowRight,
+  Activity, FileText, Shield, Bell, X, Camera, Home, Brain
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { 
   getAppointments, 
   createAppointment, 
@@ -27,6 +29,7 @@ declare global {
 }
 
 const Calendar: React.FC = () => {
+  const navigate = useNavigate()
   const { appointments, loading, fetchAppointments, addAppointment: addApptStore, updateAppointment: updateApptStore, deleteAppointment: deleteApptStore } = useAppointmentStore()
   const [error, setError] = useState<string | null>(null)
   
@@ -37,6 +40,8 @@ const Calendar: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [paymentLoading, setPaymentLoading] = useState(false)
   const [view, setView] = useState<'calendar' | 'list'>('calendar')
+  const [deleteCandidateId, setDeleteCandidateId] = useState<string | null>(null)
+  const [showNotifications, setShowNotifications] = useState(false)
 
   // Form states
   const [formData, setFormData] = useState<CreateAppointmentDTO>({
@@ -94,19 +99,26 @@ const Calendar: React.FC = () => {
     return appt.doctorId && appt.doctorId !== 'demo_user' && appt.doctorId !== appt.userId
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     const appt = appointments.find(a => a._id === id)
     if (appt && isDoctorScheduled(appt)) {
       alert('You cannot delete appointments scheduled by your doctor.')
       return
     }
-    if (!window.confirm('Are you sure you want to delete this appointment?')) return
+    setDeleteCandidateId(id)
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteCandidateId) return
+    const id = deleteCandidateId
     try {
       await deleteApptStore(id)
       if (selectedAppt?._id === id) setIsViewModalOpen(false)
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Failed to delete appointment'
       alert(msg)
+    } finally {
+      setDeleteCandidateId(null)
     }
   }
 
@@ -318,7 +330,28 @@ const Calendar: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-12">
+    <>
+      <style>{`
+        /* Global CSS for Mobile Redesign */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        
+        .mobile-body {
+          background: #f8f9fa; /* surface color */
+          min-height: 100vh;
+          -webkit-font-smoothing: antialiased;
+        }
+        @media (max-width: 768px) {
+           #global-navbar, #global-footer { display: none !important; }
+           #main-content-container { padding: 0 !important; margin: 0 !important; max-width: none !important; }
+        }
+      `}</style>
+      
+      {/* ================= DESKTOP VIEW ================= */}
+      <div className="hidden md:block space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Appointment Tracker</h1>
@@ -576,10 +609,241 @@ const Calendar: React.FC = () => {
           </div>
         )}
       </div>
+      </div>
+
+      {/* ================= MOBILE VIEW (APP.HTML Design) ================= */}
+      <div className="md:hidden mobile-body pb-32">
+        <header className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] px-6 py-4 flex justify-between items-center h-20">
+            <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#dae2ff] flex items-center justify-center neon-glow-primary overflow-hidden">
+                    <img alt="JD" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuATG4FiDS-jjh7NE4b_y8jPQIqZspwUtwSNv6E9UWe9P-t7QkR3ouJa9YnG5ipTLap4wae7ACX3XP5uDEPxgVOgYVgZFcKAuqLEjwmvKF054anKe3PRdBTtd41podwzrQLrzcgn0gG1cjeXoyK7xB8VKT9gbsP7ZOM16xp3GBDGCxhoBsuT_g4dBjZcAS1mfdVo3Qaf6kN60o2HptPsNFqjmtgmzMfdd04RwfDYUnphLMS7nK9Ao-mYiuh2BHFVOTyavvidHbsHqy4" />
+                </div>
+                <span className="text-2xl font-black text-slate-900 tracking-tighter" style={{ fontFamily: 'Manrope' }}>MedVault</span>
+            </div>
+            <div className="flex items-center gap-4">
+                <div className="relative active:scale-95 duration-200 transition-opacity hover:opacity-80 cursor-pointer"
+                     onClick={() => navigate('/know-your-report')}
+                >
+                    <Brain className="text-[#0055c9] w-6 h-6" />
+                </div>
+                <div className="relative active:scale-95 duration-200 transition-opacity hover:opacity-80 cursor-pointer"
+                     onClick={() => setShowNotifications(true)}
+                >
+                    <Bell className="text-[#0055c9] w-6 h-6" />
+                    <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-[#ba1a1a] rounded-full ring-2 ring-white"></span>
+                </div>
+            </div>
+        </header>
+
+        {showNotifications && (
+          <div className="fixed inset-0 z-[100] bg-white animate-in slide-in-from-bottom duration-300">
+            <div className="p-6 flex justify-between items-center border-b border-slate-100">
+              <h2 className="text-xl font-black text-slate-900 tracking-tight">Notifications</h2>
+              <button onClick={() => setShowNotifications(false)} className="p-2 bg-slate-50 rounded-full">
+                <X className="w-6 h-6 text-slate-400" />
+              </button>
+            </div>
+            <div className="p-6 space-y-6 overflow-y-auto max-h-[80vh]">
+                <div className="text-center py-20">
+                  <Bell className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+                  <p className="text-slate-400 font-medium italic">No new notifications</p>
+                </div>
+            </div>
+            <div className="absolute bottom-10 left-0 w-full px-6">
+               <button onClick={() => setShowNotifications(false)} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl flex items-center justify-center">
+                 Close
+               </button>
+            </div>
+          </div>
+        )}
+
+        <main className="px-6 max-w-[390px] mx-auto pt-24">
+            {/* Main Header */}
+            <section className="mb-8">
+                <h1 className="font-headline font-extrabold text-3xl text-slate-900 tracking-tight leading-tight" style={{ fontFamily: 'Manrope' }}>
+                  Appointment Tracker
+                </h1>
+                <p className="text-slate-500 text-sm mt-1" style={{ fontFamily: 'Inter' }}>Manage your upcoming doctor visits and checklists</p>
+            </section>
+            
+            {/* Monthly Calendar View */}
+            <section className="glass-card border border-slate-100 rounded-xl p-5 mb-8 shadow-sm">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="font-headline font-bold text-lg text-slate-900" style={{ fontFamily: 'Manrope' }}>
+                      {monthNames[currentMonthIdx]} {currentYear}
+                    </h2>
+                    <div className="flex items-center gap-1 bg-slate-100/80 rounded-full p-1 border border-slate-200/50">
+                        <button onClick={handlePrevMonth} className="p-1 hover:bg-white rounded-full transition-all flex items-center justify-center shadow-sm">
+                            <ChevronLeft className="w-4 h-4 text-slate-600" />
+                        </button>
+                        <button onClick={() => setCurrentMonth(new Date())} className="px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#0055c9]">Today</button>
+                        <button onClick={handleNextMonth} className="p-1 hover:bg-white rounded-full transition-all flex items-center justify-center shadow-sm">
+                            <ChevronRight className="w-4 h-4 text-slate-600" />
+                        </button>
+                    </div>
+                </div>
+                <div className="grid grid-cols-7 gap-y-4 text-center">
+                    {/* Day Labels */}
+                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+                      <span key={i} className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{d}</span>
+                    ))}
+                    
+                    {/* Calendar Grid */}
+                    {Array.from({ length: startingDay }).map((_, i) => (
+                      <div key={`empty-${i}`} className="py-2"></div>
+                    ))}
+                    
+                    {Array.from({ length: daysInMonth }).map((_, i) => {
+                        const day = i + 1;
+                        const dayAppts = getAppointmentsForDate(day);
+                        const isToday = currentYear === new Date().getFullYear() && currentMonthIdx === new Date().getMonth() && day === new Date().getDate();
+                        const hasAppts = dayAppts.length > 0;
+                        
+                        return (
+                          <div key={day} className="relative py-2" onClick={() => {
+                            if (hasAppts) {
+                              setSelectedAppt(dayAppts[0]);
+                              if (dayAppts[0].postVisitNotes) setPostNotes(dayAppts[0].postVisitNotes);
+                              setIsViewModalOpen(true);
+                            } else {
+                              handleAddForDate(day);
+                            }
+                          }}>
+                              {isToday ? (
+                                <button className="w-8 h-8 mx-auto flex items-center justify-center bg-[#0055c9] text-white rounded-full text-sm font-bold shadow-md active:scale-95 transition-transform">
+                                  {day}
+                                </button>
+                              ) : hasAppts ? (
+                                <button className="w-8 h-8 mx-auto flex items-center justify-center border-2 border-[#0055c9] text-[#0055c9] rounded-full text-sm font-bold active:scale-95 transition-transform">
+                                  {day}
+                                </button>
+                              ) : (
+                                <button className="py-2 text-sm font-medium text-slate-900 w-full hover:bg-slate-50 rounded-full active:scale-95 transition-transform">
+                                  {day}
+                                </button>
+                              )}
+                              {hasAppts && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#0055c9] rounded-full"></div>}
+                          </div>
+                        );
+                    })}
+                </div>
+            </section>
+
+            {/* Upcoming Appointments */}
+            <section className="space-y-4">
+                <div className="flex justify-between items-center">
+                    <h3 className="font-headline font-bold text-lg text-slate-900" style={{ fontFamily: 'Manrope' }}>Upcoming Appointments</h3>
+                    <span className="text-xs font-semibold text-[#0055c9] px-3 py-1 bg-[#dae2ff] rounded-full">
+                      {appointments.filter(a => new Date(a.date) >= new Date(new Date().setHours(0,0,0,0))).length} Pending
+                    </span>
+                </div>
+                
+                {appointments.filter(a => new Date(a.date) >= new Date(new Date().setHours(0,0,0,0))).length === 0 ? (
+                   <div className="glass-card rounded-lg p-8 text-center opacity-50 italic text-sm text-slate-600 border border-slate-100">No upcoming appointments.</div>
+                ) : (
+                  appointments.filter(a => new Date(a.date) >= new Date(new Date().setHours(0,0,0,0))).map((appt) => (
+                    <div key={appt._id} className="glass-card border border-slate-100 rounded-xl p-5 flex flex-col gap-4 relative overflow-hidden group hover:bg-white transition-colors shadow-sm">
+                        <div className="flex justify-between items-start">
+                            <div className="flex gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-[#dae2ff]/50 border border-[#dae2ff] flex flex-col items-center justify-center pt-1">
+                                    <span className="text-[10px] font-bold uppercase text-[#0055c9] leading-none mb-1">
+                                      {new Date(appt.date).toLocaleDateString('en-US', { month: 'short' })}
+                                    </span>
+                                    <span className="text-xl font-extrabold text-[#0055c9] leading-none">
+                                      {new Date(appt.date).getDate()}
+                                    </span>
+                                </div>
+                                <div>
+                                    <h4 className="font-headline font-bold text-slate-900" style={{ fontFamily: 'Manrope' }}>Dr. {appt.doctorName}</h4>
+                                    <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5 font-medium">
+                                        <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                        {appt.time}
+                                    </p>
+                                </div>
+                            </div>
+                            {appt.paymentAmount > 0 && appt.paymentStatus === 'Paid' ? (
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 px-2 py-0.5 bg-emerald-100 rounded-md">Paid</span>
+                            ) : appt.paymentAmount > 0 ? (
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 px-2 py-0.5 bg-amber-100 rounded-md text-center">Unpaid</span>
+                            ) : null}
+                        </div>
+                        <div className="flex gap-2">
+                            <button 
+                              onClick={() => {
+                                setFormData({
+                                  date: appt.date.split('T')[0],
+                                  time: appt.time,
+                                  doctorName: appt.doctorName,
+                                  location: appt.location,
+                                  reason: appt.reason,
+                                  reminderType: 'none',
+                                  customReminderTime: '',
+                                  preVisitQuestions: appt.preVisitQuestions || ['']
+                                });
+                                setIsAddModalOpen(true);
+                              }}
+                              className="flex-1 bg-slate-200 py-2 rounded-full text-xs font-bold text-slate-600 hover:bg-slate-300 transition-colors active:scale-95"
+                            >
+                              Reschedule
+                            </button>
+                            <button 
+                              onClick={() => {
+                                setSelectedAppt(appt);
+                                setPostNotes(appt.postVisitNotes || '');
+                                setIsViewModalOpen(true);
+                              }}
+                              className="flex-1 bg-[#0055c9] py-2 rounded-full text-xs font-bold text-white shadow-sm active:scale-95 transition-transform hover:shadow-lg"
+                            >
+                              Details
+                            </button>
+                        </div>
+                    </div>
+                  ))
+                )}
+            </section>
+        </main>
+
+        {/* FAB */}
+        <button 
+          onClick={() => {
+            const dateStr = `${currentYear}-${String(currentMonthIdx + 1).padStart(2, '0')}-${String(Math.min(new Date().getDate(), daysInMonth)).padStart(2, '0')}`;
+            setFormData({ ...formData, date: dateStr });
+            setIsAddModalOpen(true);
+          }} 
+          className="fixed bottom-28 right-6 w-14 h-14 bg-[#0055c9] text-white rounded-2xl shadow-[0_8px_30px_rgb(0,85,201,0.3)] flex items-center justify-center z-40 active:scale-90 transition-transform"
+        >
+            <Plus className="w-8 h-8 stroke-[3]" />
+        </button>
+
+        {/* BottomNavBar */}
+        <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-white/90 backdrop-blur-xl rounded-t-[2.5rem] z-50 shadow-[0_-8px_24px_rgba(0,0,0,0.05)] border-t border-slate-100">
+            <div onClick={() => navigate('/records')} className="flex flex-col items-center justify-center text-slate-400 hover:text-[#0055c9] transition-colors cursor-pointer active:scale-90 duration-200">
+                <FileText className="w-6 h-6" />
+                <span className="font-medium text-[10px] uppercase tracking-wider mt-1">Records</span>
+            </div>
+            <div onClick={() => navigate('/manage-shares')} className="flex flex-col items-center justify-center text-slate-400 hover:text-[#0055c9] transition-colors cursor-pointer active:scale-90 duration-200">
+                <Shield className="w-6 h-6" />
+                <span className="font-medium text-[10px] uppercase tracking-wider mt-1">Doctors</span>
+            </div>
+            <div onClick={() => navigate('/')} className="flex flex-col items-center justify-center text-slate-400 hover:text-[#0055c9] transition-colors cursor-pointer active:scale-90 duration-200">
+                <Home className="w-6 h-6" />
+                <span className="font-medium text-[10px] uppercase tracking-wider mt-1">Home</span>
+            </div>
+            <div onClick={() => navigate('/analytics')} className="flex flex-col items-center justify-center text-slate-400 hover:text-[#0055c9] transition-colors cursor-pointer active:scale-90 duration-200">
+                <Activity className="w-6 h-6" />
+                <span className="font-medium text-[10px] uppercase tracking-wider mt-1">Analytics</span>
+            </div>
+            <div onClick={() => navigate('/calendar')} className="flex flex-col items-center justify-center bg-[#0055c9]/10 text-[#0055c9] rounded-full px-5 py-2 active:scale-90 duration-200 cursor-pointer">
+                <CalendarIcon className="w-6 h-6" />
+                <span className="font-medium text-[10px] uppercase tracking-wider mt-1">Calendar</span>
+            </div>
+        </nav>
+      </div>
 
       {/* Add Appointment Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <>
+        <div className="hidden md:flex fixed inset-0 z-50 items-center justify-center p-4">
           <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white p-6 md:p-8 shadow-2xl relative z-10 border border-gray-200">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">Schedule Appointment</h2>
@@ -658,11 +922,153 @@ const Calendar: React.FC = () => {
             </form>
           </Card>
         </div>
+
+        {/* MOBILE Modal (Full Screen Layout) */}
+        <div className="md:hidden fixed inset-0 z-[100] bg-[#f8f9fa] overflow-y-auto w-full h-full animate-in slide-in-from-bottom duration-300 pb-32">
+          <main className="pt-24 px-4 max-w-md mx-auto relative min-h-full pb-8">
+            {/* Close Button Mobile */}
+            <button onClick={() => setIsAddModalOpen(false)} className="absolute top-8 right-4 w-10 h-10 bg-white shadow-sm rounded-full flex items-center justify-center text-slate-500 hover:text-red-500 active:scale-95 transition-all border border-slate-100">
+                <X className="w-5 h-5" />
+            </button>
+
+            {/* Hero Decorative Element */}
+            <div className="mb-8">
+                <h2 className="font-headline font-extrabold text-3xl text-slate-900 tracking-tight mb-2" style={{ fontFamily: 'Manrope' }}>
+                  Schedule Appointment
+                </h2>
+                <p className="text-slate-500 text-sm">Fill in the details below to secure your next medical consultation.</p>
+            </div>
+            
+            {/* Appointment Form */}
+            <form onSubmit={handleCreateSubmit} className="space-y-4">
+                {/* Doctor & Clinic Info */}
+                <div className="glass-card border border-slate-100 p-6 rounded-2xl shadow-sm">
+                    <div className="space-y-5">
+                        <div className="group">
+                            <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 ml-1">Doctor Name</label>
+                            <div className="relative">
+                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0055c9]" />
+                                <input required type="text" value={formData.doctorName} onChange={e => setFormData({...formData, doctorName: e.target.value})}
+                                    className="w-full pl-12 pr-4 py-4 bg-slate-100/80 rounded-xl border-none focus:ring-2 focus:ring-[#0055c9] transition-all font-medium text-slate-900 placeholder:text-slate-400 shadow-inner"
+                                    placeholder="e.g. Dr. Sarah Johnson" />
+                            </div>
+                        </div>
+                        <div className="group">
+                            <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 ml-1">Location / Clinic</label>
+                            <div className="relative">
+                                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0055c9]" />
+                                <input required type="text" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})}
+                                    className="w-full pl-12 pr-4 py-4 bg-slate-100/80 rounded-xl border-none focus:ring-2 focus:ring-[#0055c9] transition-all font-medium text-slate-900 placeholder:text-slate-400 shadow-inner"
+                                    placeholder="City Medical Center" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Date & Time Row */}
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="glass-card border border-slate-100 p-4 rounded-2xl shadow-sm text-center">
+                        <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Date</label>
+                        <div className="flex flex-col items-center justify-center gap-1">
+                            <CalendarIcon className="w-6 h-6 text-[#0055c9] mb-1" />
+                            <input required type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})}
+                                className="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-bold text-slate-900 text-center" />
+                        </div>
+                    </div>
+                    <div className="glass-card border border-slate-100 p-4 rounded-2xl shadow-sm text-center">
+                        <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Time</label>
+                        <div className="flex flex-col items-center justify-center gap-1">
+                            <Clock className="w-6 h-6 text-[#0055c9] mb-1" />
+                            <input required type="time" value={formData.time} onChange={e => setFormData({...formData, time: e.target.value})}
+                                className="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-bold text-slate-900 text-center" />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Reason & Reminder */}
+                <div className="glass-card border border-slate-100 p-6 rounded-2xl shadow-sm space-y-5">
+                    <div>
+                        <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 ml-1">Reason for visit</label>
+                        <textarea value={formData.reason} onChange={e => setFormData({...formData, reason: e.target.value})}
+                            className="w-full px-4 py-3 bg-slate-100/80 rounded-xl border-none focus:ring-2 focus:ring-[#0055c9] transition-all font-medium text-slate-900 placeholder:text-slate-400 resize-none shadow-inner"
+                            placeholder="e.g. Annual checkup..." rows={3}></textarea>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 ml-1">Reminder</label>
+                        <div className="relative">
+                            <Bell className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0055c9] pointer-events-none" />
+                            <select value={formData.reminderType} onChange={e => setFormData({...formData, reminderType: e.target.value as any})}
+                                className="w-full pl-12 pr-10 py-4 bg-slate-100/80 rounded-xl border-none focus:ring-2 focus:ring-[#0055c9] appearance-none transition-all font-medium text-slate-900 shadow-inner">
+                                <option value="none">No reminder</option>
+                                <option value="30 minutes before">30 minutes before</option>
+                                <option value="1 hour before">1 hour before</option>
+                                <option value="1 day before">1 day before</option>
+                                <option value="anytime">Custom Date & Time</option>
+                            </select>
+                            <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                    
+                    {formData.reminderType === 'anytime' && (
+                      <div className="pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                          <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 ml-1">Custom Reminder Time</label>
+                          <input required type="datetime-local" value={formData.customReminderTime} onChange={e => setFormData({...formData, customReminderTime: e.target.value})}
+                              className="w-full px-4 py-4 bg-slate-100/80 rounded-xl border-none focus:ring-2 focus:ring-[#0055c9] transition-all font-medium text-slate-900 shadow-inner" />
+                      </div>
+                    )}
+                </div>
+
+                {/* Checklist Section */}
+                <div className="glass-card border border-slate-100 p-6 rounded-2xl shadow-sm">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-headline font-bold text-lg text-slate-900" style={{ fontFamily: 'Manrope' }}>Pre-visit Checklist</h3>
+                        <button type="button" onClick={addQuestionField}
+                            className="text-[#0055c9] bg-[#dae2ff] px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 hover:opacity-80 transition-opacity whitespace-nowrap active:scale-95 shadow-sm">
+                            <Plus className="w-3.5 h-3.5" /> Add
+                        </button>
+                    </div>
+                    <div className="space-y-3">
+                        {(!formData.preVisitQuestions || formData.preVisitQuestions.length === 0) && (
+                          <div className="text-sm font-medium text-slate-400 italic text-center py-5 bg-slate-50 rounded-xl border border-dashed border-slate-200">No questions added yet.</div>
+                        )}
+                        {formData.preVisitQuestions?.map((q, i) => (
+                            <div key={i} className="flex items-center gap-3 bg-slate-100/80 p-4 rounded-xl relative group shadow-inner">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest shrink-0">Q{i+1}</span>
+                                <input className="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-medium text-slate-900 placeholder:text-slate-400"
+                                    placeholder="Any specific symptoms?" type="text" value={q} onChange={e => handleQuestionChange(i, e.target.value)} />
+                                <button type="button" onClick={() => {
+                                    const newQs = [...(formData.preVisitQuestions || [])];
+                                    newQs.splice(i, 1);
+                                    setFormData({ ...formData, preVisitQuestions: newQs });
+                                }} className="p-1.5 hover:bg-white rounded-full transition-colors active:scale-95 text-slate-400 hover:text-red-500 shadow-sm shrink-0">
+                                   <X className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="mt-8 flex flex-col gap-3 pb-8">
+                    <button type="submit"
+                        className="w-full py-4 bg-[#0055c9] text-white font-bold rounded-xl shadow-[0_8px_30px_rgb(0,85,201,0.2)] active:scale-95 transition-transform flex items-center justify-center gap-2">
+                        <CalendarIcon className="w-5 h-5 text-blue-200" /> Save Appointment
+                    </button>
+                    <button type="button" onClick={() => setIsAddModalOpen(false)}
+                        className="w-full py-4 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 active:scale-95 transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </main>
+        </div>
+        </>
       )}
 
       {/* View/Review Appointment Modal */}
       {isViewModalOpen && selectedAppt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <>
+        <div className="hidden md:flex fixed inset-0 z-50 items-center justify-center p-4">
           <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white p-6 md:p-8 shadow-2xl relative z-10 border border-gray-200">
             <div className="flex justify-between items-start mb-6">
               <div>
@@ -800,8 +1206,162 @@ const Calendar: React.FC = () => {
             </div>
           </Card>
         </div>
+
+        {/* MOBILE Modal (Centered Layout) */}
+        <div className="md:hidden fixed inset-0 z-[60] p-4 bg-white/40 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-200">
+          {/* Modal Container */}
+          <div className="w-full max-w-md bg-white shadow-[0_20px_60px_rgba(25,28,29,0.15)] rounded-3xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
+            {/* Header */}
+            <div className="px-6 py-5 flex items-center justify-between border-b border-slate-100">
+                <div className="flex flex-col">
+                    <h1 className="font-headline font-extrabold text-xl tracking-tight text-slate-900" style={{ fontFamily: 'Manrope' }}>Dr. {selectedAppt.doctorName}</h1>
+                    <p className="font-medium text-sm text-slate-500">{new Date(selectedAppt.date).toLocaleDateString()} at {selectedAppt.time}</p>
+                </div>
+                <button onClick={() => setIsViewModalOpen(false)}
+                    className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-400 active:scale-95">
+                    <X className="w-6 h-6" />
+                </button>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="px-6 py-6 pb-20 overflow-y-auto w-full custom-scrollbar space-y-7">
+                
+                {/* Payment Banner */}
+                {selectedAppt.paymentAmount > 0 && (
+                  <div className={`p-5 rounded-2xl border ${
+                    selectedAppt.paymentStatus === 'Paid' ? 'bg-emerald-50/50 border-emerald-200' : 'bg-amber-50/50 border-amber-200'
+                  }`}>
+                    <div className="flex justify-between items-center mb-3">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Consultation Fee</span>
+                        <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-md ${
+                          selectedAppt.paymentStatus === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                        }`}>
+                          {selectedAppt.paymentStatus}
+                        </span>
+                    </div>
+                    <div className="text-3xl font-black text-slate-900 mb-4">₹{selectedAppt.paymentAmount}</div>
+                    {selectedAppt.paymentStatus === 'Paid' ? (
+                        <button onClick={() => handleDownloadReceipt(selectedAppt)}
+                           className="w-full py-3 bg-emerald-600 text-white text-sm font-bold rounded-xl shadow-sm shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2">
+                           <Download className="w-4 h-4" /> Download Receipt
+                        </button>
+                    ) : (
+                        <button onClick={() => handlePay(selectedAppt)} disabled={paymentLoading}
+                           className="w-full py-3 bg-indigo-600 text-white text-sm font-bold rounded-xl shadow-sm shadow-indigo-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                           {paymentLoading ? 'Processing...' : 'Pay Now'}
+                        </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Visit Info Section */}
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 text-center">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#0055c9] block mb-1">Location</span>
+                        <p className="font-semibold text-sm text-slate-900 line-clamp-2">{selectedAppt.location}</p>
+                    </div>
+                    <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 text-center">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#0055c9] block mb-1">Reason</span>
+                        <p className="font-semibold text-sm text-slate-900 line-clamp-2">{selectedAppt.reason || 'Not specified'}</p>
+                    </div>
+                </div>
+
+                {/* Checklist (if any) */}
+                {selectedAppt.preVisitQuestions && selectedAppt.preVisitQuestions.length > 0 && (
+                  <div className="space-y-3">
+                      <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                          QUESTIONS TO ASK
+                          <span className="h-px flex-1 bg-slate-100"></span>
+                      </label>
+                      <ul className="space-y-2.5 p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                        {selectedAppt.preVisitQuestions.map((q, i) => (
+                          <li key={i} className="flex gap-3 text-sm items-start">
+                            <div className="w-4 h-4 rounded-md border-2 border-slate-300 flex-shrink-0 mt-0.5 bg-white shadow-sm" />
+                            <span className="text-slate-700 font-medium leading-tight">{q}</span>
+                          </li>
+                        ))}
+                      </ul>
+                  </div>
+                )}
+
+                {/* Post-Visit Log Section */}
+                <div className="space-y-3">
+                    <label className="text-[11px] font-bold uppercase tracking-widest text-[#0055c9] flex items-center gap-2">
+                        POST-VISIT LOG
+                        <span className="h-px flex-1 bg-blue-100"></span>
+                    </label>
+                    <div className="relative group">
+                        <textarea
+                            className="w-full min-h-[220px] p-5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-[#0055c9] text-slate-900 placeholder:text-slate-400 font-medium leading-relaxed resize-none transition-all shadow-inner"
+                            placeholder="Log the doctor's notes, recommendations, or new prescriptions here after your visit..."
+                            value={postNotes}
+                            onChange={e => setPostNotes(e.target.value)}
+                        ></textarea>
+                    </div>
+                </div>
+            </div>
+
+            {/* Action Footer */}
+            <div className="p-6 bg-white/90 backdrop-blur-md flex flex-col gap-4 border-t border-slate-100">
+                <div className="flex items-center justify-between w-full">
+                    {/* Left Actions */}
+                    <div className="flex items-center gap-1.5">
+                        {!isDoctorScheduled(selectedAppt) && (
+                          <button onClick={() => handleDelete(selectedAppt._id)}
+                              className="w-12 h-12 flex items-center justify-center rounded-full text-red-500 hover:bg-red-50 transition-all active:scale-95 border border-red-50" title="Delete">
+                              <Trash2 className="w-5 h-5" />
+                          </button>
+                        )}
+                        <button onClick={() => exportToCalendar(selectedAppt)}
+                            className="w-12 h-12 flex items-center justify-center rounded-full text-[#0055c9] hover:bg-blue-50 transition-all active:scale-95 border border-blue-50" title="Export to Calendar">
+                            <CalendarIcon className="w-5 h-5" />
+                        </button>
+                    </div>
+                    {/* Right Buttons */}
+                    <div className="flex items-center gap-3">
+                        <button onClick={() => setIsViewModalOpen(false)}
+                            className="px-5 h-12 font-semibold text-slate-500 hover:text-slate-900 transition-colors active:scale-95">
+                            Close
+                        </button>
+                        <button onClick={handleUpdatePostVisit}
+                            className="px-7 h-12 bg-[#0055c9] text-white font-bold rounded-full shadow-lg shadow-blue-500/20 active:scale-95 transition-all text-sm">
+                            Save Notes
+                        </button>
+                    </div>
+                </div>
+            </div>
+          </div>
+        </div>
+        </>
       )}
-    </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteCandidateId && (
+        <div className="fixed inset-0 z-[100] p-4 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-200">
+          <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl p-6 animate-in zoom-in-95 duration-200">
+            <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4 border border-red-100">
+              <Trash2 className="w-6 h-6 text-red-500" />
+            </div>
+            <h3 className="text-xl font-bold text-center text-slate-900 mb-2" style={{ fontFamily: 'Manrope' }}>Delete Appointment?</h3>
+            <p className="text-sm text-center text-slate-500 mb-6 font-medium">This action cannot be undone. Are you sure you want to remove this appointment from your records?</p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setDeleteCandidateId(null)}
+                className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl active:scale-95 transition-colors text-sm"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmDelete}
+                className="flex-1 py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-[0_8px_30px_rgb(220,38,38,0.2)] active:scale-95 transition-all text-sm flex items-center justify-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" /> Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Medical Record Detail - Blood Pressure</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-tertiary-fixed": "#191c1d",
+                        "on-primary-fixed": "#001946",
+                        "on-background": "#191c1d",
+                        "primary-container": "#036cfb",
+                        "on-primary": "#ffffff",
+                        "surface-dim": "#d9dadb",
+                        "on-secondary-container": "#007354",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed-dim": "#c5c7c8",
+                        "tertiary-fixed": "#e1e3e4",
+                        "surface-container": "#edeeef",
+                        "on-secondary-fixed-variant": "#00513a",
+                        "on-tertiary-fixed-variant": "#454748",
+                        "surface-container-highest": "#e1e3e4",
+                        "outline-variant": "#c1c6d7",
+                        "secondary-container": "#67fcc6",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-container": "#fcfdfe",
+                        "primary-fixed": "#dae2ff",
+                        "error": "#ba1a1a",
+                        "surface-container-low": "#f3f4f5",
+                        "surface-bright": "#f8f9fa",
+                        "primary": "#0055c9",
+                        "on-primary-fixed-variant": "#00419e",
+                        "primary-fixed-dim": "#b1c5ff",
+                        "tertiary": "#5a5c5d",
+                        "on-surface": "#191c1d",
+                        "surface-container-high": "#e7e8e9",
+                        "secondary": "#006c4f",
+                        "background": "#f8f9fa",
+                        "inverse-on-surface": "#f0f1f2",
+                        "inverse-surface": "#2e3132",
+                        "surface-variant": "#e1e3e4",
+                        "secondary-fixed-dim": "#44dfab",
+                        "on-surface-variant": "#414754",
+                        "on-primary-container": "#fefcff",
+                        "on-secondary-fixed": "#002116",
+                        "on-error": "#ffffff",
+                        "tertiary-container": "#737576",
+                        "outline": "#717786",
+                        "inverse-primary": "#b1c5ff",
+                        "surface-tint": "#0057ce",
+                        "secondary-fixed": "#67fcc6",
+                        "on-error-container": "#93000a",
+                        "error-container": "#ffdad6",
+                        "surface": "#f8f9fa"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .clinical-shadow {
+            box-shadow: 0 20px 40px rgba(25, 28, 29, 0.06);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body class="text-on-surface antialiased pb-32">
+    <!-- Top Navigation Bar -->
+    <header
+        class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-[0_20px_40px_rgba(25,28,29,0.06)]">
+        <div class="flex items-center justify-between px-6 h-16 w-full max-w-7xl mx-auto">
+            <div class="flex items-center gap-4">
+                <button class="active:scale-95 duration-200 hover:bg-slate-100/50 p-2 rounded-full">
+                    <span class="material-symbols-outlined text-blue-600">arrow_back</span>
+                </button>
+                <h1 class="font-headline font-bold text-lg text-slate-900">Blood Pressure</h1>
+            </div>
+            <div class="flex gap-2">
+                <button class="active:scale-95 duration-200 hover:bg-slate-100/50 p-2 rounded-full">
+                    <span class="material-symbols-outlined text-slate-500">notifications</span>
+                </button>
+            </div>
+        </div>
+    </header>
+    <main class="mt-20 px-4 max-w-2xl mx-auto space-y-6">
+        <!-- Header Section -->
+        <section class="space-y-4">
+            <div class="flex justify-between items-start">
+                <div class="space-y-1">
+                    <h2 class="font-headline font-extrabold text-3xl tracking-tight text-on-surface">Blood Pressure</h2>
+                    <p class="text-on-surface-variant text-sm flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">calendar_today</span>
+                        Uploaded Oct 24, 2023 · 10:45 AM
+                    </p>
+                </div>
+                <div class="flex flex-col items-end gap-2">
+                    <span
+                        class="px-4 py-1 bg-secondary-container text-on-secondary-container text-xs font-bold rounded-full flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm"
+                            style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        Completed
+                    </span>
+                </div>
+            </div>
+            <!-- Action Quick Bar -->
+            <div class="grid grid-cols-4 gap-2">
+                <button
+                    class="flex flex-col items-center justify-center p-3 bg-surface-container-lowest rounded-xl shadow-[0_20px_40px_rgba(25,28,29,0.06)] active:scale-95 transition-all">
+                    <span class="material-symbols-outlined text-primary mb-1">share</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Share</span>
+                </button>
+                <button
+                    class="flex flex-col items-center justify-center p-3 bg-surface-container-lowest rounded-xl shadow-[0_20px_40px_rgba(25,28,29,0.06)] active:scale-95 transition-all">
+                    <span class="material-symbols-outlined text-primary mb-1">picture_as_pdf</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">PDF</span>
+                </button>
+                <button
+                    class="flex flex-col items-center justify-center p-3 bg-surface-container-lowest rounded-xl shadow-[0_20px_40px_rgba(25,28,29,0.06)] active:scale-95 transition-all">
+                    <span class="material-symbols-outlined text-primary mb-1">print</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Print</span>
+                </button>
+                <button
+                    class="flex flex-col items-center justify-center p-3 bg-error-container/20 rounded-xl shadow-[0_20px_40px_rgba(25,28,29,0.06)] active:scale-95 transition-all">
+                    <span class="material-symbols-outlined text-error mb-1">delete</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-error">Delete</span>
+                </button>
+            </div>
+        </section>
+        <!-- Record Information Section (Bento Style) -->
+        <section class="grid grid-cols-2 gap-4">
+            <div class="col-span-2 p-6 bg-surface-container-lowest rounded-lg shadow-[0_20px_40px_rgba(25,28,29,0.06)]">
+                <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-4">Record Information
+                </h3>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <p class="text-[10px] text-outline font-bold uppercase mb-1">Category</p>
+                        <p class="font-headline font-bold text-on-surface">Cardiology</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-outline font-bold uppercase mb-1">Visit Date</p>
+                        <p class="font-headline font-bold text-on-surface">Oct 24, 2023</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-outline font-bold uppercase mb-1">Visit Time</p>
+                        <p class="font-headline font-bold text-on-surface">09:15 AM</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Extracted Values (Hero Metrics) -->
+        <section
+            class="bg-surface-container-lowest rounded-lg shadow-[0_20px_40px_rgba(25,28,29,0.06)] overflow-hidden">
+            <div class="p-6 border-b border-outline-variant/10">
+                <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Extracted Values</h3>
+            </div>
+            <div class="p-6 flex justify-between items-center bg-gradient-to-br from-white to-surface-container-low">
+                <div class="text-center flex-1">
+                    <p class="font-headline text-5xl font-extrabold text-error">221</p>
+                    <p class="text-[10px] font-bold text-outline uppercase tracking-tighter mt-1">Systolic</p>
+                </div>
+                <div class="w-px h-12 bg-outline-variant/30"></div>
+                <div class="text-center flex-1">
+                    <p class="font-headline text-5xl font-extrabold text-error">112</p>
+                    <p class="text-[10px] font-bold text-outline uppercase tracking-tighter mt-1">Diastolic</p>
+                </div>
+                <div class="w-px h-12 bg-outline-variant/30"></div>
+                <div class="text-center flex-1">
+                    <p class="font-headline text-5xl font-extrabold text-primary">111</p>
+                    <p class="text-[10px] font-bold text-outline uppercase tracking-tighter mt-1">Pulse</p>
+                </div>
+            </div>
+        </section>
+        <!-- Smart Insights (AI Powered) -->
+        <section class="p-6 bg-primary/5 rounded-lg border border-primary/10 space-y-4">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary"
+                    style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                <h3 class="font-headline font-bold text-primary">Smart Insights</h3>
+                <span
+                    class="ml-auto text-[10px] font-bold px-2 py-0.5 bg-primary/10 text-primary rounded-full uppercase tracking-widest">AI
+                    Powered</span>
+            </div>
+            <div class="space-y-4">
+                <div class="bg-error-container/10 p-4 rounded-xl border-l-4 border-error">
+                    <p class="text-[10px] font-bold text-error uppercase mb-1">Primary Findings</p>
+                    <p class="font-headline font-bold text-on-surface">Hypertensive Crisis Warning</p>
+                    <p class="text-sm text-on-surface-variant mt-1">Your blood pressure reading is significantly higher
+                        than normal levels.</p>
+                </div>
+                <div class="bg-white/60 backdrop-blur-sm p-4 rounded-xl border border-primary/10">
+                    <p class="text-[10px] font-bold text-primary uppercase mb-1">Recommended Steps</p>
+                    <p class="font-headline font-bold text-on-surface">Emergency medical attention</p>
+                    <p class="text-sm text-on-surface-variant mt-1">Seek medical help immediately. Avoid strenuous
+                        activity and keep monitoring symptoms.</p>
+                </div>
+            </div>
+        </section>
+        <!-- Source Document -->
+        <section class="p-6 bg-surface-container rounded-lg">
+            <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-4">Source Document</h3>
+            <div
+                class="aspect-video bg-surface-container-highest rounded-xl border-2 border-dashed border-outline-variant flex flex-col items-center justify-center text-outline">
+                <span class="material-symbols-outlined text-4xl mb-2">description</span>
+                <p class="text-xs font-bold tracking-widest">NO DOCUMENT ATTACHED</p>
+            </div>
+        </section>
+        <section class="p-6 bg-surface-container rounded-lg">
+            <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-4">Prescription</h3>
+            <div
+                class="aspect-video bg-surface-container-highest rounded-xl border-2 border-dashed border-outline-variant flex flex-col items-center justify-center text-outline">
+                <span class="material-symbols-outlined text-4xl mb-2">description</span>
+                <p class="text-xs font-bold tracking-widest">NO PRESCRIPTION ATTACHED</p>
+            </div>
+        </section>
+        <!-- Bottom Page Actions -->
+
+    </main>
+    <!-- Bottom Navigation Bar -->
+    <nav
+        class="fixed bottom-0 left-0 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-[0_-10px_30px_rgba(25,28,29,0.04)] rounded-t-[2rem] z-50 flex justify-around items-center px-4 pb-6 pt-3">
+        <!-- Records (Active) -->
+        <a class="flex flex-col items-center justify-center bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 rounded-full px-5 py-2 transition-all"
+            href="#">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">description</span>
+            <span class="font-inter text-[11px] font-medium tracking-wide">Records</span>
+        </a>
+        <!-- Doctors -->
+        <a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-5 py-2 hover:text-blue-500 transition-colors"
+            href="#">
+            <span class="material-symbols-outlined">medical_services</span>
+            <span class="font-inter text-[11px] font-medium tracking-wide">Doctors</span>
+        </a>
+        <!-- Analytics -->
+        <a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-5 py-2 hover:text-blue-500 transition-colors"
+            href="#">
+            <span class="material-symbols-outlined">analytics</span>
+            <span class="font-inter text-[11px] font-medium tracking-wide">Analytics</span>
+        </a>
+        <!-- Reports -->
+        <a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-5 py-2 hover:text-blue-500 transition-colors"
+            href="#">
+            <span class="material-symbols-outlined">assignment</span>
+            <span class="font-inter text-[11px] font-medium tracking-wide">Reports</span>
+        </a>
+        <!-- Calendar -->
+        <a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-5 py-2 hover:text-blue-500 transition-colors"
+            href="#">
+            <span class="material-symbols-outlined">calendar_today</span>
+            <span class="font-inter text-[11px] font-medium tracking-wide">Calendar</span>
+        </a>
+    </nav>
+</body>
+
+</html>

@@ -5,7 +5,7 @@ import {
   Card, Badge, Button, Pagination, LoadingSpinner, ErrorMessage, TimelineView 
 } from '../components'
 import { 
-  ArrowLeft, ArrowRight, Search, Filter, Calendar, ChevronLeft, ChevronRight, Plus, Trash2, List, Layout, FileText, Stethoscope, X, SlidersHorizontal, Share2, CheckSquare, Square, Copy, Check, Shield, UserX, Clock, Users, Bell, Activity
+  ArrowLeft, ArrowRight, Search, Filter, Calendar, ChevronLeft, ChevronRight, Plus, Trash2, List, Layout, FileText, Stethoscope, X, SlidersHorizontal, Share2, CheckSquare, Square, Copy, Check, Shield, UserX, Clock, Users, Bell, Activity, Home, Brain
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import QRCode from 'react-qr-code'
@@ -989,7 +989,7 @@ const Records: React.FC = () => {
       )}
 
     {/* ================= MOBILE VIEW (EXACT AS record.html) ================= */}
-    <div className="md:hidden mobile-body pb-32">
+    <div className="md:hidden mobile-body">
         {/* TopAppBar */}
         <header className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] px-6 py-4 flex justify-between items-center">
             <div className="flex items-center gap-3">
@@ -998,13 +998,20 @@ const Records: React.FC = () => {
                 </div>
                 <span className="text-2xl font-black text-slate-900 tracking-tighter" style={{ fontFamily: 'Manrope' }}>MedVault</span>
             </div>
-            <div className="relative active:scale-95 duration-200 transition-opacity hover:opacity-80 cursor-pointer"
-                 onClick={() => setShowNotifications(true)}
-            >
-                <Bell className="text-[#0055c9] w-6 h-6" />
-                {filteredRecords.some(r => r.hasNewDoctorNote) && (
-                  <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-[#ba1a1a] rounded-full ring-2 ring-white"></span>
-                )}
+            <div className="flex items-center gap-4">
+                <div className="relative active:scale-95 duration-200 transition-opacity hover:opacity-80 cursor-pointer"
+                     onClick={() => navigate('/know-your-report')}
+                >
+                    <Brain className="text-[#0055c9] w-6 h-6" />
+                </div>
+                <div className="relative active:scale-95 duration-200 transition-opacity hover:opacity-80 cursor-pointer"
+                     onClick={() => setShowNotifications(true)}
+                >
+                    <Bell className="text-[#0055c9] w-6 h-6" />
+                    {filteredRecords.some(r => r.hasNewDoctorNote) && (
+                      <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-[#ba1a1a] rounded-full ring-2 ring-white"></span>
+                    )}
+                </div>
             </div>
         </header>
 
@@ -1075,12 +1082,12 @@ const Records: React.FC = () => {
           </div>
         )}
 
-        <main className="pt-24 px-6 space-y-8 max-w-lg mx-auto">
+        <main className="pt-10 px-5 space-y-5 pb-[80px] max-w-lg mx-auto">
             {/* Hero Header Section */}
-            <section className="mb-8">
+            <section className="mb-4">
                 <div className="flex flex-col gap-1">
                     <span className="text-[10px] font-bold tracking-[0.2em] text-[#0055c9] uppercase" style={{ fontFamily: 'Manrope' }}>MEDICAL HISTORY ARCHIVE</span>
-                    <h1 className="text-4xl font-extrabold text-[#191c1d] leading-tight" style={{ fontFamily: 'Manrope' }}>Your Records</h1>
+                    <h1 className="text-3xl font-extrabold text-[#191c1d] leading-tight" style={{ fontFamily: 'Manrope' }}>Your Records</h1>
                 </div>
                 <div className="mt-6 flex flex-col gap-4">
                     {isSharingMode && (
@@ -1216,13 +1223,13 @@ const Records: React.FC = () => {
                 <Shield className="w-6 h-6" />
                 <span className="font-medium text-[10px] uppercase tracking-wider mt-1">Doctors</span>
             </div>
+            <div onClick={() => navigate('/')} className="flex flex-col items-center justify-center text-slate-400 hover:text-[#0055c9] transition-colors cursor-pointer active:scale-90 duration-200">
+                <Home className="w-6 h-6" />
+                <span className="font-medium text-[10px] uppercase tracking-wider mt-1">Home</span>
+            </div>
             <div onClick={() => navigate('/analytics')} className="flex flex-col items-center justify-center text-slate-400 hover:text-[#0055c9] transition-colors cursor-pointer active:scale-90 duration-200">
                 <Activity className="w-6 h-6" />
                 <span className="font-medium text-[10px] uppercase tracking-wider mt-1">Analytics</span>
-            </div>
-            <div onClick={() => navigate('/records')} className="flex flex-col items-center justify-center text-slate-400 hover:text-[#0055c9] transition-colors cursor-pointer active:scale-90 duration-200">
-                <FileText className="w-6 h-6" />
-                <span className="font-medium text-[10px] uppercase tracking-wider mt-1">Reports</span>
             </div>
             <div onClick={() => navigate('/calendar')} className="flex flex-col items-center justify-center text-slate-400 hover:text-[#0055c9] transition-colors cursor-pointer active:scale-90 duration-200">
                 <Calendar className="w-6 h-6" />
@@ -1233,7 +1240,7 @@ const Records: React.FC = () => {
         {/* Floating Action Button */}
         <button
             onClick={() => navigate('/upload')}
-            className="fixed bottom-28 right-6 w-16 h-16 rounded-full bg-[#036cfb] text-white shadow-2xl flex items-center justify-center active:scale-90 transition-transform z-40">
+            className="fixed bottom-32 right-5 w-14 h-14 rounded-full bg-[#036cfb] text-white shadow-2xl flex items-center justify-center active:scale-90 transition-transform z-40">
             <Plus className="w-8 h-8 font-bold" />
         </button>
     </div>
