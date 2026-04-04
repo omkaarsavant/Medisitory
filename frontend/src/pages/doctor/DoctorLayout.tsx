@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { Building2, Users, QrCode, LogOut, Menu, X, Shield, Calendar as CalendarIcon } from 'lucide-react'
+import { Building2, Users, QrCode, LogOut, Menu, X, Shield, Calendar as CalendarIcon, User } from 'lucide-react'
 
 const DoctorLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -9,7 +9,8 @@ const DoctorLayout: React.FC = () => {
 
   const navItems = [
     { name: 'My Patients', path: '/doctor', icon: Users, exact: true },
-    { name: 'Appointments', path: '/doctor/appointments', icon: CalendarIcon, exact: false }
+    { name: 'Appointments', path: '/doctor/appointments', icon: CalendarIcon, exact: false },
+    { name: 'My Profile', path: '/doctor/profile', icon: User, exact: false }
   ]
 
   const isActive = (path: string, exact: boolean) => {

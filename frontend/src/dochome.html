@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>MedVault: Provider Portal Glass</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-secondary-fixed": "#002116",
+                        "surface": "#f8f9fa",
+                        "on-secondary-fixed-variant": "#00513a",
+                        "surface-dim": "#d9dadb",
+                        "secondary": "#006c4f",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed": "#001946",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-surface-variant": "#414754",
+                        "error-container": "#ffdad6",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed": "#e1e3e4",
+                        "tertiary": "#5a5c5d",
+                        "on-error": "#ffffff",
+                        "surface-container-low": "#f3f4f5",
+                        "secondary-container": "#67fcc6",
+                        "on-background": "#191c1d",
+                        "tertiary-container": "#737576",
+                        "secondary-fixed-dim": "#44dfab",
+                        "outline": "#717786",
+                        "on-tertiary-container": "#fcfdfe",
+                        "primary-fixed": "#dae2ff",
+                        "background": "#f8f9fa",
+                        "surface-container-high": "#e7e8e9",
+                        "on-tertiary-fixed-variant": "#454748",
+                        "on-tertiary-fixed": "#191c1d",
+                        "surface-container": "#edeeef",
+                        "primary-container": "#036cfb",
+                        "outline-variant": "#c1c6d7",
+                        "on-primary-container": "#fefcff",
+                        "inverse-surface": "#2e3132",
+                        "primary-fixed-dim": "#b1c5ff",
+                        "primary": "#0055c9",
+                        "on-secondary": "#ffffff",
+                        "surface-variant": "#e1e3e4",
+                        "inverse-primary": "#b1c5ff",
+                        "secondary-fixed": "#67fcc6",
+                        "on-error-container": "#93000a",
+                        "surface-tint": "#0057ce",
+                        "surface-bright": "#f8f9fa",
+                        "tertiary-fixed-dim": "#c5c7c8",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#191c1d",
+                        "on-secondary-container": "#007354",
+                        "inverse-on-surface": "#f0f1f2",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed-variant": "#00419e"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body class="bg-background font-body text-on-surface min-h-screen">
+    <!-- TopAppBar Shell -->
+    <header
+        class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md flex justify-between items-center px-6 py-4 w-full shadow-[0_20px_40px_rgba(25,28,29,0.06)]">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container">
+                <img alt="Doctor Profile Picture" class="w-full h-full object-cover"
+                    data-alt="Professional headshot of a smiling male doctor in clinical attire with soft blue studio lighting background"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXbAvgyeO95AuQDIRrAhDNEnPCD8c6YnieA9TvsE17CWaCDXlZ-N4LaJc2ETMEhn-2VPRnrhOAUi_kiB6Yqi18Az222g6dMhJICheinH50TyRoCfhaAppJKxxZsCGlmcZVPHSlluRteGF3sSTEkKC_V19O_8dWilLiAAq_qZnWQlKGF2aD0XjnHnzqh-3MBrf-albT5rkD7YLn7Lqr5OiJUZZwjDQCsbGuO2Tkk2q4aN9jtSzfPnqDV0ldCa_-_86qfjVJ8u2jzMM" />
+            </div>
+            <div class="flex flex-col">
+                <h1 class="font-headline font-black text-xl text-blue-700 leading-none">Clinical Sanctuary</h1>
+                <span class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mt-0.5">MedVault
+                    Portal</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <button
+                class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100/50 transition-all">
+                <span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+            </button>
+
+        </div>
+    </header>
+    <main class="pt-24 pb-32 px-6 max-w-2xl mx-auto space-y-8">
+        <!-- Doctor ID Banner Card -->
+        <section
+            class="relative overflow-hidden p-6 rounded-lg bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-xl">
+            <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+            <div class="relative z-10 flex flex-col gap-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-widest opacity-80 mb-1">Unique Provider Identity
+                        </p>
+                        <h2 class="font-headline text-3xl font-extrabold tracking-tighter">DOC-6D3WVY</h2>
+                    </div>
+                    <div class="bg-white/20 p-2 rounded-lg backdrop-blur-md">
+                        <span class="material-symbols-outlined text-2xl">verified_user</span>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button
+                        class="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 transition-all rounded-full text-xs font-bold backdrop-blur-sm">
+                        <span class="material-symbols-outlined text-sm">content_copy</span>
+                        Copy ID
+                    </button>
+                    <button
+                        class="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 transition-all rounded-full text-xs font-bold backdrop-blur-sm">
+                        <span class="material-symbols-outlined text-sm">qr_code_2</span>
+                        QR Code
+                    </button>
+                </div>
+            </div>
+        </section>
+        <!-- Search Section -->
+        <section class="space-y-4">
+            <div class="relative group">
+                <span
+                    class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant transition-colors group-focus-within:text-primary">search</span>
+                <input
+                    class="w-full pl-12 pr-6 py-4 bg-surface-container-lowest rounded-lg border-none shadow-[0_10px_30px_rgba(0,0,0,0.03)] focus:ring-2 focus:ring-primary/20 placeholder:text-slate-400 font-medium"
+                    placeholder="Search patients by name or ID..." type="text" />
+            </div>
+        </section>
+        <!-- Status Bar -->
+        <div class="flex items-center justify-between px-2">
+            <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-secondary animate-pulse"></div>
+                <span class="text-sm font-bold text-on-surface">1 Active Session</span>
+            </div>
+            <button class="text-xs font-bold text-primary flex items-center gap-1">
+                View All <span class="material-symbols-outlined text-sm">chevron_right</span>
+            </button>
+        </div>
+        <!-- Patients List -->
+        <section class="space-y-6">
+            <h3 class="font-headline text-xl font-bold tracking-tight px-2">My Patients</h3>
+            <!-- Patient Card: Jane Doe -->
+            <div
+                class="glass-panel p-6 rounded-lg shadow-[0_20px_40px_rgba(25,28,29,0.06)] hover:translate-y-[-4px] transition-all cursor-pointer">
+                <div class="flex items-center gap-5">
+                    <div class="w-16 h-16 rounded-lg overflow-hidden bg-slate-200">
+                        <img alt="Jane Doe" class="w-full h-full object-cover"
+                            data-alt="Portrait of a young woman with a calm expression against a neutral studio background"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAtnpHtSuuQcnZe5Fc-CVFXtQ7rSE7KPmE7KnB1Aj_6b7aad6lDEeByqaHxGftNK9UC8np9cX92clc08SUm04oCzCNRr75XWJSXKrKNk2eK1n-ShBISMo5q6ppaYserQsyFPz8qD_I_XCDZE9zbFT94XNvEzWdonKoT_lgQKZAJRjeDpEuaOso8nBpKZCDQ4SCTgYOhU51fuo5B2PjEBjeJF9I3eRo8EKRvNd7T-Zkt91-soW-qkglSrBMSZPtJ_xv0EZE6o7xLsc" />
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-headline font-bold text-lg text-on-surface">Jane Doe</h4>
+                                <p class="text-sm font-medium text-on-surface-variant">ID: 00000000</p>
+                            </div>
+                            <span
+                                class="bg-secondary/10 text-secondary px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">In-Session</span>
+                        </div>
+                        <div class="mt-4 flex items-center gap-4">
+                            <div class="flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-primary text-lg">folder_shared</span>
+                                <span class="text-xs font-bold text-on-surface">18 Records</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-secondary text-lg">schedule</span>
+                                <span class="text-xs font-bold text-on-surface">Started 14m ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Empty State / Upcoming Hint -->
+            <div
+                class="border-2 border-dashed border-outline-variant/30 rounded-lg p-8 flex flex-col items-center justify-center text-center opacity-60">
+                <span class="material-symbols-outlined text-4xl text-outline-variant mb-2">person_add</span>
+                <p class="text-sm font-medium text-slate-500">Assign next patient</p>
+            </div>
+        </section>
+    </main>
+    <!-- Bottom Navigation Bar Shell -->
+    <nav
+        class="fixed bottom-0 w-full z-50 bg-white/80 backdrop-blur-md px-8 py-4 flex justify-between items-center shadow-[0_-10px_30px_rgba(0,0,0,0.03)] md:hidden">
+        <a class="flex flex-col items-center gap-1 text-slate-400 group" href="#">
+            <span class="material-symbols-outlined">group</span>
+            <span class="text-[10px] font-bold uppercase tracking-tighter">My Patients</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 text-blue-700 font-bold group" href="#">
+            <div class="relative">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_circle</span>
+                <div class="absolute -top-1 -right-1 w-2 h-2 bg-error rounded-full"></div>
+            </div>
+            <span class="text-[10px] font-bold uppercase tracking-tighter">Doctors</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 text-slate-400 group" href="#">
+            <span class="material-symbols-outlined">calendar_today</span>
+            <span class="text-[10px] font-bold uppercase tracking-tighter">Schedules</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 text-slate-400 group" href="#">
+            <span class="material-symbols-outlined">settings</span>
+            <span class="text-[10px] font-bold uppercase tracking-tighter">Profile</span>
+        </a>
+    </nav>
+    <!-- Footer Secure Session Indicator -->
+
+    <!-- FAB for Contextual Action -->
+    <button
+        class="fixed bottom-24 right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-40">
+        <span class="material-symbols-outlined text-3xl">add</span>
+    </button>
+</body>
+
+</html>

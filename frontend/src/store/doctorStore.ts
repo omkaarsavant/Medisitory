@@ -51,7 +51,7 @@ export const useDoctorStore = create<DoctorState>()(
             shareToken: token,
             sharedAt: data.patient.sharedAt,
             expiresAt: data.patient.expiresAt,
-            recordCount: data.records.length
+            recordCount: data.records.filter(r => !r.isRestricted).length
           }
 
           if (existing) {

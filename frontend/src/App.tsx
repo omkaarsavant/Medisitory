@@ -18,6 +18,7 @@ import DoctorDashboard from './pages/doctor/DoctorDashboard'
 import DoctorScan from './pages/doctor/DoctorScan'
 import DoctorPatientView from './pages/doctor/DoctorPatientView'
 import DoctorAppointments from './pages/doctor/DoctorAppointments'
+import DoctorProfile from './pages/doctor/DoctorProfile'
 import GlobalChat from './components/GlobalChat'
 
 const App: React.FC = () => {
@@ -28,6 +29,7 @@ const App: React.FC = () => {
           <Route index element={<DoctorDashboard />} />
           <Route path='scan' element={<DoctorScan />} />
           <Route path='appointments' element={<DoctorAppointments />} />
+          <Route path='profile' element={<DoctorProfile />} />
           <Route path='patient/:token' element={<DoctorPatientView />} />
         </Route>
         <Route path='/' element={<Layout />}>
