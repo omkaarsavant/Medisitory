@@ -7,6 +7,7 @@ export interface IDoctorAccess extends Document {
   patientId: string
   doctorEmail: string
   doctorName: string
+  doctorUniqueId?: string
   shareToken: string
   categories: string[]
   recordIds: string[]
@@ -50,6 +51,12 @@ const doctorAccessSchema: Schema<IDoctorAccess> = new Schema(
       type: String,
       trim: true,
       default: ''
+    },
+    doctorUniqueId: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      index: true
     },
     shareToken: {
       type: String,

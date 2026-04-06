@@ -9,6 +9,7 @@ export interface DoctorAccess {
   recordIds: string[]
   doctorEmail?: string
   doctorName?: string
+  doctorUniqueId?: string
   expiresAt: string
   createdAt: string
   accessType: string

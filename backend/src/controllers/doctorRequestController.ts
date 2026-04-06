@@ -152,6 +152,7 @@ export const respondToRequest = async (req: Request, res: Response): Promise<voi
         patientId: request.patientId,
         doctorEmail: '',
         doctorName: doctorName || 'Doctor',
+        doctorUniqueId: request.doctorUniqueId,
         shareToken,
         recordIds,
         expiresAt,

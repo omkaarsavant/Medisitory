@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import DoctorAccess from '../models/DoctorAccess'
 import MedicalRecord from '../models/MedicalRecord'
 import Message from '../models/Message'
+import DoctorRequest from '../models/DoctorRequest'
 
 // Generate a random 6-character alphanumeric code for easy typing
 const generateShortCode = () => {
@@ -174,6 +175,19 @@ export const revokeShare = async (req: Request, res: Response): Promise<void> =>
     if (!share) {
       res.status(404).json({ error: 'Share not found or already revoked' })
       return
+    }
+
+    // If this share was linked to a doctor connection request, mark the request as Rejected
+    // so the patient can re-add the doctor if they want to.
+    if (share.doctorUniqueId) {
+      await DoctorRequest.findOneAndUpdate(
+        { 
+          doctorUniqueId: share.doctorUniqueId, 
+          patientId: share.patientId,
+          status: 'Accepted'
+        },
+        { status: 'Rejected' }
+      )
     }
 
     res.status(200).json({

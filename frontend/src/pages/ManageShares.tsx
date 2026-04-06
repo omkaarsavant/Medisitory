@@ -152,14 +152,21 @@ const ManageShares: React.FC = () => {
       return
     }
 
-    const existingEntry = allRequests.find(r => r.doctorUniqueId === inputId && r.status !== 'Rejected')
-    if (existingEntry) {
-      if (existingEntry.status === 'Accepted') {
-        alert('Doctor is already connected to your profile.')
+    const existingRequest = allRequests.find(r => r.doctorUniqueId === inputId && r.status !== 'Rejected')
+    if (existingRequest) {
+      if (existingRequest.status === 'Accepted') {
+        // If the request was accepted, but the doctor isn't in our active shares list,
+        // it means access was revoked but the request is still 'Accepted' in DB.
+        // We allow re-sending the request in this case.
+        const isActive = shares.some(s => s.doctorUniqueId === inputId || (s.shareToken && s.shareToken.includes(inputId)))
+        if (isActive) {
+          alert('Doctor is already connected to your profile.')
+          return
+        }
       } else {
         alert('A connection request is already pending for this doctor.')
+        return
       }
-      return
     }
 
     try {
